@@ -1,0 +1,5 @@
+*~
+LinkDef_out*
+*.so
+*.o
+*.exe
