@@ -26,7 +26,9 @@ struct TightLep {
   LorentzVector p4() {return abs(pdgid)==11 ? els_p4().at(idx) : mus_p4().at(idx);}
   int mc3_id() {return abs(pdgid)==11 ? els_mc3_id().at(idx) : mus_mc3_id().at(idx);}
   int mc3_motherid() {return abs(pdgid)==11 ? els_mc3_motherid().at(idx) : mus_mc3_motherid().at(idx);}
-  int mc_id() {return abs(pdgid)==11 ? els_mc_id().at(idx) : mus_mc_id().at(idx);}
+  int mc_id() {
+    return abs(pdgid)==11 ? els_mc_id().at(idx) : mus_mc_id().at(idx);
+  }
   int mc_motherid() {return abs(pdgid)==11 ? els_mc_motherid().at(idx) : mus_mc_motherid().at(idx);}
 private:
   int pdgid, idx;
@@ -124,12 +126,13 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	TightLep tightmu(-1*mus_charge().at(muidx)*13,muidx);
 	tightleps.push_back(tightmu);
       }
-      cout << "muon size=" << mus_p4().size() << " electron size=" << els_p4().size() << endl;
+      //cout << "muon size=" << mus_p4().size() << " electron size=" << els_p4().size() << endl;
       if (tightleps.size()!=2) continue;
       cout << "Tight leptons = " << tightleps.size() << " pdgids=" << tightleps[0].pdgId() << ", " << tightleps[1].pdgId() << endl;
 
       DilepHyp hyp(tightleps[0],tightleps[1]);
       cout << "Total charge = " << hyp.charge() << " m=" << hyp.p4().mass() << endl;
+      if (hyp.p4().mass()<8) continue;
 
       //if (makebaby) FillBabyNtuple();
 
@@ -152,35 +155,40 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	  makeFillHisto1D<TH1F,int>("hyp_ss_mll","hyp_ss_mll",100,0,1000,hyp.p4().mass());
 	  makeFillHisto1D<TH1F,int>("hyp_ss_ptll","hyp_ss_ptll",100,0,1000,hyp.p4().pt());
 	  makeFillHisto1D<TH1F,int>("hyp_ss_type","hyp_ss_type",5,0,5,type);
-	  if (abs(hyp.traiLep().pdgId())==13) {
-	    //trailing muon
-	    makeFillHisto1D<TH1F,int>("hyp_ss_trail_mu_mc","hyp_ss_trail_mu_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id());
-	    makeFillHisto1D<TH1F,int>("hyp_ss_trail_mu_mc_mother","hyp_ss_trail_mu_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid());
-	    //cout << evt_event() << " " << hyp.traiLep().pt() << " " << hyp.traiLep().p4().eta() << " " << hyp.traiLep().p4().phi() << endl; 
-	    //makeFillHisto1D<TH1F,int>("hyp_ss_trail_mu_mc3","hyp_ss_trail_mu_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id());
-	    //makeFillHisto1D<TH1F,int>("hyp_ss_trail_mu_mc3_mother","hyp_ss_trail_mu_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid());
+	  //check fakes (mother not W)
+	  if (abs(hyp.traiLep().mc_motherid())!=24) {
+	    if (abs(hyp.traiLep().pdgId())==13) {
+	      //trailing muon
+	      makeFillHisto1D<TH1F,int>("hyp_ss_trail_mu_mc","hyp_ss_trail_mu_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id());
+	      makeFillHisto1D<TH1F,int>("hyp_ss_trail_mu_mc_mother","hyp_ss_trail_mu_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid());
+	      //cout << evt_event() << " " << hyp.traiLep().pt() << " " << hyp.traiLep().p4().eta() << " " << hyp.traiLep().p4().phi() << endl; 
+	      //makeFillHisto1D<TH1F,int>("hyp_ss_trail_mu_mc3","hyp_ss_trail_mu_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id());
+	      //makeFillHisto1D<TH1F,int>("hyp_ss_trail_mu_mc3_mother","hyp_ss_trail_mu_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid());
+	    }
+	    if (abs(hyp.traiLep().pdgId())==11) {
+	      //trailing elec
+	      makeFillHisto1D<TH1F,int>("hyp_ss_trail_el_mc","hyp_ss_trail_el_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id());
+	      makeFillHisto1D<TH1F,int>("hyp_ss_trail_el_mc_mother","hyp_ss_trail_el_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid());
+	      //makeFillHisto1D<TH1F,int>("hyp_ss_trail_el_mc3","hyp_ss_trail_el_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id());
+	      //makeFillHisto1D<TH1F,int>("hyp_ss_trail_el_mc3_mother","hyp_ss_trail_el_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid());
+	    }
 	  }
-	  if (abs(hyp.traiLep().pdgId())==11) {
-	    //trailing elec
-	    makeFillHisto1D<TH1F,int>("hyp_ss_trail_el_mc","hyp_ss_trail_el_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id());
-	    makeFillHisto1D<TH1F,int>("hyp_ss_trail_el_mc_mother","hyp_ss_trail_el_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid());
-	    //makeFillHisto1D<TH1F,int>("hyp_ss_trail_el_mc3","hyp_ss_trail_el_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id());
-	    //makeFillHisto1D<TH1F,int>("hyp_ss_trail_el_mc3_mother","hyp_ss_trail_el_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid());
-	  }
-	  if (abs(hyp.leadLep().pdgId())==13) {
-	    //leading muon
-	    makeFillHisto1D<TH1F,int>("hyp_ss_lead_mu_mc","hyp_ss_lead_mu_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id());
-	    makeFillHisto1D<TH1F,int>("hyp_ss_lead_mu_mc_mother","hyp_ss_lead_mu_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid());
-	    //cout << evt_event() << " " << hyp.leadLep().pt() << " " << hyp.leadLep().p4().eta() << " " << hyp.leadLep().p4().phi() << endl; 
-	    //makeFillHisto1D<TH1F,int>("hyp_ss_lead_mu_mc3","hyp_ss_lead_mu_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id());
-	    //makeFillHisto1D<TH1F,int>("hyp_ss_lead_mu_mc3_mother","hyp_ss_lead_mu_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid());
-	  }
-	  if (abs(hyp.leadLep().pdgId())==11) {
-	    //leading elec
-	    makeFillHisto1D<TH1F,int>("hyp_ss_lead_el_mc","hyp_ss_lead_el_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id());
-	    makeFillHisto1D<TH1F,int>("hyp_ss_lead_el_mc_mother","hyp_ss_lead_el_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid());
-	    //makeFillHisto1D<TH1F,int>("hyp_ss_lead_el_mc3","hyp_ss_lead_el_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id());
-	    //makeFillHisto1D<TH1F,int>("hyp_ss_lead_el_mc3_mother","hyp_ss_lead_el_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid());
+	  if (abs(hyp.leadLep().mc_motherid())!=24) {
+	    if (abs(hyp.leadLep().pdgId())==13) {
+	      //leading muon
+	      makeFillHisto1D<TH1F,int>("hyp_ss_lead_mu_mc","hyp_ss_lead_mu_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id());
+	      makeFillHisto1D<TH1F,int>("hyp_ss_lead_mu_mc_mother","hyp_ss_lead_mu_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid());
+	      //cout << evt_event() << " " << hyp.leadLep().pt() << " " << hyp.leadLep().p4().eta() << " " << hyp.leadLep().p4().phi() << endl; 
+	      //makeFillHisto1D<TH1F,int>("hyp_ss_lead_mu_mc3","hyp_ss_lead_mu_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id());
+	      //makeFillHisto1D<TH1F,int>("hyp_ss_lead_mu_mc3_mother","hyp_ss_lead_mu_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid());
+	    }
+	    if (abs(hyp.leadLep().pdgId())==11) {
+	      //leading elec
+	      makeFillHisto1D<TH1F,int>("hyp_ss_lead_el_mc","hyp_ss_lead_el_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id());
+	      makeFillHisto1D<TH1F,int>("hyp_ss_lead_el_mc_mother","hyp_ss_lead_el_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid());
+	      //makeFillHisto1D<TH1F,int>("hyp_ss_lead_el_mc3","hyp_ss_lead_el_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id());
+	      //makeFillHisto1D<TH1F,int>("hyp_ss_lead_el_mc3_mother","hyp_ss_lead_el_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid());
+	    }
 	  }
 	} else {
 	  //opposite sign
