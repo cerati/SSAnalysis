@@ -43,6 +43,9 @@ bool isFakableMuon(unsigned int);
 bool isGoodElectron(unsigned int);
 bool isGoodMuon(unsigned int);
 
+bool isGoodVertex(size_t ivtx);
+int firstGoodVertex();
+
 bool isLoosePFJet(unsigned int pfJetIdx);
 bool isMediumPFJet(unsigned int pfJetIdx);
 bool isTightPFJet(unsigned int pfJetIdx);

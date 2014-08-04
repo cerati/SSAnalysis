@@ -77,6 +77,7 @@ class looper
   bool makebaby;
   bool makehist;
   bool maketext;
+  bool makeskim;
   
   //ntuple, file
   TFile *babyFile_;

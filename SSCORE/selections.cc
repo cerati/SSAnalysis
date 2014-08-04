@@ -2,6 +2,23 @@
 
 using namespace tas;
 
+bool isGoodVertex(size_t ivtx) {
+  if (cms2.vtxs_isFake()[ivtx]) return false;
+  if (cms2.vtxs_ndof()[ivtx] <= 4.) return false;
+  if (cms2.vtxs_position()[ivtx].Rho() > 2.0) return false;
+  if (fabs(cms2.vtxs_position()[ivtx].Z()) > 24.0) return false;
+  return true;
+}
+
+int firstGoodVertex () {
+    for (unsigned int vidx = 0; vidx < cms2.vtxs_position().size(); vidx++) {
+        if (isGoodVertex(vidx))
+            return vidx;
+    }
+    return -1;
+}
+
+
 bool isLoosePFJet(unsigned int pfJetIdx){
 
     float pfjet_chf_  = pfjets_chargedHadronE()[pfJetIdx] / pfjets_p4()[pfJetIdx].energy();
