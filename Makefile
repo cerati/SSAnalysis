@@ -30,10 +30,10 @@ COREDIR = SSCORE
 DICTINCLUDE = $(ROOTSYS)/include/Math/QuantFuncMathCore.h $(ROOTSYS)/include/TLorentzVector.h $(ROOTSYS)/include/Math/Vector4D.h
 
 LINKER = g++
-LINKERFLAGS = $(shell root-config --ldflags)
+LINKERFLAGS = $(shell root-config --ldflags --libs) -lGenVector
 
-CORESOURCES=./$(COREDIR)/CMS2.cc \
-./$(COREDIR)/selections.cc 
+CORESOURCES=/Users/cerati/SSAnalysis/SSAnalysis/$(COREDIR)/CMS2.cc \
+/Users/cerati/SSAnalysis/SSAnalysis/$(COREDIR)/selections.cc 
 #./$(COREDIR)/conversionTools.cc \
 #./$(COREDIR)/electronSelections.cc \
 #./$(COREDIR)/electronSelectionsParameters.cc \
@@ -49,13 +49,13 @@ CORESOURCES=./$(COREDIR)/CMS2.cc \
 COREOBJECTS=$(CORESOURCES:.cc=.o)
 CORELIB=libCORE.so
 
-SOURCES = $(wildcard *.cc)
+SOURCES = $(wildcard /Users/cerati/SSAnalysis/SSAnalysis/*.cc)
 OBJECTS = $(SOURCES:.cc=.o)
 LIB = liblooper.so
 
 DICT = LinkDef_out.o
 
-LIBS = $(CORELIB) $(LIB)
+LIBS = $(LIB)
 
 EXE = main.exe
 
@@ -63,13 +63,15 @@ EXE = main.exe
 # how to make it
 #
 
-$(CORELIB): $(COREOBJECTS)
-	$(QUIET) echo "Linking $@"; \
-	$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@
+#$(CORELIB): $(COREOBJECTS)
+#	$(QUIET) echo "Linking $@"; \
+#	echo "$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@"; \
+#	$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@
 
-$(LIB):	$(DICT) $(OBJECTS) 
+$(LIB):	$(DICT) $(OBJECTS) $(COREOBJECTS)
 	$(QUIET) echo "Linking $@"; \
-	$(LINKER) $(CFLAGS) $(LINKERFLAGS) -shared $(OBJECTS) $(DICT) -o $@
+	echo "$(LINKER) $(CFLAGS) $(LINKERFLAGS) -shared $(OBJECTS) $(DICT) -o $@"; \
+	$(LINKER) -shared -o $@ $(OBJECTS) $(COREOBJECTS) $(DICT) $(LINKERFLAGS)
 
 LinkDef_out.cxx: LinkDef.h
 	$(QUIET) echo "Making CINT dictionaries"; \

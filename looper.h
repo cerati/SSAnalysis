@@ -20,7 +20,7 @@ class TChain;
 class looper
 {
  public:
-  typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > LorentzVector; 
+  typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LorentzVector; 
 
   looper() {
     p4_ = new LorentzVector();
@@ -51,13 +51,25 @@ class looper
     return dphi;
   }
 
+  float deltaR( LorentzVector lv1, LorentzVector lv2 ) {
+    return sqrt( pow(deltaPhi(lv1.phi(),lv2.phi()),2) + pow(lv1.eta()-lv2.eta(),2) );
+  }
+
   template<class T, class U> void makeFillHisto1D(const char* name,const char* title,int nbins,U minx,U maxx,U value) {
     T* h = (T*) outf->Get(name);
     if (!h) {
       outf->cd();
       h = new T(name, title, nbins, minx, maxx);
     }
-    h->Fill(value);
+    h->Fill(std::max(minx,std::min(value,U(h->GetBinCenter(nbins)))));
+  }
+  template<class T, class U> void makeFillHisto2D(const char* name,const char* title,int nbinsx,U minx,U maxx,U valuex,int nbinsy,U miny,U maxy,U valuey) {
+    T* h = (T*) outf->Get(name);
+    if (!h) {
+      outf->cd();
+      h = new T(name, title, nbinsx, minx, maxx, nbinsy, miny, maxy);
+    }
+    h->Fill(std::max(minx,std::min(valuex,U(h->GetBinCenter(nbinsx)))),std::max(miny,std::min(valuey,U(h->GetBinCenter(nbinsy)))));
   }
   
  private:
