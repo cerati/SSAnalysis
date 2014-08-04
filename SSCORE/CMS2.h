@@ -10,6 +10,7 @@
 #include "TFile.h"
 #include "TBits.h"
 #include <vector> 
+#include <unistd.h>
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LorentzVector;
 
 using namespace std; 
@@ -15628,25 +15629,25 @@ void LoadAllBranches()
 	return hlt_bits().TestBitNumber(trigIndx);
 	}
 
-  // static void progress( int nEventsTotal, int nEventsChain ){
-  //   int period = 1000;
-  //   if(nEventsTotal%1000 == 0) {
-  //     // xterm magic from L. Vacavant and A. Cerri
-  //     if (isatty(1)) {
-  //       if( ( nEventsChain - nEventsTotal ) > period ){
-  //         float frac = (float)nEventsTotal/(nEventsChain*0.01);
-  //         printf("\015\033[32m ---> \033[1m\033[31m%4.1f%%"
-  //              "\033[0m\033[32m <---\033[0m\015", frac);
-  //         fflush(stdout);
-  //       }
-  //       else {
-  //         printf("\015\033[32m ---> \033[1m\033[31m%4.1f%%"
-  //                "\033[0m\033[32m <---\033[0m\015", 100.);
-  //         cout << endl;
-  //       }
-  //     }
-  //   }
-  // }
+  static void progress( int nEventsTotal, int nEventsChain ){
+    int period = 1000;
+    if(nEventsTotal%1000 == 0) {
+      // xterm magic from L. Vacavant and A. Cerri
+      if (isatty(1)) {
+        if( ( nEventsChain - nEventsTotal ) > period ){
+          float frac = (float)nEventsTotal/(nEventsChain*0.01);
+          printf("\015\033[32m ---> \033[1m\033[31m%4.1f%%"
+               "\033[0m\033[32m <---\033[0m\015", frac);
+          fflush(stdout);
+        }
+        else {
+          printf("\015\033[32m ---> \033[1m\033[31m%4.1f%%"
+                 "\033[0m\033[32m <---\033[0m\015", 100.);
+          cout << endl;
+        }
+      }
+    }
+  }
   
 };
 

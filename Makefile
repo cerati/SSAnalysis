@@ -32,8 +32,11 @@ DICTINCLUDE = $(ROOTSYS)/include/Math/QuantFuncMathCore.h $(ROOTSYS)/include/TLo
 LINKER = g++
 LINKERFLAGS = $(shell root-config --ldflags --libs) -lGenVector
 
-CORESOURCES=/Users/cerati/SSAnalysis/SSAnalysis/$(COREDIR)/CMS2.cc \
-/Users/cerati/SSAnalysis/SSAnalysis/$(COREDIR)/selections.cc 
+#DIR = /Users/cerati/SSAnalysis/SSAnalysis/
+DIR = ./
+
+CORESOURCES=$(DIR)/$(COREDIR)/CMS2.cc \
+ $(DIR)/$(COREDIR)/selections.cc 
 #./$(COREDIR)/conversionTools.cc \
 #./$(COREDIR)/electronSelections.cc \
 #./$(COREDIR)/electronSelectionsParameters.cc \
@@ -49,7 +52,7 @@ CORESOURCES=/Users/cerati/SSAnalysis/SSAnalysis/$(COREDIR)/CMS2.cc \
 COREOBJECTS=$(CORESOURCES:.cc=.o)
 CORELIB=libCORE.so
 
-SOURCES = $(wildcard /Users/cerati/SSAnalysis/SSAnalysis/*.cc)
+SOURCES = $(wildcard $(DIR)/*.cc)
 OBJECTS = $(SOURCES:.cc=.o)
 LIB = liblooper.so
 
@@ -63,10 +66,10 @@ EXE = main.exe
 # how to make it
 #
 
-#$(CORELIB): $(COREOBJECTS)
-#	$(QUIET) echo "Linking $@"; \
-#	echo "$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@"; \
-#	$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@
+$(CORELIB): $(COREOBJECTS)
+	$(QUIET) echo "Linking $@"; \
+	echo "$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@"; \
+	$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@
 
 $(LIB):	$(DICT) $(OBJECTS) $(COREOBJECTS)
 	$(QUIET) echo "Linking $@"; \

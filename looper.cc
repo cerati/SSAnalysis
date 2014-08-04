@@ -1,6 +1,7 @@
 // C++
 #include <iostream>
 #include <vector>
+#include <unistd.h> //isatty
 
 // ROOT
 #include "TChain.h"
@@ -23,6 +24,7 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
   makebaby       = false;
   makehist       = true;
   maketext       = false;
+  makeskim       = 0;
   
   if (makebaby) MakeBabyNtuple( Form( "%s_baby.root", prefix ) );
   if (makehist) CreateOutputFile( Form( "%s_histos.root", prefix ) );
@@ -39,9 +41,19 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
     // Get File Content
     TFile f( currentFile->GetTitle() );
     TTree *tree = (TTree*)f.Get("Events");
-    cms2.Init(tree);
-    
+
+    //Skimmed output file - needs to be before cms2.Init(tree)
+    TFile *skim_file = 0;
+    TTree* skim_tree = 0;
+    if (makeskim) {
+      skim_file = new TFile(TString(currentFile->GetTitle()).ReplaceAll(".root","_newskim.root"),"recreate");
+      skim_tree = (TTree*) tree->CloneTree(0, "fast");
+      skim_tree->SetDirectory(skim_file);
+      cms2.Init(skim_tree);
+    }
+
     // Event Loop
+    cms2.Init(tree);
     unsigned int nEvents = tree->GetEntries();
 
     for(unsigned int event = 0; event < nEvents; ++event) {
@@ -51,14 +63,14 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       ++nEventsTotal;
 
       // progress feedback to user
-      //if (nEventsTotal % 1000 == 0) {
-      //// xterm magic from L. Vacavant and A. Cerri
-      //if (isatty(1)) {
-      //printf("\015\033[32m ---> \033[1m\033[31m%4.1f%%"
-      //	 "\033[0m\033[32m <---\033[0m\015", (float)nEventsTotal/(nEventsChain*0.01));
-      //fflush(stdout);
-      //}
-      //}
+      if (nEventsTotal % 1000 == 0) {
+	// xterm magic from L. Vacavant and A. Cerri
+	if (isatty(1)) {
+	  printf("\015\033[32m ---> \033[1m\033[31m%4.1f%%"
+		 "\033[0m\033[32m <---\033[0m\015", (float)nEventsTotal/(nEventsChain*0.01));
+	  fflush(stdout);
+	}
+      }
 
       if (makebaby) InitBabyNtuple();
 
@@ -79,7 +91,9 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       }
 
       //start selection
-      //event
+      //vertex
+      //fixme: check leptons are from this vertex!
+      if (firstGoodVertex()!=0) continue;
 
       //met
       float met = evt_pfmet();
@@ -109,10 +123,10 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       //jets, ht
       int njets = 0;
       float ht=0;
-      //fixme: jets should be cleaned against leptons
       //fixme: should add corrections
       for (unsigned int pfjidx=0;pfjidx<pfjets_p4().size();++pfjidx) {
 	if (fabs(pfjets_p4()[pfjidx].eta())>2.4) continue;
+	if (isLoosePFJet(pfjidx)==false) continue;
 	//add pu jet id pfjets_pileupJetId()>????
 	bool isLep = false;
 	for (unsigned int fo=0;fo<fobs.size();++fo) {
@@ -130,6 +144,13 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       if (njets<2) continue;
       if (ht<80.) continue;
 
+      //write skim here
+      if (makeskim) {
+	cms2.LoadAllBranches();
+	skim_file->cd(); 
+	skim_tree->Fill();
+      }
+
       //leptons
       vector<Lep> goodleps;
       for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
@@ -144,8 +165,8 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	Lep goodmu(-1*mus_charge().at(muidx)*13,muidx);
 	goodleps.push_back(goodmu);
       }
-      //cout << "muon size=" << mus_p4().size() << " electron size=" << els_p4().size() << endl;
-      if (goodleps.size()==0 || goodleps.size()>2) continue;
+
+      //if (goodleps.size()==0 || goodleps.size()>2) continue;
 
       //compute fake rate in ss ttbar (should be moved after which selection? ss at least?)
       if (hyp.charge()!=0) {
@@ -260,6 +281,12 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 
     }
 
+    if (makeskim) {
+      skim_file->cd(); 
+      skim_tree->Write(); 
+      skim_file->Close();
+      delete skim_file;
+    }
     delete tree;
     f.Close();
   }
