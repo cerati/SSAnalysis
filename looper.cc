@@ -73,6 +73,11 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       evt_   = evt_event();
       weight_ = isData ? 1. : evt_scale1fb();
 
+      if (mus_dxyPV().size()!=mus_dzPV().size()) {
+	cout << "run=" << run_ << " evt=" << evt_ << " mus_dxyPV().size()=" << mus_dxyPV().size() << " mus_dzPV().size()=" << mus_dzPV().size() << endl;
+	continue;
+      }
+
       //start selection
       //event
 
