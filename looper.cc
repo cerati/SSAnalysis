@@ -46,7 +46,11 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
     TFile *skim_file = 0;
     TTree* skim_tree = 0;
     if (makeskim) {
-      skim_file = new TFile(TString(currentFile->GetTitle()).ReplaceAll(".root","_newskim.root"),"recreate");
+      TString skim_file_name = TString(currentFile->GetTitle());
+      skim_file_name.ReplaceAll(".root","_newskim.root");
+      skim_file_name.ReplaceAll("/hadoop/cms/store/group/snt/csa14/MC_CMS3_V07-00-03/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/merged/","./");
+      skim_file = new TFile(skim_file_name,"recreate");
+      //locally
       skim_tree = (TTree*) tree->CloneTree(0, "fast");
       skim_tree->SetDirectory(skim_file);
       cms2.Init(skim_tree);
