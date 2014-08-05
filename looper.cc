@@ -112,11 +112,12 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       if (fobs.size()!=2) continue;
       DilepHyp hyp(fobs[0],fobs[1]);
       if (hyp.p4().mass()<8) continue;
-      if (hyp.leadLep().pt()<20) continue;
-      if (hyp.traiLep().pt()<10) continue;
 
-      //jets, ht
+      unsigned int ac_base = analysisCategory(hyp.leadLep(),hyp.traiLep());
+
+      //jets, ht, btags
       int njets = 0;
+      int nbtag = 0;
       float ht=0;
       //fixme: should add corrections
       for (unsigned int pfjidx=0;pfjidx<pfjets_p4().size();++pfjidx) {
@@ -134,16 +135,24 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	if (pfjets_p4()[pfjidx].pt()>40) {
 	  njets++;
 	  ht+=pfjets_p4()[pfjidx].pt();
+	  if (pfjets_combinedSecondaryVertexBJetTag()[pfjidx]>0.679) nbtag++;
 	}
       }
-      if (njets<2) continue;
-      if (ht<80.) continue;
 
-      //write skim here
+      passesBaselineCuts(njets, nbtag, met, ht, ac_base);
+      if (ac_base==0) continue;
+      int br = baselineRegion(nbtag);
+      unsigned int ac_sig = ac_base;
+      passesSignalRegionCuts(ht, ac_sig);
+      int sr = ac_sig!=0 ? signalRegion(njets, nbtag, met, ht) : 0;
+
+      //write skim here (only ss)
       if (makeskim) {
-	cms2.LoadAllBranches();
-	skim_file->cd(); 
-	skim_tree->Fill();
+	if (hyp.charge()!=0) {
+	  cms2.LoadAllBranches();
+	  skim_file->cd(); 
+	  skim_tree->Fill();
+	}
       }
 
       //leptons
@@ -222,6 +231,19 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	  makeFillHisto1D<TH1F,float>("hyp_ss_mll","hyp_ss_mll",100,0,1000,hyp.p4().mass());
 	  makeFillHisto1D<TH1F,float>("hyp_ss_ptll","hyp_ss_ptll",100,0,1000,hyp.p4().pt());
 	  makeFillHisto1D<TH1F,int>("hyp_ss_type","hyp_ss_type",5,0,5,type);
+
+	  if (ac_base & 1<<HighPt) {
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,br);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,sr);
+	  }
+	  if (ac_base & 1<<LowPt) {
+	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,br);
+	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,sr);
+	  }
+	  if (ac_base & 1<<VeryLowPt) {
+	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",30,0,30,br);
+	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",30,0,30,sr);
+	  }
 	  //check fakes (mother not W)
 	  if ( !isFromW(hyp.traiLep()) ) {
 	    if (abs(hyp.traiLep().pdgId())==13) {
