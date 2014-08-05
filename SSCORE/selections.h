@@ -3,6 +3,8 @@
 #include "CMS2.h"
 #include "TString.h"
 
+enum AnalysisBit { HighPt = 0, LowPt = 1, VeryLowPt = 2 };
+
 struct Lep {
   Lep(int pdgid, int idx):pdgid_(pdgid),idx_(idx){}
   int charge() {return -1*pdgid_/abs(pdgid_);}
@@ -69,5 +71,11 @@ bool passHLTTriggerPattern(const char*);
 bool isFromW(Lep lep);
 bool idIsCharm(int id);
 bool idIsBeauty(int id);
+
+unsigned int analysisCategory(Lep lep1, Lep lep2);
+void passesBaselineCuts(int njets, int nbtag, float met, float ht, unsigned int& analysisBitMask);
+int baselineRegion(int nbtag);
+void passesSignalRegionCuts(float ht, unsigned int& analysisBitMask);
+int signalRegion(int njets, int nbtag, float met, float ht);
 
 #endif

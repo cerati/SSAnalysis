@@ -647,7 +647,7 @@ bool isGoodElectron(unsigned int elidx){
 }
 
 bool isFakableMuon(unsigned int muidx){
-  if (mus_p4().at(muidx).pt()<10.) return false;//fixme shuold be 5 but need to adapt skim
+  if (mus_p4().at(muidx).pt()<5.) return false;
   if (isMuonFO(muidx)==0) return false;
   if (muRelIso03(muidx)>0.4 ) return false;
   return true;
@@ -661,4 +661,59 @@ bool isGoodMuon(unsigned int muidx){
 
 bool isFromW(Lep lep) {
   return (abs(lep.mc_motherid())==24 || (abs(lep.mc_motherid())==15 && genps_id_mother()[lep.mc3_motheridx()]) );
+}
+
+unsigned int analysisCategory(Lep lep1, Lep lep2) {
+  unsigned int result = 0;
+  if (lep1.pt()>20 && lep2.pt()>20) {
+    result |= 1<<HighPt;
+    result |= 1<<LowPt;
+    result |= 1<<VeryLowPt;
+  } else if (lep1.pt()>10 && lep2.pt()>10) {
+    result |= 1<<LowPt;
+    result |= 1<<VeryLowPt;
+  } else if (lep1.pt()>5 && lep2.pt()>5) {
+    //electrons must be at leat 10 GeV
+    if ( (abs(lep1.pdgId())==13 || lep1.pt()>10) && (abs(lep2.pdgId())==13 || lep2.pt()>10) ) result |= 1<<VeryLowPt;
+  }
+  return result;
+}
+
+void passesBaselineCuts(int njets, int nbtag, float met, float ht, unsigned int& analysisBitMask) {
+  if (analysisBitMask & 1<<HighPt) {
+    if (!(ht>80 && njets>=2 && (met>30 || ht>500)))  analysisBitMask &= ~(1<<HighPt);
+  } else {
+    if (!(ht>250 && njets>=2 && (met>30 || ht>500))) {
+      analysisBitMask &= ~(1<<LowPt);
+      analysisBitMask &= ~(1<<VeryLowPt);
+    }
+  }
+}
+
+int baselineRegion(int nbtag) {
+  if (nbtag==0) return 0;
+  else if (nbtag==1) return 10;
+  else return 20;
+}
+
+void passesSignalRegionCuts(float ht, unsigned int& analysisBitMask) {
+  if (analysisBitMask & 1<<HighPt) {
+    if (ht<200)  analysisBitMask &= ~(1<<HighPt);
+  } else {
+    if (ht<250) {
+      analysisBitMask &= ~(1<<LowPt);
+      analysisBitMask &= ~(1<<VeryLowPt);
+    }
+  }
+}
+
+//this assumes that the event has already passed all selections (including min ht)
+int signalRegion(int njets, int nbtag, float met, float ht) {
+  int result = 1;
+  if (nbtag==1) result+=10;
+  else if (nbtag>=2) result+=20;
+  if (met>120) result+=4;
+  if (njets>=4) result+=2;
+  if (ht>400) result+=1;
+  return result;
 }
