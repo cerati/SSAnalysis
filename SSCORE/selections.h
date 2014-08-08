@@ -20,6 +20,7 @@ struct Lep {
   int mc_id() { return abs(pdgid_)==11 ? cms2.els_mc_id().at(idx_) : cms2.mus_mc_id().at(idx_);}
   int mcidx() { return abs(pdgid_)==11 ? cms2.els_mcidx().at(idx_) : cms2.mus_mcidx().at(idx_);}
   int mc_motherid() {return abs(pdgid_)==11 ? cms2.els_mc_motherid().at(idx_) : cms2.mus_mc_motherid().at(idx_);}
+  LorentzVector mc_p4() { return abs(pdgid_)==11 ? cms2.els_mc_p4().at(idx_) : cms2.mus_mc_p4().at(idx_);}
 private:
   int pdgid_, idx_;
 };
@@ -68,9 +69,13 @@ int muTightID(unsigned int);
 TString triggerName(TString);
 bool passHLTTriggerPattern(const char*);
 
-bool isFromW(Lep lep);
 bool idIsCharm(int id);
 bool idIsBeauty(int id);
+bool isFromW(Lep lep);
+bool isFromB(Lep lep);
+bool isFromC(Lep lep);
+bool isFromLight(Lep lep);
+bool isFromLightFake(Lep lep);
 
 unsigned int analysisCategory(Lep lep1, Lep lep2);
 void passesBaselineCuts(int njets, int nbtag, float met, float ht, unsigned int& analysisBitMask);
