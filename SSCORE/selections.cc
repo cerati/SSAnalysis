@@ -660,7 +660,29 @@ bool isGoodMuon(unsigned int muidx){
 }
 
 bool isFromW(Lep lep) {
-  return (abs(lep.mc_motherid())==24 || (abs(lep.mc_motherid())==15 && genps_id_mother()[lep.mc3_motheridx()]) );
+  //status 1 leptons with mother W or with mother tau whose mother is W
+  if ( (abs(lep.mc_id())==11 || abs(lep.mc_id())==13) && (abs(lep.mc_motherid())==24 || (abs(lep.mc_motherid())==15 && abs(genps_id_mother()[lep.mc3_motheridx()])==24) ) ) return true;
+  //status 1 photons whose mother is a lepton, matching status 3 leptons whose mother is W
+  if ( abs(lep.mc_id())==22 && abs(lep.mc_motherid())==abs(lep.pdgId()) && abs(lep.mc3_id())==abs(lep.pdgId()) && abs(lep.mc3_motherid())==24 ) return true;
+  //everything else
+  return false;
+}
+bool isFromB(Lep lep) {
+  //true lepton from b quark
+  return (abs(lep.mc_id())==11 || abs(lep.mc_id())==13) && idIsBeauty(lep.mc_motherid());
+}
+bool isFromC(Lep lep) {
+  //true lepton from c quark
+  return (abs(lep.mc_id())==11 || abs(lep.mc_id())==13) && idIsCharm(lep.mc_motherid());
+}
+bool isFromLight(Lep lep) {
+  //true lepton from light quark
+  return (abs(lep.mc_id())==11 || abs(lep.mc_id())==13) && ( (abs(lep.mc_motherid())>200 && abs(lep.mc_motherid())<400) || (abs(lep.mc_motherid())>0 && abs(lep.mc_motherid())<4) );
+}
+bool isFromLightFake(Lep lep) {
+  //fake lepton from light quark: match light hadron or in any case does not match a lepton and mother is light hadron
+  return (abs(lep.mc_id())>200 && abs(lep.mc_id())<400) || 
+    ( abs(lep.mc_id())!=11 && abs(lep.mc_id())!=13 && ( (abs(lep.mc_motherid())>200 && abs(lep.mc_motherid())<400) || (abs(lep.mc_motherid())>0 && abs(lep.mc_motherid())<4) ) );
 }
 
 unsigned int analysisCategory(Lep lep1, Lep lep2) {
