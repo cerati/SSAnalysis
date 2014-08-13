@@ -340,8 +340,7 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	    else if (isFromC(hyp.leadLep()) ) leadType=FakeC;
 	    else if (isFromLight(hyp.leadLep())) leadType=FakeLightTrue;
 	    else if (isFromLightFake(hyp.leadLep())) leadType=FakeLightFake;
-	    else if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()>hyp.leadLep().pt()/2.) 
-	      leadType=FakeHiPtGamma;
+	    else if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()>hyp.leadLep().pt()/2.) leadType=FakeHiPtGamma;
 	    else {
 	      leadType=FakeUnknown;
 	      if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()<1.) 
