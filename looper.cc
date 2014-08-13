@@ -24,7 +24,8 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
   makebaby       = false;
   makehist       = true;
   maketext       = false;
-  makeskim       = 0;
+  makeSSskim     = 0;
+  makeQCDskim    = 0;
   
   if (makebaby) MakeBabyNtuple( Form( "%s_baby.root", prefix ) );
   if (makehist) CreateOutputFile( Form( "%s_histos.root", prefix ) );
@@ -45,10 +46,12 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
     //Skimmed output file - needs to be before cms2.Init(tree)
     TFile *skim_file = 0;
     TTree* skim_tree = 0;
-    if (makeskim) {
+    if (makeSSskim || makeQCDskim) {
       TString skim_file_name = TString(currentFile->GetTitle());
-      skim_file_name.ReplaceAll(".root","_newskim.root");
-      skim_file_name.ReplaceAll("/hadoop/cms/store/group/snt/csa14/MC_CMS3_V07-00-03/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/merged/","./");
+      if (makeSSskim) skim_file_name.ReplaceAll(".root","_skimSS.root");
+      else if (makeQCDskim) skim_file_name.ReplaceAll(".root","_skimQCD.root");
+      skim_file_name.Remove(0,skim_file_name.Last('/'));
+      skim_file_name.Prepend('.');
       skim_file = new TFile(skim_file_name,"recreate");
       //locally
       skim_tree = (TTree*) tree->CloneTree(0, "fast");
@@ -101,7 +104,7 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 
       //met
       float met = evt_pfmet();
-      if (met<30.) continue;
+      if (met<30. && !makeQCDskim) continue;
 
       //fakable objects
       vector<Lep> fobs;
@@ -116,6 +119,16 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	if (isFakableMuon(muidx)==0) continue;
 	Lep fomu(-1*mus_charge().at(muidx)*13,muidx);
 	fobs.push_back(fomu);
+      }
+
+      //write skim here (only qcd)
+      if (makeQCDskim) {
+	if (fobs.size()!=0) {
+	  cms2.LoadAllBranches();
+	  skim_file->cd(); 
+	  skim_tree->Fill();
+	  continue;
+	}
       }
 
       if (fobs.size()!=2) continue;
@@ -156,7 +169,7 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       int sr = ac_sig!=0 ? signalRegion(njets, nbtag, met, ht) : 0;
 
       //write skim here (only ss)
-      if (makeskim) {
+      if (makeSSskim) {
 	if (hyp.charge()!=0) {
 	  cms2.LoadAllBranches();
 	  skim_file->cd(); 
@@ -307,7 +320,7 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 
     }
 
-    if (makeskim) {
+    if (makeSSskim || makeQCDskim) {
       skim_file->cd(); 
       skim_tree->Write(); 
       skim_file->Close();
