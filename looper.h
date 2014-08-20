@@ -55,6 +55,10 @@ class looper
     return sqrt( pow(deltaPhi(lv1.phi(),lv2.phi()),2) + pow(lv1.eta()-lv2.eta(),2) );
   }
 
+  float mt(float pt1, float pt2, float dphi){
+    return 2*sqrt(pt1*pt2)*fabs(sin(dphi/2));
+  }
+
   template<class T, class U> void makeFillHisto1D(const char* name,const char* title,int nbins,U minx,U maxx,U value) {
     T* h = (T*) outf->Get(name);
     if (!h) {
@@ -79,6 +83,8 @@ class looper
   bool maketext;
   bool makeSSskim;
   bool makeQCDskim;
+  bool makeQCDtest;
+  bool makeDYtest;
   
   //ntuple, file
   TFile *babyFile_;

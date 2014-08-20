@@ -3,3 +3,5 @@ LinkDef_out*
 *.so
 *.o
 *.exe
+*.png
+*.root
