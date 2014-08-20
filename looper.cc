@@ -27,12 +27,17 @@ enum LeptonCategories { Prompt = 0, PromptWS = 1, PromptWF = 2, PromptFSR = 2,
 
 int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEvents) {
 
-  makebaby       = false;
-  makehist       = true;
-  maketext       = false;
+  makebaby       = 0;
+  makehist       = 1;
+  maketext       = 0;
+
+  makeQCDtest    = 1;
+  makeDYtest     = 0;
   makeSSskim     = 0;
   makeQCDskim    = 0;
-  
+
+  bool debug = 0;  
+
   if (makebaby) MakeBabyNtuple( Form( "%s_baby.root", prefix ) );
   if (makehist) CreateOutputFile( Form( "%s_histos.root", prefix ) );
 
@@ -98,10 +103,13 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       evt_   = evt_event();
       weight_ = isData ? 1. : evt_scale1fb();
 
+      if (debug) cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << endl;
+
       if (mus_dxyPV().size()!=mus_dzPV().size()) {
 	cout << "run=" << run_ << " evt=" << evt_ << " mus_dxyPV().size()=" << mus_dxyPV().size() << " mus_dzPV().size()=" << mus_dzPV().size() << endl;
 	continue;
       }
+
 
       //start selection
       //vertex
@@ -109,10 +117,12 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       if (firstGoodVertex()!=0) continue;
 
       //met
+      if (debug) cout << "met" << endl;
       float met = evt_pfmet();
-      if (met<30. && !makeQCDskim) continue;
+      if (met<30. && !makeQCDskim && !makeQCDtest && !makeDYtest) continue;
 
       //fakable objects
+      if (debug) cout << "fobs" << endl;
       vector<Lep> fobs;
       for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
 	//electron fo selection
@@ -126,9 +136,11 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	Lep fomu(-1*mus_charge().at(muidx)*13,muidx);
 	fobs.push_back(fomu);
       }
+      if (fobs.size()==0) continue;
 
       //write skim here (only qcd)
       if (makeQCDskim) {
+	if (debug) cout << "qcd skim" << endl;
 	if (fobs.size()!=0) {
 	  cms2.LoadAllBranches();
 	  skim_file->cd(); 
@@ -137,13 +149,24 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	}
       }
 
-      if (fobs.size()!=2) continue;
-      DilepHyp hyp(fobs[0],fobs[1]);
-      if (hyp.p4().mass()<8) continue;
-
-      unsigned int ac_base = analysisCategory(hyp.leadLep(),hyp.traiLep());
+      //leptons
+      if (debug) cout << "goodleps" << endl;
+      vector<Lep> goodleps;
+      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
+	//medium electron selection
+	if (isGoodElectron(elidx)==0) continue;
+	Lep goodel(-1*els_charge().at(elidx)*11,elidx);
+	goodleps.push_back(goodel);
+      }
+      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
+	//good muon selection
+	if (isGoodMuon(muidx)==0) continue;
+	Lep goodmu(-1*mus_charge().at(muidx)*13,muidx);
+	goodleps.push_back(goodmu);
+      }
 
       //jets, ht, btags
+      if (debug) cout << "jets" << endl;
       int njets = 0;
       int nbtag = 0;
       float ht=0;
@@ -153,6 +176,7 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	if (isLoosePFJet(pfjidx)==false) continue;
 	//add pu jet id pfjets_pileupJetId()>????
 	bool isLep = false;
+	//fixme: should be checked agains fo or good leptons?
 	for (unsigned int fo=0;fo<fobs.size();++fo) {
 	  if (deltaR(pfjets_p4()[pfjidx],fobs[fo].p4())<0.4) {
 	    isLep =true;
@@ -167,6 +191,62 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
 	}
       }
 
+      if (makeQCDtest) {
+	if (debug) cout << "qcdtest" << endl;
+	if (fobs.size()>1)continue; 
+	if (met>20.)continue; 
+	if (mt(fobs[0].pt(),met,deltaPhi(fobs[0].p4().phi(),evt_pfmetPhi()))>25.)continue; 
+	if (njets==0) continue;//fixme to be improved with pt cut and dR>1.0
+	//compute fake rate in QCD
+	for (unsigned int fo=0;fo<fobs.size();++fo) {
+	  if (isFromW(fobs[fo])) continue;
+	  //if (!isFromB(fobs[fo])) continue;//fixme
+	  int pdgid = abs(fobs[fo].pdgId());
+	  //denominator
+	  makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_den":"fr_el_den"),(pdgid==13?"fr_mu_den":"fr_el_den"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()));
+	  //numerator
+	  for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	    if (abs(goodleps[gl].pdgId())==pdgid && goodleps[gl].idx()==fobs[fo].idx()) {
+	      //cout << "goodleps.size()=" << goodleps.size() << endl;
+	      makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_num":"fr_el_num"),(pdgid==13?"fr_mu_num":"fr_el_num"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()));
+	      break;
+	    }
+	  }
+	}
+	continue;
+      }
+
+      if (makeDYtest) {
+	if (debug) cout << "dytest" << endl;
+	//check lepton selection efficiency
+	for (unsigned int gp=0;gp<genps_id().size();++gp) {
+	  int pdgid = abs(genps_id()[gp]);
+	  if (pdgid!=13 && pdgid!=11) continue;
+	  if (genps_id_mother()[gp]!=23) continue;
+	  if (genps_status()[gp]!=1) continue;
+	  if (genps_p4()[gp].eta()>2.55) continue;
+	  if (genps_p4()[gp].pt()<5) continue;
+	  if (pdgid==11 && genps_p4()[gp].pt()<10) continue;
+	  //denominator
+	  makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_den":"ef_el_den"),(pdgid==13?"ef_mu_den":"ef_el_den"),10,0.,50.,genps_p4()[gp].pt(),5,0.,2.5,fabs(genps_p4()[gp].eta()));
+	  //numerator
+	  for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	    if (abs(goodleps[gl].pdgId())==pdgid && deltaR(goodleps[gl].p4(),genps_p4()[gp])<0.1) {
+	      //cout << "goodleps.size()=" << goodleps.size() << endl;
+	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num":"ef_el_num"),(pdgid==13?"ef_mu_num":"ef_el_num"),10,0.,50.,genps_p4()[gp].pt(),5,0.,2.5,fabs(genps_p4()[gp].eta()));
+	      break;
+	    }
+	  }
+	}
+	continue;
+      }
+
+      if (fobs.size()!=2) continue;
+      DilepHyp hyp(fobs[0],fobs[1]);
+      if (hyp.p4().mass()<8) continue;
+
+      unsigned int ac_base = analysisCategory(hyp.leadLep(),hyp.traiLep());
+
       passesBaselineCuts(njets, nbtag, met, ht, ac_base);
       if (ac_base==0) continue;
       int br = baselineRegion(nbtag);
@@ -175,27 +255,13 @@ int looper::ScanChain( TChain* chain, const char* prefix, bool isData, int nEven
       int sr = ac_sig!=0 ? signalRegion(njets, nbtag, met, ht) : 0;
 
       //write skim here (only ss)
+      if (debug) cout << "ss skim" << endl;
       if (makeSSskim) {
 	if (hyp.charge()!=0) {
 	  cms2.LoadAllBranches();
 	  skim_file->cd(); 
 	  skim_tree->Fill();
 	}
-      }
-
-      //leptons
-      vector<Lep> goodleps;
-      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
-	//medium electron selection
-	if (isGoodElectron(elidx)==0) continue;
-	Lep goodel(-1*els_charge().at(elidx)*11,elidx);
-	goodleps.push_back(goodel);
-      }
-      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
-	//good muon selection
-	if (isGoodMuon(muidx)==0) continue;
-	Lep goodmu(-1*mus_charge().at(muidx)*13,muidx);
-	goodleps.push_back(goodmu);
       }
 
       //if (goodleps.size()==0 || goodleps.size()>2) continue;

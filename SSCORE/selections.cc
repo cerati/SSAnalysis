@@ -84,143 +84,46 @@ bool isTightPFJet(unsigned int pfJetIdx){
 //https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaCutBasedIdentification#Electron_ID_Working_Points
 bool isVetoElectron(unsigned int elIdx){
 
-  if(fabs(els_etaSC().at(elIdx)) <= 1.479){
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.8) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.15) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.04) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.2) return false; //is this wrt the correct PV?
-    if(eleRelIso03(elIdx) >= 0.15) return false; 
-    return true;
-
-  } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.01) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.7) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.04) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.2) return false; //is this wrt the correct PV?
-    if( eleRelIso03(elIdx) >= 0.15) return false; 
-    return true;
-
-  } else return false;
+  return false;
 
 }
 
 bool isLooseElectron(unsigned int elIdx){
 
-  if(fabs(els_etaSC().at(elIdx)) <= 1.479){
-    /*
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.15) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.2) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.15) return false; 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    */
-    //csa14 cuts
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.012) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.15) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.2) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.23) return false; 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    //csa14 cuts
-    return true;
-
-  } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
-    /*
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.009) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.10) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
-    if(els_hOverE().at(elIdx) >= 0.10) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.2) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.15 || (eleRelIso03(elIdx) >= 0.1 && els_p4().at(elIdx).pt() < 20) ) return false; 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    */
-    //csa14 cuts
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.014) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.10) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.033) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.2) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.25 /*|| (eleRelIso03(elIdx) >= 0.1 && els_p4().at(elIdx).pt() < 20)*/ ) return false; 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    //csa14 cuts
-    return true;
-
-  } else return false;
+  return false;
 
 }
 
 bool isElectronFO(unsigned int elIdx){//fixme
-
+  //same as medium but removed dxy cut and iso<0.6
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
-    /*
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.004) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
+    //csa14 cuts 50ns
+    if(fabs(els_dEtaIn().at(elIdx)) >= 0.015) return false; 
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.051) return false; 
     if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.15) return false; 
+    if(els_hOverE().at(elIdx) >= 0.10) return false; 
+    //if(fabs(els_dxyPV().at(elIdx)) >= 0.012) return false; //is this wrt the correct PV?
+    if(fabs(els_dzPV().at(elIdx)) >= 0.030) return false; //is this wrt the correct PV?
+    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.053) return false; // |1/E - 1/p|
+    if( eleRelIso03(elIdx) >= 0.6) return false; //fixme add dBeta PU correction
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    */
-    //csa14 cuts
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.009) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    //FO//if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.6) return false;//FO// 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    //csa14 cuts
+    //csa14 cuts 50ns
     return true;
 
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
-    /*
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
-    if(els_hOverE().at(elIdx) >= 0.10) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.15 || (eleRelIso03(elIdx) >= 0.1 && els_p4().at(elIdx).pt() < 20) ) return false; 
+    //csa14 cuts 50ns
+    if(fabs(els_dEtaIn().at(elIdx)) >= 0.023) return false; 
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.056) return false; 
+    if(els_sigmaIEtaIEta().at(elIdx) >= 0.030) return false; 
+    if(els_hOverE().at(elIdx) >= 0.099) return false; 
+    //if(fabs(els_dxyPV().at(elIdx)) >= 0.068) return false; //is this wrt the correct PV?
+    if(fabs(els_dzPV().at(elIdx)) >= 0.78) return false; //is this wrt the correct PV?
+    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.11) return false; // |1/E - 1/p|
+    if( eleRelIso03(elIdx) >= 0.6 ) return false; //fixme add dBeta PU correction
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    */
-    //csa14 cuts
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.012) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.031) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    //FO//if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.6 /*|| (eleRelIso03(elIdx) >= 0.1 && els_p4().at(elIdx).pt() < 20)*/ ) return false;//FO//
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    //csa14 cuts
+    //csa14 cuts 50ns
     return true;
 
   } else return false;
@@ -230,57 +133,33 @@ bool isElectronFO(unsigned int elIdx){//fixme
 bool isMediumElectron(unsigned int elIdx){
 
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
-    /*
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.004) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
+    //csa14 cuts 50ns
+    if(fabs(els_dEtaIn().at(elIdx)) >= 0.015) return false; 
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.051) return false; 
     if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.15) return false; 
+    if(els_hOverE().at(elIdx) >= 0.10) return false; 
+    if(fabs(els_dxyPV().at(elIdx)) >= 0.012) return false; //is this wrt the correct PV?
+    if(fabs(els_dzPV().at(elIdx)) >= 0.030) return false; //is this wrt the correct PV?
+    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.053) return false; // |1/E - 1/p|
+    if( eleRelIso03(elIdx) >= 0.14) return false; //fixme add dBeta PU correction
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    */
-    //csa14 cuts
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.009) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.23) return false; 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    //csa14 cuts
+    //csa14 cuts 50ns
     return true;
 
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
-    /*
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
-    if(els_hOverE().at(elIdx) >= 0.10) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.15 || (eleRelIso03(elIdx) >= 0.1 && els_p4().at(elIdx).pt() < 20) ) return false; 
+    //csa14 cuts 50ns
+    if(fabs(els_dEtaIn().at(elIdx)) >= 0.023) return false; 
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.056) return false; 
+    if(els_sigmaIEtaIEta().at(elIdx) >= 0.030) return false; 
+    if(els_hOverE().at(elIdx) >= 0.099) return false; 
+    if(fabs(els_dxyPV().at(elIdx)) >= 0.068) return false; //is this wrt the correct PV?
+    if(fabs(els_dzPV().at(elIdx)) >= 0.78) return false; //is this wrt the correct PV?
+    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.11) return false; // |1/E - 1/p|
+    if( eleRelIso03(elIdx) >= 0.15 ) return false; //fixme add dBeta PU correction
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    */
-    //csa14 cuts
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.012) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.031) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.21 /*|| (eleRelIso03(elIdx) >= 0.1 && els_p4().at(elIdx).pt() < 20)*/ ) return false; 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 1) return false;
-    //csa14 cuts
+    //csa14 cuts 50ns
     return true;
 
   } else return false;
@@ -290,57 +169,33 @@ bool isMediumElectron(unsigned int elIdx){
 bool isTightElectron(unsigned int elIdx){
 
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
-    /*
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.004) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
+    //csa14 cuts 50ns
+    if(fabs(els_dEtaIn().at(elIdx)) >= 0.012) return false; 
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.024) return false; 
     if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.1) return false; 
+    if(els_hOverE().at(elIdx) >= 0.074) return false; 
+    if(fabs(els_dxyPV().at(elIdx)) >= 0.0091) return false; //is this wrt the correct PV?
+    if(fabs(els_dzPV().at(elIdx)) >= 0.017) return false; //is this wrt the correct PV?
+    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.026) return false; // |1/E - 1/p|
+    if( eleRelIso03(elIdx) >= 0.10) return false; //fixme add dBeta PU correction
     if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 0) return false;
-    */
-    //csa14 cuts
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.009) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.18) return false; 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 0) return false;
-    //csa14 cuts
+    if( els_lost_pixelhits().at(elIdx) > 1) return false;
+    //csa14 cuts 50ns
     return true;
 
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
-    /*
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.005) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.02) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
-    if(els_hOverE().at(elIdx) >= 0.10) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.1 || (eleRelIso03(elIdx) >= 0.07 && els_p4().at(elIdx).pt() < 20) ) return false; 
+    //csa14 cuts 50ns
+    if(fabs(els_dEtaIn().at(elIdx)) >= 0.019) return false; 
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.043) return false; 
+    if(els_sigmaIEtaIEta().at(elIdx) >= 0.029) return false; 
+    if(els_hOverE().at(elIdx) >= 0.08) return false; 
+    if(fabs(els_dxyPV().at(elIdx)) >= 0.037) return false; //is this wrt the correct PV?
+    if(fabs(els_dzPV().at(elIdx)) >= 0.065) return false; //is this wrt the correct PV?
+    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.076) return false; // |1/E - 1/p|
+    if( eleRelIso03(elIdx) >= 0.14 ) return false; //fixme add dBeta PU correction
     if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 0) return false;
-    */
-    //csa14 cuts
-    if(fabs(els_dEtaIn().at(elIdx)) >= 0.010) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.02) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.031) return false; 
-    if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.02) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
-    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.16 /*|| (eleRelIso03(elIdx) >= 0.07 && els_p4().at(elIdx).pt() < 20)*/ ) return false; 
-    if( els_conv_vtx_flag().at(elIdx) ) return false;
-    if( els_lost_pixelhits().at(elIdx) > 0) return false;
-    //csa14 cuts
+    if( els_lost_pixelhits().at(elIdx) > 1) return false;
+    //csa14 cuts 50ns
     return true;
 
   } else return false;
