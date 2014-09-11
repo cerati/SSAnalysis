@@ -30,7 +30,7 @@ class looper
     delete babyTree_;
   };
   
-  int ScanChain (TChain*, const char*, bool isData, int nEvents = -1);
+  int ScanChain ( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest = "", int nEvents = -1);
   
   void MakeBabyNtuple (const char *);
   void InitBabyNtuple ();
@@ -59,21 +59,31 @@ class looper
     return 2*sqrt(pt1*pt2)*fabs(sin(dphi/2));
   }
 
-  template<class T, class U> void makeFillHisto1D(const char* name,const char* title,int nbins,U minx,U maxx,U value) {
+  template<class T, class U> void makeFillHisto1D(const char* name,const char* title,
+						  int nbins,U minx,U maxx,U value, 
+						  float weight = 1.) {
     T* h = (T*) outf->Get(name);
     if (!h) {
       outf->cd();
       h = new T(name, title, nbins, minx, maxx);
+      h->Sumw2();
     }
-    h->Fill(std::max(minx,std::min(value,U(h->GetBinCenter(nbins)))));
+    h->Fill(std::max(minx,std::min(value,U(h->GetBinCenter(nbins)))),weight);
   }
-  template<class T, class U> void makeFillHisto2D(const char* name,const char* title,int nbinsx,U minx,U maxx,U valuex,int nbinsy,U miny,U maxy,U valuey) {
+  template<class T, class U> void makeFillHisto2D(const char* name,const char* title,
+						  int nbinsx,U minx,U maxx,U valuex,
+						  int nbinsy,U miny,U maxy,U valuey, 
+						  float weight = 1.) {
     T* h = (T*) outf->Get(name);
     if (!h) {
       outf->cd();
       h = new T(name, title, nbinsx, minx, maxx, nbinsy, miny, maxy);
+      h->Sumw2();
     }
-    h->Fill(std::max(minx,std::min(valuex,U(h->GetBinCenter(nbinsx)))),std::max(miny,std::min(valuey,U(h->GetBinCenter(nbinsy)))));
+    h->Fill(std::max(minx,std::min(valuex,U(h->GetXaxis()->GetBinCenter(nbinsx)))),std::max(miny,std::min(valuey,U(h->GetYaxis()->GetBinCenter(nbinsy)))),weight);
+    float newvaluex = std::max(minx,std::min(valuex,U(h->GetXaxis()->GetBinCenter(nbinsx))));
+    float newvaluey = std::max(miny,std::min(valuey,U(h->GetYaxis()->GetBinCenter(nbinsy))));
+    if (TString(name)=="evt_mt_vs_pt" && valuey>80. && newvaluey<80.) std::cout << valuex << " " << newvaluex << " " << valuey << " " << newvaluey << std::endl;
   }
   
  private:

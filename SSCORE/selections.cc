@@ -220,21 +220,20 @@ bool isLooseMuon(unsigned int muIdx){
 
 bool isMuonFO(unsigned int muIdx){
   if (!isLooseMuon(muIdx)) return false;
-  if (mus_gfit_chi2().at(muIdx)/mus_gfit_ndof().at(muIdx) >= 50) return false; 
+  if (mus_gfit_chi2().at(muIdx)/mus_gfit_ndof().at(muIdx) >= 10)      return false; 
   if (mus_gfit_validSTAHits().at(muIdx) == 0)                         return false; 
   if (mus_numberOfMatchedStations().at(muIdx) < 2)                    return false;
   if (mus_validPixelHits().at(muIdx) == 0)                            return false;
   if (mus_nlayers().at(muIdx) < 6)                                    return false;
   if (mus_dxyPV().at(muIdx) > 0.2)                                    return false;
-  if (mus_dzPV().at(muIdx) > 0.1)                                     return false;
+  if (mus_dzPV().at(muIdx) > 0.2)                                     return false;
   return true;
 }
 
 bool isTightMuon(unsigned int muIdx){
   if (!isMuonFO(muIdx)) return false;
   //fixme not applying MIP requirement in calo
-  if (mus_gfit_chi2().at(muIdx)/mus_gfit_ndof().at(muIdx) >= 10) return false; 
-  if (mus_dxyPV().at(muIdx) > 0.005)                                  return false;
+  if (mus_dxyPV().at(muIdx) > 0.01)                                  return false;
   return true;
 }
 
@@ -504,7 +503,7 @@ bool isGoodElectron(unsigned int elidx){
 bool isFakableMuon(unsigned int muidx){
   if (mus_p4().at(muidx).pt()<5.) return false;
   if (isMuonFO(muidx)==0) return false;
-  if (muRelIso03(muidx)>0.4 ) return false;
+  if (muRelIso03(muidx)>1.0 ) return false;
   return true;
 }
 bool isGoodMuon(unsigned int muidx){

@@ -6,7 +6,7 @@
 
   TString sample = "dy";
 
-  TFile* f = TFile::Open(sample+"_histos.root");
+  TFile* f = TFile::Open(sample+"_histos_effic.root");
 
   TH2F* mud = (TH2F*) f->Get("ef_mu_den");
   TH2F* mun = (TH2F*) f->Get("ef_mu_num");
@@ -25,6 +25,7 @@
     }
   }
   TCanvas c1;
+  muf->GetZaxis()->SetRangeUser(0.,1.);
   muf->Draw("texte,colz");
   c1.RedrawAxis();
 
@@ -45,6 +46,7 @@
     }
   }
   TCanvas c2;
+  elf->GetZaxis()->SetRangeUser(0.,1.);
   elf->Draw("texte,colz");
   c2.RedrawAxis();
 
