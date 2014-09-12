@@ -40,9 +40,13 @@ int main() {
   chain_ttbar->Add("./TTbar_SkimSS/merged_ntuple_*.root");
   l->ScanChain(chain_ttbar,"ttbar","",0,"",-1);
 
-  // TChain *chain_qcd80ti120 = new TChain("Events");
-  // chain_qcd80ti120->Add("./QCD_Pt-80to120/merged_ntuple_*_skimQCD.root");
-  // l->ScanChain(chain_qcd80ti120,"qcd","pt-80to120",0,"QCDtest",-1);
+  TChain *chain_qcd80to120 = new TChain("Events");
+  chain_qcd80to120->Add("./QCD_Pt-80to120/merged_ntuple_*_skimQCD.root");
+  l->ScanChain(chain_qcd80to120,"qcd","pt-80to120",0,"QCDtest",-1);
+
+  TChain *chain_qcdmupt5_50to80 = new TChain("Events");
+  chain_qcdmupt5_50to80->Add("./QCD_Pt-50to80_MuEnrichedPt5/merged_ntuple_*_skimQCD.root");
+  l->ScanChain(chain_qcdmupt5_50to80,"qcd_mupt5_50to80","",0,"QCDtest",-1);
 
   TChain *chain_qcdmupt5 = new TChain("Events");
   chain_qcdmupt5->Add("./QCD_Pt-15to20_MuEnrichedPt5/merged_ntuple_*_skimQCD.root");

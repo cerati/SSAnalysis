@@ -209,12 +209,18 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (fobs.size()>1)continue; 
 	if (fobs[0].pt()<20) continue; 
 	makeFillHisto1D<TH1F,int>("njets","njets",20,0,20,njets,weight_);
+	for (unsigned int ipu=0;ipu<puInfo_bunchCrossing().size();ipu++)
+	  if (puInfo_bunchCrossing()[ipu]==0) 
+	    makeFillHisto1D<TH1F,float>("npu_true","npu_true",20,0,100,puInfo_trueNumInteractions()[ipu],weight_);
 	if (njets==0) continue;
 	float evtmt = mt(fobs[0].pt(),met,deltaPhi(fobs[0].p4().phi(),evt_pfmetPhi()));
 	float genmt = mt(fobs[0].pt(),gen_met(),deltaPhi(fobs[0].p4().phi(),gen_metPhi()));
+	float tkmet = trackerMET(0.2).met;
 	makeFillHisto1D<TH1F,float>("fo_pt","fo_pt",20,0,100,fobs[0].pt(),weight_);
 	makeFillHisto1D<TH1F,float>("fo_eta","fo_eta",10,-2.5,2.5,fobs[0].eta(),weight_);
 	makeFillHisto1D<TH1F,float>("evt_met","evt_met",10,0,100,met,weight_);
+	makeFillHisto1D<TH1F,float>("evt_tkmet","evt_tkmet",10,0,100,tkmet,weight_);
+	makeFillHisto1D<TH1F,float>("evt_minmet","evt_minmet",10,0,100,std::min(tkmet,met),weight_);
 	makeFillHisto1D<TH1F,float>("evt_mt","evt_mt",20,0,200,evtmt,weight_);
 	makeFillHisto2D<TH2F,float>("evt_mt_vs_met","evt_mt_vs_met",10,0,100,met,20,0,200,evtmt,weight_);
 	makeFillHisto2D<TH2F,float>("evt_mt_vs_pt", "evt_mt_vs_pt",20,0,100,fobs[0].pt(),20,0,200,evtmt,weight_);

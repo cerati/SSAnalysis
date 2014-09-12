@@ -83,4 +83,14 @@ int baselineRegion(int nbtag);
 void passesSignalRegionCuts(float ht, unsigned int& analysisBitMask);
 int signalRegion(int njets, int nbtag, float met, float ht);
 
+struct metStruct{
+  metStruct() : met(-999.), metphi(-999.), metx(-999.), mety(-999.), sumet(-999.)  {}
+  float met;
+  float metphi;
+  float metx;
+  float mety;
+  float sumet;
+};
+metStruct trackerMET(float deltaZCut = 0.2 /*, const std::vector<LorentzVector>* jets = 0*/);
+
 #endif
