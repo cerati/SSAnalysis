@@ -66,10 +66,15 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
     TTree* skim_tree = 0;
     if (makeSSskim || makeQCDskim) {
       TString skim_file_name = TString(currentFile->GetTitle());
-      if (makeSSskim) skim_file_name.ReplaceAll(".root","_skimSS.root");
-      else if (makeQCDskim) skim_file_name.ReplaceAll(".root","_skimQCD.root");
-      skim_file_name.Remove(0,skim_file_name.Last('/'));
-      skim_file_name.Prepend('.');
+      if (makeSSskim) {
+	skim_file_name.ReplaceAll(".root","_skimSS.root");
+	skim_file_name.Remove(0,skim_file_name.Last('/'));
+	skim_file_name.Prepend('.');
+      } else if (makeQCDskim) {
+	skim_file_name.ReplaceAll(".root","_skimQCD.root");
+	skim_file_name.Remove(0,skim_file_name.First('Q'));
+	skim_file_name.Remove(skim_file_name.First('T')-1,skim_file_name.Last('/')-skim_file_name.First('T')+1);
+      }
       skim_file = new TFile(skim_file_name,"recreate");
       //locally
       skim_tree = (TTree*) tree->CloneTree(0, "fast");
