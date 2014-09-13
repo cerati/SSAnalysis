@@ -221,11 +221,12 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	float evtmt = mt(fobs[0].pt(),met,deltaPhi(fobs[0].p4().phi(),evt_pfmetPhi()));
 	float genmt = mt(fobs[0].pt(),gen_met(),deltaPhi(fobs[0].p4().phi(),gen_metPhi()));
 	float tkmet = trackerMET(0.2).met;
+	float minmet = std::min(tkmet,met);
 	makeFillHisto1D<TH1F,float>("fo_pt","fo_pt",20,0,100,fobs[0].pt(),weight_);
 	makeFillHisto1D<TH1F,float>("fo_eta","fo_eta",10,-2.5,2.5,fobs[0].eta(),weight_);
 	makeFillHisto1D<TH1F,float>("evt_met","evt_met",10,0,100,met,weight_);
 	makeFillHisto1D<TH1F,float>("evt_tkmet","evt_tkmet",10,0,100,tkmet,weight_);
-	makeFillHisto1D<TH1F,float>("evt_minmet","evt_minmet",10,0,100,std::min(tkmet,met),weight_);
+	makeFillHisto1D<TH1F,float>("evt_minmet","evt_minmet",10,0,100,minmet,weight_);
 	makeFillHisto1D<TH1F,float>("evt_mt","evt_mt",20,0,200,evtmt,weight_);
 	makeFillHisto2D<TH2F,float>("evt_mt_vs_met","evt_mt_vs_met",10,0,100,met,20,0,200,evtmt,weight_);
 	makeFillHisto2D<TH2F,float>("evt_mt_vs_pt", "evt_mt_vs_pt",20,0,100,fobs[0].pt(),20,0,200,evtmt,weight_);
@@ -234,6 +235,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	makeFillHisto2D<TH2F,float>("gen_mt_vs_met","gen_mt_vs_met",10,0,100,gen_met(),20,0,200,genmt,weight_);
 	if (met<20 && evtmt<20) makeFillHisto1D<TH1F,int>("pass_metmt","pass_metmt",2,0,2,1,weight_);
 	else makeFillHisto1D<TH1F,int>("pass_metmt","pass_metmt",2,0,2,0,weight_);
+ 	if (minmet<20 && evtmt<20) makeFillHisto1D<TH1F,int>("pass_minmetmt","pass_minmetmt",2,0,2,1,weight_);
+	else makeFillHisto1D<TH1F,int>("pass_minmetmt","pass_minmetmt",2,0,2,0,weight_);
 	if (gen_met()<20 && genmt<20) makeFillHisto1D<TH1F,int>("pass_gen_metmt","pass_gen_metmt",2,0,2,1,weight_);
 	else makeFillHisto1D<TH1F,int>("pass_gen_metmt","pass_gen_metmt",2,0,2,0,weight_);
 	//compute fake rate
@@ -255,6 +258,31 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_num":"fr_el_num"),(pdgid==13?"fr_mu_num":"fr_el_num"),
 					    10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_);
 		makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_num_now":"fr_el_num_now"),(pdgid==13?"fr_mu_num_now":"fr_el_num_now"),
+					    10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),1.);
+		//std::cout << "scale1fb=" << evt_scale1fb() << endl;
+		break;
+	      }
+	    }
+	  }
+	}
+	//reco level selection (minmet)
+	if (minmet<20. && evtmt<20.) {
+	  for (unsigned int fo=0;fo<fobs.size();++fo) {
+	    //if (isFromW(fobs[fo])) continue;//fixme
+	    //if (!isFromB(fobs[fo])) continue;//fixme
+	    int pdgid = abs(fobs[fo].pdgId());
+	    //denominator
+	    makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_den_min":"fr_el_den_min"),(pdgid==13?"fr_mu_den_min":"fr_el_den_min"),
+					10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_);
+	    makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_den_min_now":"fr_el_den_min_now"),(pdgid==13?"fr_mu_den_min_now":"fr_el_den_min_now"),
+					10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),1.);
+	    //numerator
+	    for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	      if (abs(goodleps[gl].pdgId())==pdgid && goodleps[gl].idx()==fobs[fo].idx()) {
+		//cout << "goodleps.size()=" << goodleps.size() << endl;
+		makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_num_min":"fr_el_num_min"),(pdgid==13?"fr_mu_num_min":"fr_el_num_min"),
+					    10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_);
+		makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_num_min_now":"fr_el_num_min_now"),(pdgid==13?"fr_mu_num_min_now":"fr_el_num_min_now"),
 					    10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),1.);
 		//std::cout << "scale1fb=" << evt_scale1fb() << endl;
 		break;
