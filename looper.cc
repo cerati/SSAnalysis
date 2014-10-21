@@ -46,7 +46,9 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
   if (makebaby) MakeBabyNtuple( Form( "%s_baby%s.root", prefix.Data(), postfix.Data() ) );
   if (makehist) CreateOutputFile( Form( "%s_histos%s.root", prefix.Data(), postfix.Data() ) );
 
-  TFile* fr_file=TFile::Open("fakeRates_qcd_pt-50to170.root");
+  TFile* fr_file=0;
+  if (!makeDYtest&&!makeQCDtest&&!makeSSskim&&!makeQCDskim) 
+    fr_file=TFile::Open("fakeRates_qcd_pt-50to170.root");
 
   // File Loop
   if( nEvents == -1 ) nEvents = chain->GetEntries();
@@ -120,7 +122,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       evt_   = evt_event();
       weight_ = isData ? 1. : lumi*evt_scale1fb();
       if (prefix=="wj") weight_*=30;//fixme using only a subset of events
-      if (prefix=="dy") weight_*=25;//fixme using only a subset of events
+      //if (prefix=="dy") weight_*=25;//fixme using only a subset of events
 
       if (newfile) {
 	cout << "weight=" << weight_ << endl;
@@ -345,7 +347,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      //cout << "goodleps.size()=" << goodleps.size() << endl;
 	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num":"ef_el_num"),(pdgid==13?"ef_mu_num":"ef_el_num"),10,0.,50.,genps_p4()[gp].pt(),5,0.,2.5,fabs(genps_p4()[gp].eta()),weight_);
 	      //charge flip
-	      if (goodleps[gl].pdgId()==-genps_id()[gp]) makeFillHisto2D<TH2F,float>((pdgid==13?"flip_mu":"flip_el"),(pdgid==13?"flip_mu":"flip_el"),10,0.,50.,genps_p4()[gp].pt(),5,0.,2.5,fabs(genps_p4()[gp].eta()),weight_);
+	      makeFillHisto2D<TH2F,float>((pdgid==13?"flip_mu_den":"flip_el_den"),(pdgid==13?"flip_mu_den":"flip_el_den"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
+	      if (goodleps[gl].pdgId()==-genps_id()[gp]) makeFillHisto2D<TH2F,float>((pdgid==13?"flip_mu_num":"flip_el_num"),(pdgid==13?"flip_mu_num":"flip_el_num"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
 	      break;
 	    }
 	  }
@@ -645,7 +648,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
     f.Close();
   }
 
-  fr_file->Close();
+  if (fr_file) fr_file->Close();
 
   if ( nEventsChain != nEventsTotal ) {
     std::cout << "ERROR: number of events from files is not equal to total number of events" << std::endl;
