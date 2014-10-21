@@ -46,6 +46,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
   if (makebaby) MakeBabyNtuple( Form( "%s_baby%s.root", prefix.Data(), postfix.Data() ) );
   if (makehist) CreateOutputFile( Form( "%s_histos%s.root", prefix.Data(), postfix.Data() ) );
 
+  TFile* fr_file=TFile::Open("fakeRates_qcd_pt-50to170.root");
+
   // File Loop
   if( nEvents == -1 ) nEvents = chain->GetEntries();
   unsigned int nEventsChain = nEvents;
@@ -85,6 +87,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
     // Event Loop
     cms2.Init(tree);
     unsigned int nEvents = tree->GetEntries();
+    bool newfile = true;
 
     for(unsigned int event = 0; event < nEvents; ++event) {
     
@@ -118,6 +121,11 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       weight_ = isData ? 1. : lumi*evt_scale1fb();
       if (prefix=="wj") weight_*=30;//fixme using only a subset of events
       if (prefix=="dy") weight_*=25;//fixme using only a subset of events
+
+      if (newfile) {
+	cout << "weight=" << weight_ << endl;
+	newfile = false;
+      }
 
       if (debug) cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << endl;
 
@@ -325,8 +333,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  int pdgid = abs(genps_id()[gp]);
 	  if (pdgid!=13 && pdgid!=11) continue;
 	  if (genps_id_mother()[gp]!=23) continue;
-	  if (genps_status()[gp]!=1) continue;
-	  if (genps_p4()[gp].eta()>2.55) continue;
+	  if (genps_status()[gp]!=1) continue;//is this needed?
+	  if (genps_p4()[gp].eta()>2.5) continue;
 	  if (genps_p4()[gp].pt()<5) continue;
 	  if (pdgid==11 && genps_p4()[gp].pt()<10) continue;
 	  //denominator
@@ -336,6 +344,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    if (abs(goodleps[gl].pdgId())==pdgid && deltaR(goodleps[gl].p4(),genps_p4()[gp])<0.1) {
 	      //cout << "goodleps.size()=" << goodleps.size() << endl;
 	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num":"ef_el_num"),(pdgid==13?"ef_mu_num":"ef_el_num"),10,0.,50.,genps_p4()[gp].pt(),5,0.,2.5,fabs(genps_p4()[gp].eta()),weight_);
+	      //charge flip
+	      if (goodleps[gl].pdgId()==-genps_id()[gp]) makeFillHisto2D<TH2F,float>((pdgid==13?"flip_mu":"flip_el"),(pdgid==13?"flip_mu":"flip_el"),10,0.,50.,genps_p4()[gp].pt(),5,0.,2.5,fabs(genps_p4()[gp].eta()),weight_);
 	      break;
 	    }
 	  }
@@ -366,9 +376,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	}
       }
 
-      //if (goodleps.size()==0 || goodleps.size()>2) continue;
-
-      //compute fake rate in ss ttbar (should be moved after which selection? ss at least?)
+      //compute fake rate in ss ttbar
       if (hyp.charge()!=0) {
 	for (unsigned int fo=0;fo<fobs.size();++fo) {
 	  if (isFromW(fobs[fo])) continue;
@@ -376,12 +384,28 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  //denominator
 	  makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_den":"fr_el_den"),(pdgid==13?"fr_mu_den":"fr_el_den"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_);
 	  //numerator
+	  bool isNumerator = false;
 	  for (unsigned int gl=0;gl<goodleps.size();++gl) {
 	    if (abs(goodleps[gl].pdgId())==pdgid && goodleps[gl].idx()==fobs[fo].idx()) {
 	      //cout << "goodleps.size()=" << goodleps.size() << endl;
 	      makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_num":"fr_el_num"),(pdgid==13?"fr_mu_num":"fr_el_num"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_);
+	      isNumerator = true;
 	      break;
 	    }
+	  }
+	  if (!isNumerator) {
+	    TH2F* fr_h = (TH2F*) fr_file->Get((pdgid==13?"fr_mu_gen":"fr_el_gen"));
+	    float maxPt=fr_h->GetXaxis()->GetBinUpEdge(fr_h->GetXaxis()->GetNbins())-0.01; 
+	    float maxEta=fr_h->GetYaxis()->GetBinUpEdge(fr_h->GetYaxis()->GetNbins())-0.01;
+	    float pt = fobs[fo].pt();
+	    float eta = fabs(fobs[fo].eta());
+	    if (pt>maxPt) pt=maxPt;
+	    if (eta>maxEta) eta=maxEta;
+	    float fr = fr_h->GetBinContent(fr_h->FindBin(pt,eta));
+	    float fre = fr_h->GetBinError(fr_h->FindBin(pt,eta));
+	    float frW = fr/(1.-fr);
+	    std::cout << "fake rate=" << fr << " +/- " << fre << std::endl;
+	    makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_close":"fr_el_close"),(pdgid==13?"fr_mu_close":"fr_el_close"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_*frW);
 	  }
 	}
       }
@@ -418,6 +442,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  //same sign
 	  cout << endl << "NEW SS EVENT" << endl << endl;
 
+	  /*
  	  cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
 	       << " mcid=" << hyp.leadLep().mc_id() << " mcp4=" << hyp.leadLep().mc_p4() << " mother_id=" << hyp.leadLep().mc_motherid()
 	       << " mc3idx=" << hyp.leadLep().mc3idx() << " mc3_id=" << hyp.leadLep().mc3_id() 
@@ -430,6 +455,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	       << " mc3_motheridx=" << hyp.traiLep().mc3_motheridx() << " mc3_mother_id=" << hyp.traiLep().mc3_motherid()
 	       << " genps_id_mother()[hyp.traiLep().mc3_motheridx()]=" << genps_id_mother()[hyp.traiLep().mc3_motheridx()]
 	       << endl;
+	  */
 
 	  makeFillHisto1D<TH1F,int>("hyp_ss_njets","hyp_ss_njets",20,0,20,njets,weight_);
 	  makeFillHisto1D<TH1F,int>("hyp_ss_nbtag","hyp_ss_nbtag",20,0,20,nbtag,weight_);
@@ -499,6 +525,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_other_mc3","hyp_ss_trail_"+lt+"_other_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
 		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_other_mc3_mother","hyp_ss_trail_"+lt+"_other_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
 		makeFillHisto1D<TH1F,float>("hyp_ss_trail_"+lt+"_category_other_pt","hyp_ss_trail_"+lt+"_category_other_pt",50,0,100,hyp.traiLep().pt(),weight_);
+		/*
 		cout << "UNKNOWN FAKE LEPTON " << lt << endl;
 		cout << "trai lep id=" << hyp.traiLep().pdgId() << " p4=" << hyp.traiLep().p4() 
 		     << " mcid=" << hyp.traiLep().mc_id() << " mcp4=" << hyp.traiLep().mc_p4()  << " mother_id=" << hyp.traiLep().mc_motherid()
@@ -506,6 +533,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		     << " mc3_motheridx=" << hyp.traiLep().mc3_motheridx() << " mc3_mother_id=" << hyp.traiLep().mc3_motherid()
 		     << " genps_id_mother()[hyp.traiLep().mc3_motheridx()]=" << genps_id_mother()[hyp.traiLep().mc3_motheridx()]
 		     << endl;
+		*/
 	      }
 	    }
 
@@ -539,6 +567,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_category","hyp_ss_lead_"+ll+"_category",End,0,End,All9999,weight_);
 	      else {
 		makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_category","hyp_ss_lead_"+ll+"_category",End,0,End,Other,weight_);
+		/*
 		cout << "UNKNOWN FAKE LEPTON " << ll << endl;
 		cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
 		     << " mcid=" << hyp.leadLep().mc_id() << " mcp4=" << hyp.leadLep().mc_p4() << " mother_id=" << hyp.leadLep().mc_motherid()
@@ -546,6 +575,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		     << " mc3_motheridx=" << hyp.leadLep().mc3_motheridx() << " mc3_mother_id=" << hyp.leadLep().mc3_motherid()
 		     << " genps_id_mother()[hyp.leadLep().mc3_motheridx()]=" << genps_id_mother()[hyp.leadLep().mc3_motheridx()]
 		     << endl;
+		*/
 	      }
 	    }
 
@@ -584,6 +614,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,int>("hyp_leadprompttype","hyp_leadprompttype",5,0,5,leadprompttype,weight_);
 	  }
 
+	  /*
 	  //dump genps
 	  for (unsigned int gp_idx=0;gp_idx<genps_p4().size();++gp_idx) {
 	    cout << "gp idx=" << gp_idx << " id=" << genps_id()[gp_idx] 
@@ -592,7 +623,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		 << " p4=" << genps_p4()[gp_idx]
 		 << endl;    
 	  }
-
+	  */
 
 	} else {
 	  //opposite sign
@@ -613,6 +644,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
     delete tree;
     f.Close();
   }
+
+  fr_file->Close();
 
   if ( nEventsChain != nEventsTotal ) {
     std::cout << "ERROR: number of events from files is not equal to total number of events" << std::endl;

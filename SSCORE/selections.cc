@@ -487,7 +487,7 @@ bool idIsBeauty(int id) {
 
 
 bool isFakableElectron(unsigned int elidx){
-  if (els_p4().at(elidx).pt()<10.) return false;
+  if (els_p4().at(elidx).pt()<20.) return false;//fixme
   if (isElectronFO(elidx)==0) return false;
   if (threeChargeAgree(elidx)==0) return false;
   return true;
@@ -501,7 +501,7 @@ bool isGoodElectron(unsigned int elidx){
 }
 
 bool isFakableMuon(unsigned int muidx){
-  if (mus_p4().at(muidx).pt()<5.) return false;
+  if (mus_p4().at(muidx).pt()<20.) return false;//fixme
   if (isMuonFO(muidx)==0) return false;
   if (muRelIso03(muidx)>1.0 ) return false;
   return true;
