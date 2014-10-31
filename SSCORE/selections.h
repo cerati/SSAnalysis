@@ -45,6 +45,8 @@ bool isFakableElectron(unsigned int);
 bool isFakableMuon(unsigned int);
 bool isGoodElectron(unsigned int);
 bool isGoodMuon(unsigned int);
+bool isGoodVetoElectron(unsigned int);
+bool isGoodVetoMuon(unsigned int);
 
 bool isGoodVertex(size_t ivtx);
 int firstGoodVertex();
