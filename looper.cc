@@ -19,6 +19,8 @@
 using namespace tas;
 using namespace std;
 
+bool ptsort (int i,int j) { return (genps_p4()[i].pt()>genps_p4()[j].pt()); }
+
 //fixme: put WF and FSR in different categories
 enum LeptonCategories { Prompt = 0, PromptWS = 1, PromptWF = 2, PromptFSR = 2, 
 			FakeLightTrue = 3, FakeC = 4, FakeB = 5, FakeLightFake = 6, FakeHiPtGamma = 7, 
@@ -31,12 +33,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
   makehist       = 1;
   maketext       = 0;
 
-  makeQCDtest    = 0;
-  makeDYtest     = 0;
-  makeSSskim     = 0;
-  makeQCDskim    = 0;
+  bool makeQCDtest    = 0;
+  bool makeDYtest     = 0;
+  bool makeWZtest     = 0;
+  bool makeSSskim     = 0;
+  bool makeQCDskim    = 0;
   if (whatTest=="QCDtest") makeQCDtest    = 1;
   if (whatTest=="DYtest" ) makeDYtest     = 1;
+  if (whatTest=="WZtest" ) makeWZtest     = 1;
   if (whatTest=="SSskim" ) makeSSskim     = 1;
   if (whatTest=="QCDskim") makeQCDskim    = 1;
 
@@ -114,7 +118,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //print info
       if (maketext) printEvent();
 
-      float lumi = 5.;
+      float lumi = 10.;
 
       //fill baby
       run_   = evt_run();
@@ -189,6 +193,22 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (isGoodMuon(muidx)==0) continue;
 	Lep goodmu(-1*mus_charge().at(muidx)*13,muidx);
 	goodleps.push_back(goodmu);
+      }
+
+      //veto leptons
+      if (debug) cout << "vetoleps" << endl;
+      vector<Lep> vetoleps;
+      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
+	//medium electron selection
+	if (isGoodVetoElectron(elidx)==0) continue;
+	Lep vetoel(-1*els_charge().at(elidx)*11,elidx);
+	vetoleps.push_back(vetoel);
+      }
+      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
+	//veto muon selection
+	if (isGoodVetoMuon(muidx)==0) continue;
+	Lep vetomu(-1*mus_charge().at(muidx)*13,muidx);
+	vetoleps.push_back(vetomu);
       }
 
       //jets, ht, btags
@@ -356,6 +376,234 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	continue;
       }
 
+      if (makeWZtest) {
+
+	weight_=1.;//fixme
+
+	makeFillHisto1D<TH1F,float>("vetoleps_size","vetoleps_size",10,-0.5,9.5,vetoleps.size(),weight_);
+	makeFillHisto1D<TH1F,float>("goodleps_size","goodleps_size",10,-0.5,9.5,goodleps.size(),weight_);
+
+	if (goodleps.size()==2) {
+	  makeFillHisto1D<TH1F,float>("vetoleps_size_g2","vetoleps_size_g2",10,-0.5,9.5,vetoleps.size(),weight_);
+	  if (goodleps[0].charge()!=goodleps[1].charge()) continue;
+	  makeFillHisto1D<TH1F,float>("vetoleps_size_g2ss","vetoleps_size_g2ss",10,-0.5,9.5,vetoleps.size(),weight_);
+
+	  bool noZmass = true;
+	  for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	    for (unsigned int vl=0;vl<vetoleps.size();++vl) {
+	      if ( fabs(ROOT::Math::VectorUtil::DeltaR(goodleps[gl].p4(),vetoleps[vl].p4()))<0.001 ) continue;
+	      if ( goodleps[gl].pdgId()!=-vetoleps[vl].pdgId() ) continue; 
+	      float mll = (goodleps[gl].p4()+vetoleps[vl].p4()).mass();
+	      if (fabs(mll-91.2)<15) {
+		noZmass = false;
+		break;
+	      }
+	    }
+	  }
+	  if (vetoleps.size()>2) makeFillHisto1D<TH1F,float>("noZmass_v3g2ss","noZmass_v3g2ss",2,0,2,noZmass,weight_);
+
+	  if (vetoleps.size()==2 || noZmass) {
+
+	    makeFillHisto1D<TH1F,float>("fobs_size_noZv3g2ss","fobs_size_noZv3g2ss",10,-0.5,9.5,fobs.size(),weight_);
+	    if (fobs.size()>2) continue;
+
+	    cout << "new gps" << endl;
+
+	    float mz = -999.;
+	    float mw = -999.;
+	    float maxAbsEta = -1;
+	    float minPt = 999999.;
+	    vector<unsigned int> gpidv;
+	    for (unsigned int gp=0;gp<genps_id().size();++gp) {
+	      int pdgid = abs(genps_id()[gp]);
+	      if (pdgid==23) {
+		//cout << "Z status=" << genps_status()[gp] << " mother=" << genps_id_mother()[gp]  << endl;
+		if (genps_status()[gp]==22) mz = genps_p4()[gp].mass();
+	      }
+	      if (pdgid==24) {
+		//cout << "W status=" << genps_status()[gp] << " mother=" << genps_id_mother()[gp]  << endl;
+		if (genps_status()[gp]==22) mw = genps_p4()[gp].mass();
+	      }
+	      if (pdgid!=13 && pdgid!=11 && pdgid!=15) continue;
+	      if (pdgid==11) cout << "electron status=" << genps_status()[gp] << " mother=" << genps_id_mother()[gp] << " pt=" << genps_p4()[gp].pt() << endl;
+	      if (pdgid==13) cout << "muon status=" << genps_status()[gp] << " mother=" << genps_id_mother()[gp] << " pt=" << genps_p4()[gp].pt() << endl;
+	      if (pdgid==15) cout << "tau status=" << genps_status()[gp] << " mother=" << genps_id_mother()[gp] << " pt=" << genps_p4()[gp].pt() << endl;
+	      if (genps_id_mother()[gp]!=23 && abs(genps_id_mother()[gp])!=24) continue;
+	      if (pdgid==11 && genps_status()[gp]!=1) continue;//is this needed?
+	      if (pdgid==13 && genps_status()[gp]!=1) continue;//is this needed?
+	      if (pdgid==15 && genps_status()[gp]!=2) continue;//is this needed?
+	      gpidv.push_back(gp);
+	      if (fabs(genps_p4()[gp].eta())>maxAbsEta) maxAbsEta=fabs(genps_p4()[gp].eta());
+	      if (genps_p4()[gp].pt()<minPt) minPt=genps_p4()[gp].pt();
+	    }
+
+	    if (gpidv.size()==1) {
+	      //cout << "size1" << endl;
+	      for (unsigned int gp=0;gp<genps_id().size();++gp) {
+		int pdgid = abs(genps_id()[gp]);
+		//cout << "id=" << genps_id()[gp] << " status=" << genps_status()[gp] << " mother=" << genps_id_mother()[gp] << " pt=" << genps_p4()[gp].pt() << endl;
+		if (genps_status()[gp]!=1 && genps_status()[gp]!=2) continue;
+		if (abs(genps_id_mother()[gp])>=24) continue;//Ws are ok (size=1), don't want other resonances, but somehow Z leptons don't have mother id=23
+		if ((pdgid==11 && genps_status()[gp]==1) || (pdgid==13 && genps_status()[gp]==1) || (pdgid==15 && genps_status()[gp]==2)) gpidv.push_back(gp);
+	      }
+	    }
+	    if (gpidv.size()>3) {
+	      cout << "size>3 is " << gpidv.size() << endl;
+	      for (unsigned int gp=0;gp<gpidv.size() && gpidv.size()>3;++gp) {
+		cout << "id=" << genps_id()[gpidv[gp]] << " status=" << genps_status()[gpidv[gp]] << " mother=" << genps_id_mother()[gpidv[gp]] << " pt=" << genps_p4()[gpidv[gp]].pt() << endl;
+		if (abs(genps_id()[gpidv[gp]])==15) {//extra leps can be duplicates from tau decays
+		  gpidv.erase(gpidv.begin()+gp);
+		  cout << "erased position=" << gp << " new size=" << gpidv.size() << endl;
+		  gp--;
+		}
+	      }
+	    }
+	    if (gpidv.size()>3) {
+	      cout << "sorting size>3 is " << gpidv.size() << endl;
+	      //sort by pt and erase exceeding items
+	      std::sort(gpidv.begin(),gpidv.end(),ptsort);
+	      gpidv.erase(gpidv.begin()+3,gpidv.end());
+	      for (unsigned int gp=0;gp<gpidv.size();++gp) {
+		  cout << "id=" << genps_id()[gpidv[gp]] << " status=" << genps_status()[gpidv[gp]] 
+		       << " mother=" << genps_id_mother()[gpidv[gp]] << " pt=" << genps_p4()[gpidv[gp]].pt() << endl;
+		}     
+	    }
+	    if (gpidv.size()!=3) {
+	      cout << "anomalous size=" << gpidv.size() << endl;
+	      for (unsigned int gp=0;gp<gpidv.size();++gp) {
+		cout << "sel id=" << genps_id()[gpidv[gp]] << " status=" << genps_status()[gpidv[gp]] << " mother=" << genps_id_mother()[gpidv[gp]] << " pt=" << genps_p4()[gpidv[gp]].pt() << endl;
+	      }
+	      for (unsigned int gp=0;gp<genps_id().size();++gp) {
+		cout << "gps id=" << genps_id()[gp] << " status=" << genps_status()[gp] << " mother=" << genps_id_mother()[gp] << " pt=" << genps_p4()[gp].pt() << endl;
+	      }
+	    }
+
+	    int glepfromZ = -1;
+	    for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	      //easy to check that it is not from W
+	      if (isFromW(goodleps[gl])==0 ||goodleps[gl].mc_motherid()==23) {
+		glepfromZ=gl; 
+		break;
+	      }
+	    }
+
+	    makeFillHisto1D<TH1F,float>("gps_size_g2f2","gps_size_g2f2",10,-0.5,9.5,gpidv.size(),weight_);
+	    makeFillHisto1D<TH1F,float>("mz_g2f2","mz_g2f2",100,0.,200,mz,weight_);
+	    makeFillHisto1D<TH1F,float>("mw_g2f2","mw_g2f2",100,0.,200,mw,weight_);
+	    if (gpidv.size()==3) {
+	      makeFillHisto1D<TH1F,float>("maxAbsEta_g2f2s3","maxAbsEta_g2f2s3",100,0.,5.0,maxAbsEta,weight_);
+	      if (maxAbsEta<2.4) makeFillHisto1D<TH1F,float>("minPt_g2f2s3eta24","minPt_g2f2s3eta24",100,0.,200.0,minPt,weight_);
+	      else continue;
+
+	      //match goodleps and vetoleps with genps
+	      cout << "check duplicates" << endl;
+	      int unmatches = 0;
+	      for (unsigned int gp=0;gp<gpidv.size();++gp) {
+		unsigned int gpid = gpidv[gp];
+		int pdgid = abs(genps_id()[gpid]);
+		/*
+		cout << "sel id=" << genps_id()[gpid] << " status=" << genps_status()[gpid] 
+		     << " mother=" << genps_id_mother()[gpid] << " pt=" << genps_p4()[gpid].pt() << endl;
+		*/
+		bool glmatch = false;
+		for (unsigned int gl=0;gl<goodleps.size();++gl) {
+		  if (goodleps[gl].mc3idx()==int(gpid) || 
+		      fabs(ROOT::Math::VectorUtil::DeltaR(goodleps[gl].mc_p4(),genps_p4()[gpid]))<0.1 || 
+		      fabs(ROOT::Math::VectorUtil::DeltaR(goodleps[gl].p4(),genps_p4()[gpid]))<0.1) {
+		    cout << "match lep and gp, pt=" << goodleps[gl].mc_p4().pt() << " " << genps_p4()[gpid].pt() << endl;
+		    glmatch = true;
+		  }
+		}
+		if (glmatch==0) {
+		  unmatches++;
+		  int pfidx = -1;
+		  float mindpt = 0.2;
+		  for (unsigned int pfi=0; pfi<pfcands_p4().size(); ++pfi){
+		    if ( pfcands_charge()[pfi]==0 ) continue;
+		    float dR = fabs(ROOT::Math::VectorUtil::DeltaR(pfcands_p4()[pfi],genps_p4()[gpid]));
+		    float dpt = fabs((pfcands_p4()[pfi].pt()-genps_p4()[gpid].pt())/genps_p4()[gpid].pt());
+		    if ( dR<0.1 && dpt<mindpt ) {
+		      pfidx=pfi;
+		      mindpt=dpt;
+		      //break;
+		    }
+		  }
+		  makeFillHisto1D<TH1F,float>("pdgId_noGL","pdgId_noGL",20,0.,20,pdgid,weight_);
+		  makeFillHisto1D<TH1F,float>("momId_noGL","momId_noGL",30,0.,30,abs(genps_id_mother()[gpid]),weight_);
+		  if (pdgid==15) continue;
+		  if (pfidx>=0) {
+		    makeFillHisto1D<TH1F,float>("deltapt_pfmatch","deltapt_pfmatch",100,-1.,1,(pfcands_p4()[pfidx].pt()-genps_p4()[gpid].pt())/genps_p4()[gpid].pt(),weight_);
+		    makeFillHisto1D<TH1F,float>("pfid_pfmatch","pfid_pfmatch",250,0,250,abs(pfcands_particleId()[pfidx]),weight_);
+		  } else {
+		    if (pdgid==11) makeFillHisto2D<TH2F,float>("pteta_el_noPFnoGLeta24","pteta_el_noPFnoGLeta24",5,0.,50.0,genps_p4()[gpid].pt(),5,0.,2.5,fabs(genps_p4()[gpid].eta()),weight_);
+		    if (pdgid==13) makeFillHisto2D<TH2F,float>("pteta_mu_noPFnoGLeta24","pteta_mu_noPFnoGLeta24",5,0.,50.0,genps_p4()[gpid].pt(),5,0.,2.5,fabs(genps_p4()[gpid].eta()),weight_);
+		  }
+		  if (pdgid==11) {
+		    makeFillHisto1D<TH1F,float>("eta_el_noGL","eta_el_noGL",100,0.,5.0,fabs(genps_p4()[gpid].eta()),weight_);
+		    if (fabs(genps_p4()[gpid].eta())<2.4) {
+		      makeFillHisto1D<TH1F,float>("pt_el_noGLeta24","pt_el_noGLeta24",100,0.,200.0,genps_p4()[gpid].pt(),weight_);
+		      if (pfidx>=0&&glepfromZ>=0) {
+			//makeFillHisto1D<TH1F,float>("mll_elpf_noGLeta24","mll_elpf_noGLeta24",40,0.,200.0,(goodleps[glepfromZ].p4()+pfcands_p4()[pfidx]).mass(),weight_);
+			float mass0 = (goodleps[0].p4()+pfcands_p4()[pfidx]).mass();
+			float mass1 = (goodleps[1].p4()+pfcands_p4()[pfidx]).mass();
+			makeFillHisto1D<TH1F,float>("mll_elpf_noGLeta24","mll_elpf_noGLeta24",40,0.,200.0,(fabs(mass0-91.2)<fabs(mass1-91.2)?mass0:mass1),weight_);
+			makeFillHisto1D<TH1F,float>("mz_elpf_noGLeta24","mz_elpf_noGLeta24",40,0.,200.0,mz,weight_);
+		      }
+		    }
+		  }		  
+		  if (pdgid==13) {
+		    makeFillHisto1D<TH1F,float>("eta_mu_noGL","eta_mu_noGL",100,0.,5.0,fabs(genps_p4()[gpid].eta()),weight_);
+		    if (fabs(genps_p4()[gpid].eta())<2.4) {
+		      makeFillHisto1D<TH1F,float>("pt_mu_noGLeta24","pt_mu_noGLeta24",100,0.,200.0,genps_p4()[gpid].pt(),weight_);
+		      if (pfidx>=0&&glepfromZ>=0) {
+			//makeFillHisto1D<TH1F,float>("mll_mupf_noGLeta24","mll_mupf_noGLeta24",40,0.,200.0,(goodleps[glepfromZ].p4()+pfcands_p4()[pfidx]).mass(),weight_);
+			float mass0 = (goodleps[0].p4()+pfcands_p4()[pfidx]).mass();
+			float mass1 = (goodleps[1].p4()+pfcands_p4()[pfidx]).mass();
+			makeFillHisto1D<TH1F,float>("mll_mupf_noGLeta24","mll_mupf_noGLeta24",40,0.,200.0,(fabs(mass0-91.2)<fabs(mass1-91.2)?mass0:mass1),weight_);
+			makeFillHisto1D<TH1F,float>("mz_mupf_noGLeta24","mz_mupf_noGLeta24",40,0.,200.0,mz,weight_);
+		      }
+		    }
+		  }		  
+		}
+		
+	      }
+	      if (unmatches>1) {
+		cout << "duplcates, unmatches=" << unmatches << endl;
+
+		for (unsigned int gl=0;gl<goodleps.size();++gl) {
+		  cout << "good lep pt=" << goodleps[gl].pt() << " eta=" << goodleps[gl].eta() << " phi=" << goodleps[gl].p4().phi() << " mcpt=" << goodleps[gl].mc_p4().pt() << endl;
+		}
+
+		for (unsigned int gp=0;gp<gpidv.size();++gp) {
+		  cout << "id=" << genps_id()[gpidv[gp]] << " status=" << genps_status()[gpidv[gp]] << " mother=" << genps_id_mother()[gpidv[gp]] 
+		       << " pt=" << genps_p4()[gpidv[gp]].pt() << " eta=" << genps_p4()[gpidv[gp]].eta() << " phi=" << genps_p4()[gpidv[gp]].phi() << endl;
+		}		
+		//return -1;
+
+	      }
+
+	    }
+
+	  }
+	}
+
+	// makeFillHisto1D<TH1F,int>("hyp_charge","hyp_charge",7,-3.5,3.5,hyp.charge(),weight_);
+	// makeFillHisto1D<TH1F,float>("hyp_mll","hyp_mll",100,0,1000,hyp.p4().mass(),weight_);
+	// makeFillHisto1D<TH1F,float>("hyp_ptll","hyp_ptll",100,0,1000,hyp.p4().pt(),weight_);
+	// makeFillHisto1D<TH1F,int>("hyp_njets","hyp_njets",20,0,20,njets,weight_);
+	// makeFillHisto1D<TH1F,int>("hyp_nbtag","hyp_nbtag",20,0,20,nbtag,weight_);
+	// makeFillHisto1D<TH1F,float>("hyp_ht","hyp_ht",50,0,2000,ht,weight_);
+	// makeFillHisto1D<TH1F,float>("hyp_met","hyp_met",50,0,500,met,weight_);
+
+	// int type = -1;
+	// if (abs(hyp.traiLep().pdgId())==13 && abs(hyp.leadLep().pdgId())==13) type=0;
+	// if (abs(hyp.traiLep().pdgId())==13 && abs(hyp.leadLep().pdgId())==11) type=1;
+	// if (abs(hyp.traiLep().pdgId())==11 && abs(hyp.leadLep().pdgId())==13) type=2;
+	// if (abs(hyp.traiLep().pdgId())==11 && abs(hyp.leadLep().pdgId())==11) type=3;
+	// makeFillHisto1D<TH1F,int>("hyp_type","hyp_type",5,0,5,type,weight_);
+	continue;
+      }
+
       if (fobs.size()!=2) continue;
       DilepHyp hyp(fobs[0],fobs[1]);
       if (hyp.p4().mass()<8) continue;
@@ -407,7 +655,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    float fr = fr_h->GetBinContent(fr_h->FindBin(pt,eta));
 	    float fre = fr_h->GetBinError(fr_h->FindBin(pt,eta));
 	    float frW = fr/(1.-fr);
-	    std::cout << "fake rate=" << fr << " +/- " << fre << std::endl;
+	    //std::cout << "fake rate=" << fr << " +/- " << fre << std::endl;
 	    makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_close":"fr_el_close"),(pdgid==13?"fr_mu_close":"fr_el_close"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_*frW);
 	  }
 	}
@@ -443,7 +691,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	if (hyp.charge()!=0) {
 	  //same sign
-	  cout << endl << "NEW SS EVENT" << endl << endl;
+	  //cout << endl << "NEW SS EVENT" << endl << endl;
 
 	  /*
  	  cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
@@ -472,10 +720,28 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  if (ac_base & 1<<HighPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,br,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,sr,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_njets","hyp_highpt_njets",8,0,8,njets,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag","hyp_highpt_nbtag",4,0,4,nbtag,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_ht","hyp_highpt_ht",13,80,600,ht,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_met","hyp_highpt_met",10,0,250,met,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_mll","hyp_highpt_mll",100,0,1000,hyp.p4().mass(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_ptll","hyp_highpt_ptll",100,0,1000,hyp.p4().pt(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_type","hyp_highpt_type",5,0,5,type,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_ptlead","hyp_highpt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_pttrai","hyp_highpt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
 	  }
 	  if (ac_base & 1<<LowPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,br,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,sr,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_lowpt_njets","hyp_lowpt_njets",20,0,20,njets,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_lowpt_nbtag","hyp_lowpt_nbtag",20,0,20,nbtag,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_lowpt_ht","hyp_lowpt_ht",50,0,2000,ht,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_lowpt_met","hyp_lowpt_met",50,0,500,met,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_lowpt_mll","hyp_lowpt_mll",100,0,1000,hyp.p4().mass(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_lowpt_ptll","hyp_lowpt_ptll",100,0,1000,hyp.p4().pt(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_lowpt_type","hyp_lowpt_type",5,0,5,type,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_lowpt_ptlead","hyp_lowpt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_lowpt_pttrai","hyp_lowpt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
 	  }
 	  if (ac_base & 1<<VeryLowPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",30,0,30,br,weight_);

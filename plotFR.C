@@ -9,16 +9,22 @@
   // TString type = "";
 
   // TString sample = "qcd";
-  // TString postfix = "_pt-30to170";
-  // TString type = "";
+  // TString postfix = "_pt-50to170";
+  // TString type = "_gen";
+
+  // TString sample = "qcd";
+  // TString postfix = "";
+  // TString type = "_now";
 
   TString sample = "qcd_mupt5";
   TString postfix = "";
-  TString type = "";
+  TString type = "_gen";
 
-  bool doEWK = true;
+  bool doEWK = false;
 
   TFile* f = TFile::Open(sample+"_histos"+postfix+".root");
+
+  TFile* fout = TFile::Open("fakeRates_"+sample+postfix+".root","RECREATE");
 
   TH2F* mud = (TH2F*) f->Get("fr_mu_den"+type);
   TH2F* mun = (TH2F*) f->Get("fr_mu_num"+type);
@@ -101,4 +107,7 @@
   c1.SaveAs(sample+"_mu_fr"+postfix+type+".png");
   c2.SaveAs(sample+"_el_fr"+postfix+type+".png");
 
+  muf->Write();
+  elf->Write();
+  fout->Close();
 }

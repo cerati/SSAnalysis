@@ -91,10 +91,6 @@ class looper
   bool makebaby;
   bool makehist;
   bool maketext;
-  bool makeSSskim;
-  bool makeQCDskim;
-  bool makeQCDtest;
-  bool makeDYtest;
   
   //ntuple, file
   TFile *babyFile_;
