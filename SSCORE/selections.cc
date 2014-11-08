@@ -171,7 +171,7 @@ bool isMediumElectron(unsigned int elIdx){
     if(fabs(els_dxyPV().at(elIdx)) >= 0.01) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.15) return false; 
+    if( eleRelIso03(elIdx) >= 0.1 ) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 1) return false;
     //old
@@ -200,7 +200,7 @@ bool isMediumElectron(unsigned int elIdx){
     if(fabs(els_dxyPV().at(elIdx)) >= 0.01) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.15 ) return false; 
+    if( eleRelIso03(elIdx) >= 0.1 ) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 1) return false;
     //old
