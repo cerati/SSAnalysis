@@ -165,7 +165,7 @@ bool isMediumElectron(unsigned int elIdx){
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
     //old
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.004) return false; 
-    if(fabs(els_dPhiIn().at(elIdx)) >= 0.006) return false; 
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
     if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
     if(els_hOverE().at(elIdx) >= 0.12) return false; 
     if(fabs(els_dxyPV().at(elIdx)) >= 0.01) return false; //is this wrt the correct PV?
@@ -196,7 +196,7 @@ bool isMediumElectron(unsigned int elIdx){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; 
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
     if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
-    if(els_hOverE().at(elIdx) >= 0.01) return false; 
+    if(els_hOverE().at(elIdx) >= 0.1) return false; 
     if(fabs(els_dxyPV().at(elIdx)) >= 0.01) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
