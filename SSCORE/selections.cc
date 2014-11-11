@@ -126,6 +126,7 @@ bool isLooseElectron(unsigned int elIdx){
 
 bool isElectronFO(unsigned int elIdx){//fixme
   //same as medium but removed dxy cut and iso<0.6
+  /*
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
     //csa14 cuts 50ns
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.015) return false; 
@@ -157,6 +158,38 @@ bool isElectronFO(unsigned int elIdx){//fixme
     return true;
 
   } else return false;
+  */
+  if(fabs(els_etaSC().at(elIdx)) <= 1.479){
+    //old
+    if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; //was 0.004
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
+    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
+    if(els_hOverE().at(elIdx) >= 0.12) return false; 
+    //if(fabs(els_dxyPV().at(elIdx)) >= 0.01) return false; //is this wrt the correct PV?
+    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
+    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
+    if( eleRelIso03(elIdx) >= 0.6 ) return false; 
+    if( els_conv_vtx_flag().at(elIdx) ) return false;
+    if( els_exp_innerlayers().at(elIdx) > 1) return false;
+    return true;
+
+  } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
+    //old
+    if(fabs(els_dEtaIn().at(elIdx)) >= 0.017) return false; //was 0.007
+    if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
+    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
+    if(els_hOverE().at(elIdx) >= 0.1) return false; 
+    //if(fabs(els_dxyPV().at(elIdx)) >= 0.01) return false; //is this wrt the correct PV?
+    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
+    if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
+    if( eleRelIso03(elIdx) >= 0.6 ) return false; 
+    if( els_conv_vtx_flag().at(elIdx) ) return false;
+    if( els_exp_innerlayers().at(elIdx) > 1) return false;
+    //old
+    return true;
+
+  } else return false;
+
 
 }
 
