@@ -5,6 +5,10 @@
 
 enum AnalysisBit { HighPt = 0, LowPt = 1, VeryLowPt = 2 };
 
+float muRelIso03(unsigned int);
+float muRelIso04(unsigned int);
+float eleRelIso03(unsigned int);
+
 struct Lep {
   Lep(int pdgid, int idx):pdgid_(pdgid),idx_(idx){}
   int charge() {return -1*pdgid_/abs(pdgid_);}
@@ -21,6 +25,7 @@ struct Lep {
   int mcidx() { return abs(pdgid_)==11 ? cms2.els_mcidx().at(idx_) : cms2.mus_mcidx().at(idx_);}
   int mc_motherid() {return abs(pdgid_)==11 ? cms2.els_mc_motherid().at(idx_) : cms2.mus_mc_motherid().at(idx_);}
   LorentzVector mc_p4() { return abs(pdgid_)==11 ? cms2.els_mc_p4().at(idx_) : cms2.mus_mc_p4().at(idx_);}
+  float relIso03() { return abs(pdgid_)==11 ? eleRelIso03(idx_) : muRelIso03(idx_);}
 private:
   int pdgid_, idx_;
 };
@@ -63,9 +68,6 @@ bool isLooseMuon(unsigned int);
 bool isTightMuon(unsigned int);
 bool isMuonFO(unsigned int);
 bool threeChargeAgree(unsigned int);
-float muRelIso03(unsigned int);
-float muRelIso04(unsigned int);
-float eleRelIso03(unsigned int);
 int eleTightID(unsigned int);
 int muTightID(unsigned int);
 TString triggerName(TString);
@@ -82,7 +84,7 @@ bool isFromLightFake(Lep lep);
 unsigned int analysisCategory(Lep lep1, Lep lep2);
 void passesBaselineCuts(int njets, int nbtag, float met, float ht, unsigned int& analysisBitMask);
 int baselineRegion(int nbtag);
-void passesSignalRegionCuts(float ht, unsigned int& analysisBitMask);
+void passesSignalRegionCuts(float ht, float met, unsigned int& analysisBitMask);
 int signalRegion(int njets, int nbtag, float met, float ht);
 
 struct metStruct{

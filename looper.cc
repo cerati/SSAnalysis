@@ -21,6 +21,11 @@ using namespace std;
 
 bool ptsort (int i,int j) { return (genps_p4()[i].pt()>genps_p4()[j].pt()); }
 
+bool lepsort (Lep i,Lep j) { 
+  if ( abs(i.pdgId())==abs(j.pdgId()) ) return ( i.pt()>j.pt() ); 
+  else return ( abs(i.pdgId())>abs(j.pdgId()) );
+}
+
 //fixme: put WF and FSR in different categories
 enum LeptonCategories { Prompt = 0, PromptWS = 1, PromptWF = 2, PromptFSR = 2, 
 			FakeLightTrue = 3, FakeC = 4, FakeB = 5, FakeLightFake = 6, FakeHiPtGamma = 7, 
@@ -41,10 +46,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
   if (whatTest=="QCDtest") makeQCDtest    = 1;
   if (whatTest=="DYtest" ) makeDYtest     = 1;
   if (whatTest=="WZtest" ) makeWZtest     = 1;
-  if (whatTest=="SSskim" ) makeSSskim     = 1;
+  if (whatTest=="SSskim" ){makeSSskim     = 1; makehist = 0;}
   if (whatTest=="QCDskim") makeQCDskim    = 1;
 
   bool debug = 0;  
+  if (debug) cout << "running with flags: makeQCDtest=" << makeQCDtest << " makeDYtest=" << makeDYtest 
+		  << " makeWZtest=" << makeWZtest << " makeSSskim=" << makeSSskim << " makeQCDskim=" << makeQCDskim 
+		  << " makebaby=" << makebaby << " makehist=" << makehist << " maketext=" << maketext
+		  << endl;
 
   if (postfix!="") postfix = "_"+postfix;
   if (makebaby) MakeBabyNtuple( Form( "%s_baby%s.root", prefix.Data(), postfix.Data() ) );
@@ -67,7 +76,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
     TFile f( currentFile->GetTitle() );
     TTree *tree = (TTree*)f.Get("Events");
 
-    cout << "processing file: " << currentFile->GetTitle() << endl;
+    if (debug) cout << "processing file: " << currentFile->GetTitle() << endl;
 
     //Skimmed output file - needs to be before cms2.Init(tree)
     TFile *skim_file = 0;
@@ -75,9 +84,9 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
     if (makeSSskim || makeQCDskim) {
       TString skim_file_name = TString(currentFile->GetTitle());
       if (makeSSskim) {
-	skim_file_name.ReplaceAll(".root","_skimSS.root");
+	skim_file_name.ReplaceAll(".root","_skimSS_"+prefix+".root");
 	skim_file_name.Remove(0,skim_file_name.Last('/'));
-	skim_file_name.Prepend('.');
+	skim_file_name.Prepend("./"+prefix+"_skimSS/");
       } else if (makeQCDskim) {
 	skim_file_name.ReplaceAll(".root","_skimQCD.root");
 	skim_file_name.Remove(0,skim_file_name.First('Q'));
@@ -120,16 +129,53 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
       float lumi = 10.;
 
+      /*
+      if (
+	  evt_event()!=  43692964 &&
+	  evt_event()!=  65774137 &&
+	  evt_event()!=   5387415 &&
+	  evt_event()!= 124546173 &&
+	  evt_event()!=    568709 &&
+	  evt_event()!=  77909511 &&
+	  evt_event()!= 122866534 &&
+	  evt_event()!=  44782110 &&
+	  evt_event()!= 111401182 &&
+	  evt_event()!=  53545464 &&
+	  evt_event()!=  19875516 &&
+	  evt_event()!=  83136440 &&
+	  evt_event()!=   1844261 &&
+	  evt_event()!=   3646755 &&
+	  evt_event()!=   7633972 &&
+	  evt_event()!= 123155239 &&
+	  evt_event()!=  92920285 &&
+	  evt_event()!=  17012696 &&
+	  evt_event()!=  19302194 &&
+	  evt_event()!=  92578280 &&
+	  evt_event()!= 123339214 &&
+	  evt_event()!=  35773484 &&
+	  evt_event()!=  30991903 &&
+	  evt_event()!=  48586491 &&
+	  evt_event()!=  47551608 &&
+	  evt_event()!= 116109011 &&
+	  evt_event()!=   4372004 &&
+	  evt_event()!=  32149198 &&
+	  evt_event()!=  43797694 &&
+	  evt_event()!=  88504031 &&
+	  evt_event()!= 122477348 &&
+	  evt_event()!=  94865204 )  continue;
+      std::cout << "event =" << evt_event() << std::endl;
+      */
+  
       //fill baby
       run_   = evt_run();
       ls_    = evt_lumiBlock();
       evt_   = evt_event();
       weight_ = isData ? 1. : lumi*evt_scale1fb();
-      if (prefix=="wj") weight_*=30;//fixme using only a subset of events
+      //if (prefix=="wj") weight_*=30;//fixme using only a subset of events
       //if (prefix=="dy") weight_*=25;//fixme using only a subset of events
 
       if (newfile) {
-	cout << "weight=" << weight_ << endl;
+	if (debug) cout << "weight=" << weight_ << endl;
 	newfile = false;
       }
 
@@ -145,11 +191,6 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //vertex
       //fixme: check leptons are from this vertex!
       if (firstGoodVertex()!=0) continue;
-
-      //met
-      if (debug) cout << "met" << endl;
-      float met = evt_pfmet();
-      if (met<30. && !makeQCDskim && !makeQCDtest && !makeDYtest) continue;
 
       //fakable objects
       if (debug) cout << "fobs" << endl;
@@ -232,12 +273,18 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  }
 	}
 	if (isLep) continue;
-	if (pfjets_p4()[pfjidx].pt()>40) {
+	float jetpt = pfjets_p4()[pfjidx].pt()*cms2.pfjets_corL1FastL2L3()[pfjidx]; 
+	if (jetpt>40.) {
 	  njets++;
-	  ht+=pfjets_p4()[pfjidx].pt();
+	  ht+=jetpt;
 	  if (pfjets_combinedSecondaryVertexBJetTag()[pfjidx]>0.679) nbtag++;
 	}
       }
+
+      //met
+      if (debug) cout << "met" << endl;
+      float met = evt_pfmet();
+      if (met<30. && ht<500. && !makeQCDskim && !makeQCDtest && !makeDYtest) continue;
 
       if (makeQCDtest) {
 	if (debug) cout << "qcdtest" << endl;
@@ -377,6 +424,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
 
       if (makeWZtest) {
+	if (debug) cout << "WZtest" << endl;
 
 	weight_=1.;//fixme
 
@@ -604,31 +652,99 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	continue;
       }
 
-      if (fobs.size()!=2) continue;
-      DilepHyp hyp(fobs[0],fobs[1]);
-      if (hyp.p4().mass()<8) continue;
+      vector<Lep> hypleps;
+      //select best hyp in case >3 good leps
+      if (goodleps.size()>2) {
+	vector<Lep> goodlepsp, goodlepsn;
+	for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	  if (goodleps[gl].pdgId()>0) goodlepsn.push_back(goodleps[gl]);
+	  else goodlepsp.push_back(goodleps[gl]);
+	}
+	//sort goodleps by muon and then by pt
+	std::sort(goodlepsp.begin(),goodlepsp.end(),lepsort);
+	std::sort(goodlepsn.begin(),goodlepsn.end(),lepsort);
+	//take first SS hyp
+	if (goodlepsp.size()<2) {
+	  hypleps.push_back(goodlepsn[0]);
+	  hypleps.push_back(goodlepsn[1]);
+	} else if (goodlepsn.size()<2) {
+	  hypleps.push_back(goodlepsp[0]);
+	  hypleps.push_back(goodlepsp[1]);
+	} else {
+	  if ( abs(goodlepsn[0].pdgId()+goodlepsn[1].pdgId())>abs(goodlepsp[0].pdgId()+goodlepsp[1].pdgId()) ) {
+	    hypleps.push_back(goodlepsn[0]);
+	    hypleps.push_back(goodlepsn[1]);
+	  } else if ( abs(goodlepsn[0].pdgId()+goodlepsn[1].pdgId())<abs(goodlepsp[0].pdgId()+goodlepsp[1].pdgId()) ) {
+	    hypleps.push_back(goodlepsp[0]);
+	    hypleps.push_back(goodlepsp[1]);
+	  } else if ( (goodlepsn[0].pt()+goodlepsn[1].pt())>(goodlepsp[0].pt()+goodlepsp[1].pt()) ) {
+	    hypleps.push_back(goodlepsn[0]);
+	    hypleps.push_back(goodlepsn[1]);
+	  } else {
+	    hypleps.push_back(goodlepsp[0]);
+	    hypleps.push_back(goodlepsp[1]);
+	  }
+	}
+      } else if (goodleps.size()==2) {
+	hypleps.push_back(goodleps[0]);
+	hypleps.push_back(goodleps[1]);	
+      }      
+
+      if (fobs.size()!=2 && hypleps.size()!=2) {
+	if (debug) cout << "skip, fobs size=" << fobs.size() << " hypleps size=" << hypleps.size() << endl;
+	continue;
+      }
+      DilepHyp hyp = (hypleps.size()==2 ? DilepHyp(hypleps[0],hypleps[1]) : DilepHyp(fobs[0],fobs[1]) );
+      if (hyp.p4().mass()<8) {
+	if (debug) cout<< "skip, hyp mass=" << hyp.p4().mass() <<endl;
+	continue;
+      }
 
       unsigned int ac_base = analysisCategory(hyp.leadLep(),hyp.traiLep());
-
       passesBaselineCuts(njets, nbtag, met, ht, ac_base);
-      if (ac_base==0) continue;
+      if (ac_base==0) {
+	if (debug) {
+	  cout << "skip, not passing baseline cuts" << endl;
+	  cout << "njets=" << njets << " nbtag=" << nbtag << " ht=" << ht << " met=" << met << endl;
+	}
+	continue;
+      }
       int br = baselineRegion(nbtag);
       unsigned int ac_sig = ac_base;
-      passesSignalRegionCuts(ht, ac_sig);
-      int sr = ac_sig!=0 ? signalRegion(njets, nbtag, met, ht) : 0;
+      passesSignalRegionCuts(ht, met, ac_sig);
+      int sr = ac_sig!=0 ? signalRegion(njets, nbtag, met, ht) : -1;
 
       //write skim here (only ss)
-      if (debug) cout << "ss skim" << endl;
       if (makeSSskim) {
+	if (debug) cout << "ss skim" << endl;
 	if (hyp.charge()!=0) {
 	  cms2.LoadAllBranches();
 	  skim_file->cd(); 
 	  skim_tree->Fill();
 	}
+	continue;
+      }
+
+      //3rd lepton veto
+      bool leptonVeto = false;
+      for (unsigned int gl=0;gl<hypleps.size();++gl) {
+	for (unsigned int vl=0;vl<vetoleps.size();++vl) {
+	  if ( fabs(ROOT::Math::VectorUtil::DeltaR(hypleps[gl].p4(),vetoleps[vl].p4()))<0.001 ) continue;
+	  if ( hypleps[gl].pdgId()!=-vetoleps[vl].pdgId() ) continue; 
+	  float mll = (hypleps[gl].p4()+vetoleps[vl].p4()).mass();
+	  if ( (fabs(mll-91.2)<15&&vetoleps[vl].pt()>10. ) || (mll<12&&vetoleps[vl].pt()>5. ) ) {
+	    leptonVeto = true;
+	    break;
+	  }
+	}
+      }
+      if (leptonVeto) {
+	if (debug) cout<< "skip, 3rd lepton veto" << endl;	
+	continue;
       }
 
       //compute fake rate in ss ttbar
-      if (hyp.charge()!=0) {
+      if (hyp.charge()!=0 && prefix=="ttbar") {
 	for (unsigned int fo=0;fo<fobs.size();++fo) {
 	  if (isFromW(fobs[fo])) continue;
 	  int pdgid = abs(fobs[fo].pdgId());
@@ -661,10 +777,28 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	}
       }
 
-      if (goodleps.size()!=2) continue;
+      if (hypleps.size()!=2 || hypleps[0].pt()<20 || hypleps[1].pt()<20) {
+	if (debug) {
+	  cout << "skip, not passing lepton cuts" << endl; 
+	  cout << "fobs size = " << fobs.size() << " pdgids=" << fobs[0].pdgId() << ", " << fobs[1].pdgId() << endl;
+	  if (hypleps.size()>0) cout << "Good leptons = " << hypleps.size() << " pdgids=" << hypleps[0].pdgId() << " pt=" << hypleps[0].pt() << " eta=" << hypleps[0].eta() << endl;
+	  for (unsigned int fo=0;fo<fobs.size();++fo){
+	    if (abs(fobs[fo].pdgId())!=13) continue;
+	    cout << "fob pt=" << fobs[fo].pt() << " eta=" << fobs[fo].eta() << endl;
+	    if (mus_p4().at(fobs[fo].idx()).pt()<20.) cout << "fail pt" << endl;
+	    if (isMuonFO(fobs[fo].idx())==0) cout << "fail FO" << endl;
+	    if (muRelIso03(fobs[fo].idx())>1.0 ) cout << "fail loose iso" << endl;
+	    if (isTightMuon(fobs[fo].idx())==0) cout << "fail tight id" << endl;
+	    if (muRelIso03(fobs[fo].idx())>0.1 ) cout << "fail tight iso, iso=" << muRelIso03(fobs[fo].idx()) << endl;
+	  }
+	}
+	continue;
+      }
 
-      //cout << "Good leptons = " << goodleps.size() << " pdgids=" << goodleps[0].pdgId() << ", " << goodleps[1].pdgId() << endl;
-      //cout << "Total charge = " << hyp.charge() << " m=" << hyp.p4().mass() << endl;
+      if (debug) {
+	cout << "Good leptons = " << hypleps.size() << " pdgids=" << hypleps[0].pdgId() << ", " << hypleps[1].pdgId() << endl;
+	cout << "Total charge = " << hyp.charge() << " m=" << hyp.p4().mass() << endl;
+      }
 
       //if (makebaby) FillBabyNtuple();
 
@@ -679,6 +813,26 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	makeFillHisto1D<TH1F,float>("hyp_ht","hyp_ht",50,0,2000,ht,weight_);
 	makeFillHisto1D<TH1F,float>("hyp_met","hyp_met",50,0,500,met,weight_);
 
+	float dPhi1 = deltaPhi(hyp.leadLep().p4().phi(),evt_pfmetPhi());
+	float mt1  = mt(hyp.leadLep().pt(),met,dPhi1);
+	float dPhi2 = deltaPhi(hyp.traiLep().p4().phi(),evt_pfmetPhi());
+	float mt2  = mt(hyp.traiLep().pt(),met,dPhi2);
+	float dPhill = deltaPhi(hyp.p4().phi(),evt_pfmetPhi());
+	float mtll = mt(hyp.p4().pt(),met,dPhill);
+
+	float mtmin = min(mt1,mt2);
+	float mtmin12ll = min(mtmin,mtll);
+
+	makeFillHisto1D<TH1F,float>("hyp_mt1","hyp_mt1",15,0,300,mt1,weight_);
+	makeFillHisto1D<TH1F,float>("hyp_mt2","hyp_mt2",15,0,300,mt2,weight_);
+	makeFillHisto1D<TH1F,float>("hyp_mtll","hyp_mtll",15,0,300,mtll,weight_);
+	makeFillHisto1D<TH1F,float>("hyp_mtmin","hyp_mtmin",15,0,300,mtmin,weight_);
+	makeFillHisto1D<TH1F,float>("hyp_mtmin12ll","hyp_mtmin12ll",15,0,300,mtmin12ll,weight_);
+
+	makeFillHisto1D<TH1F,float>("hyp_cosdPhi1","hyp_cosdPhi1",20,-1,1,cos(dPhi1),weight_);
+	makeFillHisto1D<TH1F,float>("hyp_cosdPhi2","hyp_cosdPhi2",20,-1,1,cos(dPhi2),weight_);
+	makeFillHisto1D<TH1F,float>("hyp_cosdPhill","hyp_cosdPhill",20,-1,1,cos(dPhill),weight_);
+
 	int type = -1;
 	if (abs(hyp.traiLep().pdgId())==13 && abs(hyp.leadLep().pdgId())==13) type=0;
 	if (abs(hyp.traiLep().pdgId())==13 && abs(hyp.leadLep().pdgId())==11) type=1;
@@ -691,22 +845,24 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	if (hyp.charge()!=0) {
 	  //same sign
-	  //cout << endl << "NEW SS EVENT" << endl << endl;
 
-	  /*
- 	  cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
-	       << " mcid=" << hyp.leadLep().mc_id() << " mcp4=" << hyp.leadLep().mc_p4() << " mother_id=" << hyp.leadLep().mc_motherid()
-	       << " mc3idx=" << hyp.leadLep().mc3idx() << " mc3_id=" << hyp.leadLep().mc3_id() 
-	       << " mc3_motheridx=" << hyp.leadLep().mc3_motheridx() << " mc3_mother_id=" << hyp.leadLep().mc3_motherid()
-	       << " genps_id_mother()[hyp.leadLep().mc3_motheridx()]=" << genps_id_mother()[hyp.leadLep().mc3_motheridx()]
-	       << endl;
-	  cout << "trai lep id=" << hyp.traiLep().pdgId() << " p4=" << hyp.traiLep().p4() 
-	       << " mcid=" << hyp.traiLep().mc_id() << " mcp4=" << hyp.traiLep().mc_p4()  << " mother_id=" << hyp.traiLep().mc_motherid()
-	       << " mc3idx=" << hyp.traiLep().mc3idx() << " mc3_id=" << hyp.traiLep().mc3_id() 
-	       << " mc3_motheridx=" << hyp.traiLep().mc3_motheridx() << " mc3_mother_id=" << hyp.traiLep().mc3_motherid()
-	       << " genps_id_mother()[hyp.traiLep().mc3_motheridx()]=" << genps_id_mother()[hyp.traiLep().mc3_motheridx()]
-	       << endl;
-	  */
+	  if (debug) {
+	    cout << endl << "NEW SS EVENT" << endl << endl;	  
+	    cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
+		 << " mcid=" << hyp.leadLep().mc_id() << " mcp4=" << hyp.leadLep().mc_p4() << " mother_id=" << hyp.leadLep().mc_motherid()
+		 << " mc3idx=" << hyp.leadLep().mc3idx() << " mc3_id=" << hyp.leadLep().mc3_id() 
+		 << " mc3_motheridx=" << hyp.leadLep().mc3_motheridx() << " mc3_mother_id=" << hyp.leadLep().mc3_motherid()
+		 << " genps_id_mother()[hyp.leadLep().mc3_motheridx()]=" << genps_id_mother()[hyp.leadLep().mc3_motheridx()]
+		 << endl;
+	    cout << "trai lep id=" << hyp.traiLep().pdgId() << " p4=" << hyp.traiLep().p4() 
+		 << " mcid=" << hyp.traiLep().mc_id() << " mcp4=" << hyp.traiLep().mc_p4()  << " mother_id=" << hyp.traiLep().mc_motherid()
+		 << " mc3idx=" << hyp.traiLep().mc3idx() << " mc3_id=" << hyp.traiLep().mc3_id() 
+		 << " mc3_motheridx=" << hyp.traiLep().mc3_motheridx() << " mc3_mother_id=" << hyp.traiLep().mc3_motherid()
+		 << " genps_id_mother()[hyp.traiLep().mc3_motheridx()]=" << genps_id_mother()[hyp.traiLep().mc3_motheridx()]
+		 << endl;
+	    cout << "njets=" << njets << " nbtag=" << nbtag << " ht=" << ht << " met=" << met << endl;
+	    cout << "BR" << br << " SR" << sr << endl;
+	  }
 
 	  makeFillHisto1D<TH1F,int>("hyp_ss_njets","hyp_ss_njets",20,0,20,njets,weight_);
 	  makeFillHisto1D<TH1F,int>("hyp_ss_nbtag","hyp_ss_nbtag",20,0,20,nbtag,weight_);
@@ -717,9 +873,85 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  makeFillHisto1D<TH1F,float>("hyp_ss_ptll","hyp_ss_ptll",100,0,1000,hyp.p4().pt(),weight_);
 	  makeFillHisto1D<TH1F,int>("hyp_ss_type","hyp_ss_type",5,0,5,type,weight_);
 
+	  makeFillHisto1D<TH1F,float>("hyp_ss_ngleps","hyp_ss_ngleps",10,0,10,goodleps.size(),weight_);
+	  makeFillHisto1D<TH1F,float>("hyp_ss_nfobs","hyp_ss_nfobs",10,0,10,fobs.size(),weight_);
+	  makeFillHisto1D<TH1F,float>("hyp_ss_nvetos","hyp_ss_nvetos",10,0,10,vetoleps.size(),weight_);
+
+	  makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_relIso03","hyp_ss_alltrail_"+lt+"_relIso03",100,0.,1.,hyp.traiLep().relIso03(),weight_);
+	  makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_relIso03","hyp_ss_alllead_"+ll+"_relIso03",100,0.,1.,hyp.leadLep().relIso03(),weight_);
+
+	  if (abs(hyp.traiLep().pdgId())==11) {
+	    unsigned int elIdx = hyp.traiLep().idx();
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dEtaIn","hyp_ss_alltrail_"+lt+"_dEtaIn",100,0,0.05,fabs(els_dEtaIn().at(elIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dPhiIn","hyp_ss_alltrail_"+lt+"_dPhiIn",100,0,0.05,fabs(els_dPhiIn().at(elIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_sIEtaIEta","hyp_ss_alltrail_"+lt+"_sIEtaIEta",100,0,0.5,els_sigmaIEtaIEta().at(elIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_hOverE","hyp_ss_alltrail_"+lt+"_hOverE",100,0,0.5,els_hOverE().at(elIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dxyPV","hyp_ss_alltrail_"+lt+"_dxyPV",100,0,0.1,fabs(els_dxyPV().at(elIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dzPV","hyp_ss_alltrail_"+lt+"_dzPV",100,0,0.5,fabs(els_dzPV().at(elIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_EoP","hyp_ss_alltrail_"+lt+"_EoP",100,0,0.1,fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_convflag","hyp_ss_alltrail_"+lt+"_convflag",2,0,2,els_conv_vtx_flag().at(elIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_expinlay","hyp_ss_alltrail_"+lt+"_expinlay",5,0,5,els_exp_innerlayers().at(elIdx),weight_);
+	  } else {
+	    unsigned int muIdx = hyp.traiLep().idx();
+	    bool isGlobal  = true;
+	    bool isTracker = true;
+	    if (((mus_type().at(muIdx)) & (1<<1)) == 0) isGlobal  = false;
+	    if (((mus_type().at(muIdx)) & (1<<2)) == 0) isTracker = false;
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_isPf","hyp_ss_alltrail_"+lt+"_isPf",2,0,2,mus_pid_PFMuon().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_isGl","hyp_ss_alltrail_"+lt+"_isGl",2,0,2,isGlobal,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_isTk","hyp_ss_alltrail_"+lt+"_isTk",2,0,2,isTracker,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_chi2","hyp_ss_alltrail_"+lt+"_chi2",100,0,20,mus_gfit_chi2().at(muIdx)/mus_gfit_ndof().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_vStaH","hyp_ss_alltrail_"+lt+"_vStaH",20,0,20,mus_gfit_validSTAHits().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_nMatchSt","hyp_ss_alltrail_"+lt+"_nMatchSt",20,0,20,mus_numberOfMatchedStations().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_vPixH","hyp_ss_alltrail_"+lt+"_vPixH",10,0,10,mus_validPixelHits().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_nLay","hyp_ss_alltrail_"+lt+"_nLay",20,0,20,mus_nlayers().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dxyPV","hyp_ss_alltrail_"+lt+"_dxyPV",100,0,0.1,fabs(mus_dxyPV().at(muIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dzPV","hyp_ss_alltrail_"+lt+"_dzPV",100,0,0.5,fabs(mus_dzPV().at(muIdx)),weight_);
+	  }
+
+	  if (abs(hyp.leadLep().pdgId())==11) {
+	    unsigned int elIdx = hyp.leadLep().idx();
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dEtaIn","hyp_ss_alllead_"+ll+"_dEtaIn",100,0,0.05,fabs(els_dEtaIn().at(elIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dPhiIn","hyp_ss_alllead_"+ll+"_dPhiIn",100,0,0.05,fabs(els_dPhiIn().at(elIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_sIEtaIEta","hyp_ss_alllead_"+ll+"_sIEtaIEta",100,0,0.5,els_sigmaIEtaIEta().at(elIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_hOverE","hyp_ss_alllead_"+ll+"_hOverE",100,0,0.5,els_hOverE().at(elIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dxyPV","hyp_ss_alllead_"+ll+"_dxyPV",100,0,0.1,fabs(els_dxyPV().at(elIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dzPV","hyp_ss_alllead_"+ll+"_dzPV",100,0,0.5,fabs(els_dzPV().at(elIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_EoP","hyp_ss_alllead_"+ll+"_EoP",100,0,0.1,fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_convflag","hyp_ss_alllead_"+ll+"_convflag",2,0,2,els_conv_vtx_flag().at(elIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_expinlay","hyp_ss_alllead_"+ll+"_expinlay",5,0,5,els_exp_innerlayers().at(elIdx),weight_);
+	  } else {
+	    unsigned int muIdx = hyp.leadLep().idx();
+	    bool isGlobal  = true;
+	    bool isTracker = true;
+	    if (((mus_type().at(muIdx)) & (1<<1)) == 0) isGlobal  = false;
+	    if (((mus_type().at(muIdx)) & (1<<2)) == 0) isTracker = false;
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_isPf","hyp_ss_alllead_"+ll+"_isPf",2,0,2,mus_pid_PFMuon().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_isGl","hyp_ss_alllead_"+ll+"_isGl",2,0,2,isGlobal,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_isTk","hyp_ss_alllead_"+ll+"_isTk",2,0,2,isTracker,weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_chi2","hyp_ss_alllead_"+ll+"_chi2",100,0,20,mus_gfit_chi2().at(muIdx)/mus_gfit_ndof().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_vStaH","hyp_ss_alllead_"+ll+"_vStaH",20,0,20,mus_gfit_validSTAHits().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_nMatchSt","hyp_ss_alllead_"+ll+"_nMatchSt",20,0,20,mus_numberOfMatchedStations().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_vPixH","hyp_ss_alllead_"+ll+"_vPixH",10,0,10,mus_validPixelHits().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_nLay","hyp_ss_alllead_"+ll+"_nLay",20,0,20,mus_nlayers().at(muIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dxyPV","hyp_ss_alllead_"+ll+"_dxyPV",100,0,0.1,fabs(mus_dxyPV().at(muIdx)),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dzPV","hyp_ss_alllead_"+ll+"_dzPV",100,0,0.5,fabs(mus_dzPV().at(muIdx)),weight_);
+	  }
+
 	  if (ac_base & 1<<HighPt) {
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,br,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,sr,weight_);
+	    if (prefix=="ttbar") cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << " ls=" << ls_ << endl;
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_br","hyp_highpt_br",30,0,30,br,weight_);
+	    if ( isFromW(hyp.traiLep()) && isFromW(hyp.leadLep()) ) {
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromW","hyp_highpt_br_fromW",30,0,30,br,weight_);
+	    }
+	    if (sr>0) {
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,br,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,sr,weight_);
+	      if ( isFromW(hyp.traiLep()) && isFromW(hyp.leadLep()) ) {
+		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromW","hyp_highpt_sr_fromW",30,0,30,br,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromW","hyp_highpt_sr_fromW",30,0,30,sr,weight_);
+	      }
+	    }
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_njets","hyp_highpt_njets",8,0,8,njets,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag","hyp_highpt_nbtag",4,0,4,nbtag,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_ht","hyp_highpt_ht",13,80,600,ht,weight_);
@@ -729,10 +961,12 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_type","hyp_highpt_type",5,0,5,type,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_ptlead","hyp_highpt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_pttrai","hyp_highpt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_etalead","hyp_highpt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_etatrai","hyp_highpt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
 	  }
 	  if (ac_base & 1<<LowPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,br,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,sr,weight_);
+	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,sr,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_njets","hyp_lowpt_njets",20,0,20,njets,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_nbtag","hyp_lowpt_nbtag",20,0,20,nbtag,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_lowpt_ht","hyp_lowpt_ht",50,0,2000,ht,weight_);
@@ -745,8 +979,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  }
 	  if (ac_base & 1<<VeryLowPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",30,0,30,br,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",30,0,30,sr,weight_);
+	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",30,0,30,sr,weight_);
 	  }
+
+	  if (prefix=="ttbar") {
 
 	  bool isLeadPrompt = 0;
 	  bool isTrailPrompt = 0;
@@ -756,10 +992,12 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  if ( !isFromW(hyp.traiLep()) ) {
 	    //check fakes (mother not W)
 
-	    makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_mc","hyp_ss_trail_"+lt+"_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_mc_mother","hyp_ss_trail_"+lt+"_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_mc3","hyp_ss_trail_"+lt+"_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_mc3_mother","hyp_ss_trail_"+lt+"_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc","hyp_ss_faketrail_"+lt+"_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc_mother","hyp_ss_faketrail_"+lt+"_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc3","hyp_ss_faketrail_"+lt+"_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc3_mother","hyp_ss_faketrail_"+lt+"_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+
+	    makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_relIso03","hyp_ss_faketrail_"+lt+"_relIso03",100,0.,1.,hyp.traiLep().relIso03(),weight_);
 
 	    if (isFromB(hyp.traiLep()) ) trailType=FakeB;
 	    else if (isFromC(hyp.traiLep()) ) trailType=FakeC;
@@ -767,33 +1005,33 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    else if (isFromLightFake(hyp.traiLep())) trailType=FakeLightFake;
 	    else if (hyp.traiLep().mc_id()==22 && hyp.traiLep().mc_p4().pt()>hyp.traiLep().pt()/2.) {
 	      trailType=FakeHiPtGamma;
-	      makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_hiptgamma_mc","hyp_ss_trail_"+lt+"_hiptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_hiptgamma_mc_mother","hyp_ss_trail_"+lt+"_hiptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_hiptgamma_mc3","hyp_ss_trail_"+lt+"_hiptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_hiptgamma_mc3_mother","hyp_ss_trail_"+lt+"_hiptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_ss_trail_"+lt+"_hiptgamma_pt","hyp_ss_trail_"+lt+"_hiptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_ss_trail_"+lt+"_hiptgamma_ptmc","hyp_ss_trail_"+lt+"_hiptgamma_ptmc",50,0,100,hyp.traiLep().mc_p4().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_ss_trail_"+lt+"_hiptgamma_deltaptoverpt","hyp_ss_trail_"+lt+"_hiptgamma_deltaptoverpt",100,-0.5,0.5,(hyp.traiLep().pt()-hyp.traiLep().mc_p4().pt())/hyp.traiLep().mc_p4().pt(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc","hyp_ss_faketrail_"+lt+"_hiptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc_mother","hyp_ss_faketrail_"+lt+"_hiptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc3","hyp_ss_faketrail_"+lt+"_hiptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc3_mother","hyp_ss_faketrail_"+lt+"_hiptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_pt","hyp_ss_faketrail_"+lt+"_hiptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_ptmc","hyp_ss_faketrail_"+lt+"_hiptgamma_ptmc",50,0,100,hyp.traiLep().mc_p4().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_deltaptoverpt","hyp_ss_faketrail_"+lt+"_hiptgamma_deltaptoverpt",100,-0.5,0.5,(hyp.traiLep().pt()-hyp.traiLep().mc_p4().pt())/hyp.traiLep().mc_p4().pt(),weight_);
 	    } else  {
 	      trailType=FakeUnknown;
 	      if (hyp.traiLep().mc_id()==22 && hyp.traiLep().mc_p4().pt()<1.) {
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_category","hyp_ss_trail_"+lt+"_category",End,0,End,FakeLowPtGamma,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_lowptgamma_mc","hyp_ss_trail_"+lt+"_lowptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_lowptgamma_mc_mother","hyp_ss_trail_"+lt+"_lowptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_lowptgamma_mc3","hyp_ss_trail_"+lt+"_lowptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_lowptgamma_mc3_mother","hyp_ss_trail_"+lt+"_lowptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_ss_trail_"+lt+"_category_lowptgamma_pt","hyp_ss_trail_"+lt+"_category_lowptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,FakeLowPtGamma,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc","hyp_ss_faketrail_"+lt+"_lowptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc_mother","hyp_ss_faketrail_"+lt+"_lowptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc3","hyp_ss_faketrail_"+lt+"_lowptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc3_mother","hyp_ss_faketrail_"+lt+"_lowptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_lowptgamma_pt","hyp_ss_faketrail_"+lt+"_category_lowptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
 	      } else if (hyp.traiLep().mc_id()==-9999 && hyp.traiLep().mc_motherid()==-9999 && hyp.traiLep().mc3_id()==-9999 && hyp.traiLep().mc3_motherid()==-9999) {
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_category","hyp_ss_trail_"+lt+"_category",End,0,End,All9999,weight_);
-		makeFillHisto1D<TH1F,float>("hyp_ss_trail_"+lt+"_category_all9999_pt","hyp_ss_trail_"+lt+"_category_all9999_pt",50,0,100,hyp.traiLep().pt(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,All9999,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_all9999_pt","hyp_ss_faketrail_"+lt+"_category_all9999_pt",50,0,100,hyp.traiLep().pt(),weight_);
 	      }
 	      else {
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_category","hyp_ss_trail_"+lt+"_category",End,0,End,Other,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_other_mc","hyp_ss_trail_"+lt+"_other_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_other_mc_mother","hyp_ss_trail_"+lt+"_other_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_other_mc3","hyp_ss_trail_"+lt+"_other_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_other_mc3_mother","hyp_ss_trail_"+lt+"_other_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_ss_trail_"+lt+"_category_other_pt","hyp_ss_trail_"+lt+"_category_other_pt",50,0,100,hyp.traiLep().pt(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,Other,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc","hyp_ss_faketrail_"+lt+"_other_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc_mother","hyp_ss_faketrail_"+lt+"_other_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc3","hyp_ss_faketrail_"+lt+"_other_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc3_mother","hyp_ss_faketrail_"+lt+"_other_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_other_pt","hyp_ss_faketrail_"+lt+"_category_other_pt",50,0,100,hyp.traiLep().pt(),weight_);
 		/*
 		cout << "UNKNOWN FAKE LEPTON " << lt << endl;
 		cout << "trai lep id=" << hyp.traiLep().pdgId() << " p4=" << hyp.traiLep().p4() 
@@ -818,10 +1056,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  }
 	  if ( !isFromW(hyp.leadLep()) ) {
 
-	    makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_mc","hyp_ss_lead_"+ll+"_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_mc_mother","hyp_ss_lead_"+ll+"_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_mc3","hyp_ss_lead_"+ll+"_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_mc3_mother","hyp_ss_lead_"+ll+"_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc","hyp_ss_fakelead_"+ll+"_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc_mother","hyp_ss_fakelead_"+ll+"_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc3","hyp_ss_fakelead_"+ll+"_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id(),weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc3_mother","hyp_ss_fakelead_"+ll+"_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid(),weight_);
 
 	    if (isFromB(hyp.leadLep()) ) leadType=FakeB;
 	    else if (isFromC(hyp.leadLep()) ) leadType=FakeC;
@@ -831,11 +1069,11 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    else {
 	      leadType=FakeUnknown;
 	      if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()<1.) 
-		makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_category","hyp_ss_lead_"+ll+"_category",End,0,End,FakeLowPtGamma,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,FakeLowPtGamma,weight_);
 	      else if (hyp.leadLep().mc_id()==-9999 && hyp.leadLep().mc_motherid()==-9999 && hyp.leadLep().mc3_id()==-9999 && hyp.leadLep().mc3_motherid()==-9999)
-		makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_category","hyp_ss_lead_"+ll+"_category",End,0,End,All9999,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,All9999,weight_);
 	      else {
-		makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_category","hyp_ss_lead_"+ll+"_category",End,0,End,Other,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,Other,weight_);
 		/*
 		cout << "UNKNOWN FAKE LEPTON " << ll << endl;
 		cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
@@ -871,6 +1109,12 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  if (!isLeadPrompt && isTrailPrompt) prompttype=2;
 	  if (!isLeadPrompt && !isTrailPrompt) prompttype=3;
 	  makeFillHisto1D<TH1F,int>("hyp_prompttype","hyp_prompttype",5,0,5,prompttype,weight_);
+	  if (trailType==PromptWS) makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,1,weight_);
+	  else if (leadType==PromptWS) makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,2,weight_);
+	  else makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,0,weight_);
+
+	  if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) makeFillHisto1D<TH1F,int>("hyp_sstype","hyp_sstype",3,0,3,0,weight_);
+	  else makeFillHisto1D<TH1F,int>("hyp_sstype","hyp_sstype",3,0,3,1,weight_);
 
 	  if (isLeadPrompt && isTrailPrompt) {
 	    int leadprompttype = -1;
@@ -883,6 +1127,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,int>("hyp_leadprompttype","hyp_leadprompttype",5,0,5,leadprompttype,weight_);
 	  }
 
+	  }
 	  /*
 	  //dump genps
 	  for (unsigned int gp_idx=0;gp_idx<genps_p4().size();++gp_idx) {

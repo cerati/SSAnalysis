@@ -317,7 +317,7 @@ bool isMuonFO(unsigned int muIdx){
   if (mus_validPixelHits().at(muIdx) == 0)                            return false;
   if (mus_nlayers().at(muIdx) < 6)                                    return false;
   if (mus_dxyPV().at(muIdx) > 0.2)                                    return false;
-  if (mus_dzPV().at(muIdx) > 0.2)                                     return false;
+  if (mus_dzPV().at(muIdx) > 0.1)                                     return false;
   return true;
 }
 
@@ -325,7 +325,7 @@ bool isTightMuon(unsigned int muIdx){
   if (!isMuonFO(muIdx)) return false;
   //fixme not applying MIP requirement in calo
   if (mus_dzPV().at(muIdx) > 0.1)                                    return false;//fixme?
-  if (mus_dxyPV().at(muIdx) > 0.005)                                return false;//fixme?
+  if (mus_dxyPV().at(muIdx) > 0.005)                                 return false;//fixme?
   return true;
 }
 
@@ -345,6 +345,7 @@ float muRelIso03(unsigned int muIdx){
   float emiso     = mus_isoR03_pf_PhotonEt().at(muIdx);
   float deltaBeta = mus_isoR03_pf_PUPt().at(muIdx);
   float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
+  //cout << "chiso=" << chiso << " nhiso=" << nhiso << " emiso=" << emiso << " deltaBeta=" << deltaBeta << " absiso=" << absiso << " relIso=" << absiso/(mus_p4().at(muIdx).pt()) << endl;
   return absiso/(mus_p4().at(muIdx).pt());
 
 }
@@ -615,8 +616,9 @@ bool isGoodMuon(unsigned int muidx){
   if (isFakableMuon(muidx)==0) return false;
   if (isTightMuon(muidx)==0) return false;
   if (muRelIso03(muidx)>0.1 ) return false;
-  //if (fabs(mus_dxyPV().at(muidx)) >= 0.005) return false;//fixme
-  //if (fabs(mus_dzPV().at(muidx)) >= 0.1) return false;//fixme
+
+
+
   return true;
 }
 
@@ -678,17 +680,22 @@ int baselineRegion(int nbtag) {
   else return 20;
 }
 
-void passesSignalRegionCuts(float ht, unsigned int& analysisBitMask) {
+void passesSignalRegionCuts(float ht, float met, unsigned int& analysisBitMask) {
+  if (met<50.) {
+    analysisBitMask &= ~(1<<HighPt);
+    analysisBitMask &= ~(1<<LowPt);
+    analysisBitMask &= ~(1<<VeryLowPt);
+  }
   if (analysisBitMask & 1<<HighPt) {
-    if (ht<200)  analysisBitMask &= ~(1<<HighPt);
+    if (ht<200.)  analysisBitMask &= ~(1<<HighPt);
   } 
-  if (ht<250) {
+  if (ht<250.) {
     analysisBitMask &= ~(1<<LowPt);
     analysisBitMask &= ~(1<<VeryLowPt);
   }
 }
 
-//this assumes that the event has already passed all selections (including min ht)
+//this assumes that the event has already passed all selections (including min ht and met)
 int signalRegion(int njets, int nbtag, float met, float ht) {
   int result = 1;
   if (nbtag==1) result+=10;
