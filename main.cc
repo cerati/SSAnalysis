@@ -8,6 +8,8 @@ int main() {
   bool skimAll = false;
   bool runAll  = true;
 
+  //looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents)
+
   if (skimAll) {
   TChain *chain_T1ttttG1200skim = new TChain("Events");
   chain_T1ttttG1200skim->Add("/hadoop/cms/store/group/snt/csa14/MC_CMS3_V07-00-04/SMS-T1tttt_2J_mGl-1200_mLSP-800_Tune4C_13TeV-madgraph-tauola/merged/merged_ntuple_*.root");
