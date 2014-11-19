@@ -49,6 +49,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
   if (whatTest=="SSskim" ){makeSSskim     = 1; makehist = 0;}
   if (whatTest=="QCDskim") makeQCDskim    = 1;
 
+  cout << "Processing " << prefix << " " << postfix << " " << whatTest << endl;
+
   bool debug = 0;  
   if (debug) cout << "running with flags: makeQCDtest=" << makeQCDtest << " makeDYtest=" << makeDYtest 
 		  << " makeWZtest=" << makeWZtest << " makeSSskim=" << makeSSskim << " makeQCDskim=" << makeQCDskim 
@@ -266,10 +268,19 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	//add pu jet id pfjets_pileupJetId()>????
 	bool isLep = false;
 	//fixme: should be checked agains fo or good leptons?
-	for (unsigned int fo=0;fo<fobs.size();++fo) {
-	  if (deltaR(pfjets_p4()[pfjidx],fobs[fo].p4())<drcut) {
-	    isLep =true;
-	    break;
+	if (makeQCDtest) {
+	  for (unsigned int fo=0;fo<fobs.size();++fo) {
+	    if (deltaR(pfjets_p4()[pfjidx],fobs[fo].p4())<drcut) {
+	      isLep =true;
+	      break;
+	    }
+	  }
+	} else {
+	  for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	    if (deltaR(pfjets_p4()[pfjidx],goodleps[gl].p4())<drcut) {
+	      isLep =true;
+	      break;
+	    }
 	  }
 	}
 	if (isLep) continue;
@@ -769,7 +780,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    if (pt>maxPt) pt=maxPt;
 	    if (eta>maxEta) eta=maxEta;
 	    float fr = fr_h->GetBinContent(fr_h->FindBin(pt,eta));
-	    float fre = fr_h->GetBinError(fr_h->FindBin(pt,eta));
+	    //float fre = fr_h->GetBinError(fr_h->FindBin(pt,eta));
 	    float frW = fr/(1.-fr);
 	    //std::cout << "fake rate=" << fr << " +/- " << fre << std::endl;
 	    makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_close":"fr_el_close"),(pdgid==13?"fr_mu_close":"fr_el_close"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_*frW);
@@ -845,6 +856,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	if (hyp.charge()!=0) {
 	  //same sign
+
+	  if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) continue;
 
 	  if (debug) {
 	    cout << endl << "NEW SS EVENT" << endl << endl;	  
@@ -939,7 +952,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  }
 
 	  if (ac_base & 1<<HighPt) {
-	    if (prefix=="ttbar") cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << " ls=" << ls_ << endl;
+	    //if (prefix=="ttbar") cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << " ls=" << ls_ << endl;
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_br","hyp_highpt_br",30,0,30,br,weight_);
 	    if ( isFromW(hyp.traiLep()) && isFromW(hyp.leadLep()) ) {
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromW","hyp_highpt_br_fromW",30,0,30,br,weight_);
