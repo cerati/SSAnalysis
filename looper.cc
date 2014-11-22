@@ -26,6 +26,8 @@ bool lepsort (Lep i,Lep j) {
   else return ( abs(i.pdgId())>abs(j.pdgId()) );
 }
 
+bool jetptsort (Jet i,Jet j) { return (i.pt()>j.pt()); }
+
 //fixme: put WF and FSR in different categories
 enum LeptonCategories { Prompt = 0, PromptWS = 1, PromptWF = 2, PromptFSR = 2, 
 			FakeLightTrue = 3, FakeC = 4, FakeB = 5, FakeLightFake = 6, FakeHiPtGamma = 7, 
@@ -132,42 +134,39 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       float lumi = 10.;
 
       /*
-      if (
-	  evt_event()!=  43692964 &&
-	  evt_event()!=  65774137 &&
-	  evt_event()!=   5387415 &&
-	  evt_event()!= 124546173 &&
-	  evt_event()!=    568709 &&
-	  evt_event()!=  77909511 &&
-	  evt_event()!= 122866534 &&
-	  evt_event()!=  44782110 &&
-	  evt_event()!= 111401182 &&
-	  evt_event()!=  53545464 &&
-	  evt_event()!=  19875516 &&
-	  evt_event()!=  83136440 &&
-	  evt_event()!=   1844261 &&
-	  evt_event()!=   3646755 &&
-	  evt_event()!=   7633972 &&
-	  evt_event()!= 123155239 &&
-	  evt_event()!=  92920285 &&
-	  evt_event()!=  17012696 &&
-	  evt_event()!=  19302194 &&
-	  evt_event()!=  92578280 &&
-	  evt_event()!= 123339214 &&
-	  evt_event()!=  35773484 &&
-	  evt_event()!=  30991903 &&
-	  evt_event()!=  48586491 &&
-	  evt_event()!=  47551608 &&
-	  evt_event()!= 116109011 &&
-	  evt_event()!=   4372004 &&
-	  evt_event()!=  32149198 &&
-	  evt_event()!=  43797694 &&
-	  evt_event()!=  88504031 &&
-	  evt_event()!= 122477348 &&
-	  evt_event()!=  94865204 )  continue;
-      std::cout << "event =" << evt_event() << std::endl;
+	if (evt_event()!=  13505442    &&
+	// evt_event()!= 13257188    &&
+	// evt_event()!= 23477869    &&
+	// evt_event()!= 23637563    &&
+	// evt_event()!= 24057459    &&
+	// evt_event()!= 27882277    &&
+	evt_event()!=  31523263   &&
+	evt_event()!=  43046287   &&
+	// evt_event()!= 48749515    &&
+	// evt_event()!= 52510072    &&
+	// evt_event()!= 59752897    &&
+	evt_event()!=  62070700   &&
+	// evt_event()!= 68718274    &&
+	evt_event()!=  73473787   &&
+	evt_event()!=  75196857   &&
+	// evt_event()!= 74994186    &&
+	// evt_event()!= 81183414    &&
+	evt_event()!=  83053767   &&
+	// evt_event()!= 83394082    &&
+	evt_event()!=  93203227   &&
+	// evt_event()!= 98760784    &&
+	evt_event()!= 103341316   &&
+	evt_event()!= 108415158   &&
+	evt_event()!= 112556492   &&
+	// evt_event()!=  112516047  &&
+	evt_event()!= 113641646   &&
+	evt_event()!= 113872516   &&
+	evt_event()!= 113953497   
+	evt_event()!=  124975131  
+	)  continue;
+	std::cout << "event =" << evt_event() << std::endl;
       */
-  
+
       //fill baby
       run_   = evt_run();
       ls_    = evt_lumiBlock();
@@ -257,40 +256,54 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //jets, ht, btags
       if (debug) cout << "jets" << endl;
       int njets = 0;
+      vector<Jet> jets;
       int nbtag = 0;
+      vector<Jet> btags;
       float ht=0;
       //fixme: should add corrections
       float drcut = 0.4;
       if (makeQCDtest) drcut = 1.0;
       for (unsigned int pfjidx=0;pfjidx<pfjets_p4().size();++pfjidx) {
-	if (fabs(pfjets_p4()[pfjidx].eta())>2.4) continue;
+	Jet jet(pfjidx);
+	if (debug) cout << "jet pt=" << jet.pt() << " eta=" << jet.eta() << endl;
+	if (fabs(jet.eta())>2.4) continue;
+	if (debug) cout << "jet pass eta" << endl;
 	if (isLoosePFJet(pfjidx)==false) continue;
+	if (debug) cout << "jet pass loose pf id" << endl;
 	//add pu jet id pfjets_pileupJetId()>????
 	bool isLep = false;
 	//fixme: should be checked agains fo or good leptons?
 	if (makeQCDtest) {
 	  for (unsigned int fo=0;fo<fobs.size();++fo) {
-	    if (deltaR(pfjets_p4()[pfjidx],fobs[fo].p4())<drcut) {
+	    if (deltaR(jet.p4(),fobs[fo].p4())<drcut) {
 	      isLep =true;
 	      break;
 	    }
 	  }
 	} else {
 	  for (unsigned int gl=0;gl<goodleps.size();++gl) {
-	    if (deltaR(pfjets_p4()[pfjidx],goodleps[gl].p4())<drcut) {
+	    if (deltaR(jet.p4(),goodleps[gl].p4())<drcut) {
 	      isLep =true;
 	      break;
 	    }
 	  }
 	}
 	if (isLep) continue;
-	float jetpt = pfjets_p4()[pfjidx].pt()*cms2.pfjets_corL1FastL2L3()[pfjidx]; 
+	if (debug) cout << "jet pass lepton clean" << endl;
+	float jetpt = jet.pt(); 
 	if (jetpt>40.) {
+	  if (debug) cout << "jet pass pT cut" << endl;
 	  njets++;
+	  jets.push_back(jet);
 	  ht+=jetpt;
-	  if (pfjets_combinedSecondaryVertexBJetTag()[pfjidx]>0.679) nbtag++;
+	  if (jet.csv()>0.679) {
+	    nbtag++;
+	    btags.push_back(jet);
+	  }
 	}
       }
+      std::sort(jets.begin(),jets.end(),jetptsort);
+      std::sort(btags.begin(),btags.end(),jetptsort);
 
       //met
       if (debug) cout << "met" << endl;
@@ -744,6 +757,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  if ( hypleps[gl].pdgId()!=-vetoleps[vl].pdgId() ) continue; 
 	  float mll = (hypleps[gl].p4()+vetoleps[vl].p4()).mass();
 	  if ( (fabs(mll-91.2)<15&&vetoleps[vl].pt()>10. ) || (mll<12&&vetoleps[vl].pt()>5. ) ) {
+	    if (debug) cout << "mll=" << mll << " l1id=" << hypleps[gl].pdgId() << " pt=" << hypleps[gl].pt() << " vlid=" << vetoleps[vl].pdgId() << " pt=" << vetoleps[vl].pt() << endl;
 	    leptonVeto = true;
 	    break;
 	  }
@@ -751,6 +765,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       if (leptonVeto) {
 	if (debug) cout<< "skip, 3rd lepton veto" << endl;	
+	if (debug) cout<< "hyp leps id=" << hypleps[0].pdgId() << " pt=" << hypleps[0].pt() << " id=" << hypleps[1].pdgId() << " pt=" << hypleps[1].pt() << endl;
 	continue;
       }
 
@@ -861,13 +876,13 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	  if (debug) {
 	    cout << endl << "NEW SS EVENT" << endl << endl;	  
-	    cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
+	    cout << "lead lep id=" << hyp.leadLep().pdgId() << " pt=" << hyp.leadLep().pt() << " eta=" << hyp.leadLep().eta() << " p4=" << hyp.leadLep().p4() 
 		 << " mcid=" << hyp.leadLep().mc_id() << " mcp4=" << hyp.leadLep().mc_p4() << " mother_id=" << hyp.leadLep().mc_motherid()
 		 << " mc3idx=" << hyp.leadLep().mc3idx() << " mc3_id=" << hyp.leadLep().mc3_id() 
 		 << " mc3_motheridx=" << hyp.leadLep().mc3_motheridx() << " mc3_mother_id=" << hyp.leadLep().mc3_motherid()
 		 << " genps_id_mother()[hyp.leadLep().mc3_motheridx()]=" << genps_id_mother()[hyp.leadLep().mc3_motheridx()]
 		 << endl;
-	    cout << "trai lep id=" << hyp.traiLep().pdgId() << " p4=" << hyp.traiLep().p4() 
+	    cout << "trai lep id=" << hyp.traiLep().pdgId() << " pt=" << hyp.traiLep().pt() << " eta=" << hyp.traiLep().eta() << " p4=" << hyp.traiLep().p4() 
 		 << " mcid=" << hyp.traiLep().mc_id() << " mcp4=" << hyp.traiLep().mc_p4()  << " mother_id=" << hyp.traiLep().mc_motherid()
 		 << " mc3idx=" << hyp.traiLep().mc3idx() << " mc3_id=" << hyp.traiLep().mc3_id() 
 		 << " mc3_motheridx=" << hyp.traiLep().mc3_motheridx() << " mc3_mother_id=" << hyp.traiLep().mc3_motherid()
@@ -881,6 +896,9 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  makeFillHisto1D<TH1F,int>("hyp_ss_nbtag","hyp_ss_nbtag",20,0,20,nbtag,weight_);
 	  makeFillHisto1D<TH1F,float>("hyp_ss_ht","hyp_ss_ht",50,0,2000,ht,weight_);
 	  makeFillHisto1D<TH1F,float>("hyp_ss_met","hyp_ss_met",50,0,500,met,weight_);
+
+	  makeFillHisto1D<TH1F,int>("hyp_ss_leadjetpt","hyp_ss_leadjetpt",50,0,1000,jets[0].pt(),weight_);
+	  if (btags.size()>0) makeFillHisto1D<TH1F,int>("hyp_ss_leadbtagpt","hyp_ss_leadbtagpt",50,0,1000,btags[0].pt(),weight_);
 
 	  makeFillHisto1D<TH1F,float>("hyp_ss_mll","hyp_ss_mll",100,0,1000,hyp.p4().mass(),weight_);
 	  makeFillHisto1D<TH1F,float>("hyp_ss_ptll","hyp_ss_ptll",100,0,1000,hyp.p4().pt(),weight_);
@@ -953,6 +971,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	  if (ac_base & 1<<HighPt) {
 	    //if (prefix=="ttbar") cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << " ls=" << ls_ << endl;
+	    if (prefix=="ttbar2") cout << ls_  << " *    " << evt_ << endl;
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_br","hyp_highpt_br",30,0,30,br,weight_);
 	    if ( isFromW(hyp.traiLep()) && isFromW(hyp.leadLep()) ) {
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromW","hyp_highpt_br_fromW",30,0,30,br,weight_);
@@ -1073,6 +1092,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc_mother","hyp_ss_fakelead_"+ll+"_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid(),weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc3","hyp_ss_fakelead_"+ll+"_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id(),weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc3_mother","hyp_ss_fakelead_"+ll+"_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid(),weight_);
+
+	      makeFillHisto1D<TH1F,float>("hyp_ss_fakelead_"+lt+"_relIso03","hyp_ss_fakelead_"+lt+"_relIso03",100,0.,1.,hyp.leadLep().relIso03(),weight_);
 	      
 	      if (isFromB(hyp.leadLep()) ) leadType=FakeB;
 	      else if (isFromC(hyp.leadLep()) ) leadType=FakeC;
@@ -1126,14 +1147,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    else if (leadType==PromptWS) makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,2,weight_);
 	    else makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,0,weight_);
 	    
-	    if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) makeFillHisto1D<TH1F,int>("hyp_sstype","hyp_sstype",3,0,3,0,weight_);
-	    else makeFillHisto1D<TH1F,int>("hyp_sstype","hyp_sstype",3,0,3,1,weight_);
+	    if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) makeFillHisto1D<TH1F,int>("hyp_ismcss","hyp_ismcss",3,0,3,0,weight_);
+	    else makeFillHisto1D<TH1F,int>("hyp_ismcss","hyp_ismcss",3,0,3,1,weight_);
 	    
 	    if (isLeadPrompt && isTrailPrompt) {
 	      int leadprompttype = -1;
 	      if (leadType==0 && trailType==0) {
 		leadprompttype=0;
-		cout << "UNEXPECTED DOUBLE PROMPT" << endl;
+		//cout << "UNEXPECTED DOUBLE PROMPT" << endl;
 	      } else if (leadType==1 || trailType==1) leadprompttype=1;
 	      else if (leadType==2 || trailType==2) leadprompttype=1;
 	      else  leadprompttype=3;
