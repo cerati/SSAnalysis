@@ -316,16 +316,16 @@ bool isMuonFO(unsigned int muIdx){
   if (mus_numberOfMatchedStations().at(muIdx) < 2)                    return false;
   if (mus_validPixelHits().at(muIdx) == 0)                            return false;
   if (mus_nlayers().at(muIdx) < 6)                                    return false;
-  if (mus_dxyPV().at(muIdx) > 0.2)                                    return false;
-  if (mus_dzPV().at(muIdx) > 0.1)                                     return false;
+  if (fabs(mus_dxyPV().at(muIdx)) > 0.2)                              return false;
+  if (fabs(mus_dzPV().at(muIdx)) > 0.1)                               return false;
   return true;
 }
 
 bool isTightMuon(unsigned int muIdx){
   if (!isMuonFO(muIdx)) return false;
   //fixme not applying MIP requirement in calo
-  if (mus_dzPV().at(muIdx) > 0.1)                                    return false;//fixme?
-  if (mus_dxyPV().at(muIdx) > 0.005)                                 return false;//fixme?
+  if (fabs(mus_dzPV().at(muIdx)) > 0.1)                              return false;//fixme?
+  if (fabs(mus_dxyPV().at(muIdx)) > 0.005)                           return false;//fixme?
   return true;
 }
 

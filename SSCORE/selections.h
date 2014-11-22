@@ -46,6 +46,16 @@ private:
   Lep leadlep, trailep;
 };
 
+struct Jet {
+  Jet(int idx):idx_(idx){}
+  LorentzVector p4() {return cms2.pfjets_p4()[idx_]*cms2.pfjets_corL1FastL2L3()[idx_];}
+  float pt() {return p4().pt();}
+  float eta() {return p4().eta();}
+  float csv() {return cms2.pfjets_combinedSecondaryVertexBJetTag()[idx_];}
+private:
+  int idx_;
+};
+
 bool isFakableElectron(unsigned int);
 bool isFakableMuon(unsigned int);
 bool isGoodElectron(unsigned int);
