@@ -26,6 +26,8 @@ bool lepsort (Lep i,Lep j) {
   else return ( abs(i.pdgId())>abs(j.pdgId()) );
 }
 
+bool jetptsort (Jet i,Jet j) { return (i.pt()>j.pt()); }
+
 //fixme: put WF and FSR in different categories
 enum LeptonCategories { Prompt = 0, PromptWS = 1, PromptWF = 2, PromptFSR = 2, 
 			FakeLightTrue = 3, FakeC = 4, FakeB = 5, FakeLightFake = 6, FakeHiPtGamma = 7, 
@@ -130,42 +132,44 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       float lumi = 10.;
 
       /*
-      if (
-	  evt_event()!=  43692964 &&
-	  evt_event()!=  65774137 &&
-	  evt_event()!=   5387415 &&
-	  evt_event()!= 124546173 &&
-	  evt_event()!=    568709 &&
-	  evt_event()!=  77909511 &&
-	  evt_event()!= 122866534 &&
-	  evt_event()!=  44782110 &&
-	  evt_event()!= 111401182 &&
-	  evt_event()!=  53545464 &&
-	  evt_event()!=  19875516 &&
-	  evt_event()!=  83136440 &&
-	  evt_event()!=   1844261 &&
-	  evt_event()!=   3646755 &&
-	  evt_event()!=   7633972 &&
-	  evt_event()!= 123155239 &&
-	  evt_event()!=  92920285 &&
-	  evt_event()!=  17012696 &&
-	  evt_event()!=  19302194 &&
-	  evt_event()!=  92578280 &&
-	  evt_event()!= 123339214 &&
-	  evt_event()!=  35773484 &&
-	  evt_event()!=  30991903 &&
-	  evt_event()!=  48586491 &&
-	  evt_event()!=  47551608 &&
-	  evt_event()!= 116109011 &&
-	  evt_event()!=   4372004 &&
-	  evt_event()!=  32149198 &&
-	  evt_event()!=  43797694 &&
-	  evt_event()!=  88504031 &&
-	  evt_event()!= 122477348 &&
-	  evt_event()!=  94865204 )  continue;
+      if (evt_event()!=  13505442    &&
+          // evt_event()!= 13257188    &&
+          // evt_event()!= 23477869    &&
+          // evt_event()!= 23637563    &&
+          // evt_event()!= 24057459    &&
+          // evt_event()!= 27882277    &&
+          evt_event()!=  31523263   &&
+          evt_event()!=  43046287   &&
+          // evt_event()!= 48749515    &&
+          // evt_event()!= 52510072    &&
+          // evt_event()!= 59752897    &&
+          evt_event()!=  62070700   &&
+          // evt_event()!= 68718274    &&
+          evt_event()!=  73473787   &&
+          evt_event()!=  75196857   &&
+          // evt_event()!= 74994186    &&
+          // evt_event()!= 81183414    &&
+          evt_event()!=  83053767   &&
+          // evt_event()!= 83394082    &&
+          evt_event()!=  93203227   &&
+          // evt_event()!= 98760784    &&
+          evt_event()!= 103341316   &&
+          evt_event()!= 108415158   &&
+          evt_event()!= 112556492   &&
+          // evt_event()!=  112516047  &&
+          evt_event()!= 113641646   &&
+          evt_event()!= 113872516   &&
+          evt_event()!= 113953497
+          // evt_event()!=  124975131
+          )  continue;
       std::cout << "event =" << evt_event() << std::endl;
       */
-  
+      /*
+      if (evt_event()!= 568709)  continue;
+      std::cout << "event =" << evt_event() << std::endl;
+      cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << endl;      
+      */  
+
       //fill baby
       run_   = evt_run();
       ls_    = evt_lumiBlock();
@@ -197,13 +201,17 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       vector<Lep> fobs;
       for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
 	//electron fo selection
+	if (debug) cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " q=" << els_charge()[elidx] << endl;
 	if (isFakableElectron(elidx)==0) continue;
+	if (debug) cout << "pass FO selection" << endl;
 	Lep foel(-1*els_charge().at(elidx)*11,elidx);
 	fobs.push_back(foel);
       }
       for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
 	//muon fo selection
+	if (debug) cout << "mu pt=" << mus_p4()[muidx].pt() << " eta=" << mus_p4()[muidx].eta() << " q=" << mus_charge()[muidx]<< endl;
 	if (isFakableMuon(muidx)==0) continue;
+	if (debug) cout << "pass FO selection" << endl;
 	Lep fomu(-1*mus_charge().at(muidx)*13,muidx);
 	fobs.push_back(fomu);
       }
@@ -255,31 +263,54 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //jets, ht, btags
       if (debug) cout << "jets" << endl;
       int njets = 0;
+      vector<Jet> jets;
       int nbtag = 0;
+      vector<Jet> btags;
       float ht=0;
       //fixme: should add corrections
       float drcut = 0.4;
       if (makeQCDtest) drcut = 1.0;
       for (unsigned int pfjidx=0;pfjidx<pfjets_p4().size();++pfjidx) {
-	if (fabs(pfjets_p4()[pfjidx].eta())>2.4) continue;
-	if (isLoosePFJet(pfjidx)==false) continue;
-	//add pu jet id pfjets_pileupJetId()>????
-	bool isLep = false;
-	//fixme: should be checked agains fo or good leptons?
-	for (unsigned int fo=0;fo<fobs.size();++fo) {
-	  if (deltaR(pfjets_p4()[pfjidx],fobs[fo].p4())<drcut) {
-	    isLep =true;
-	    break;
-	  }
-	}
-	if (isLep) continue;
-	float jetpt = pfjets_p4()[pfjidx].pt()*cms2.pfjets_corL1FastL2L3()[pfjidx]; 
-	if (jetpt>40.) {
-	  njets++;
-	  ht+=jetpt;
-	  if (pfjets_combinedSecondaryVertexBJetTag()[pfjidx]>0.679) nbtag++;
-	}
+        Jet jet(pfjidx);
+        if (debug) cout << "jet pt=" << jet.pt() << " eta=" << jet.eta() << endl;
+        if (fabs(jet.eta())>2.4) continue;
+        if (debug) cout << "jet pass eta" << endl;
+        if (isLoosePFJet(pfjidx)==false) continue;
+        if (debug) cout << "jet pass loose pf id" << endl;
+        //add pu jet id pfjets_pileupJetId()>????
+        bool isLep = false;
+        //fixme: should be checked agains fo or good leptons?
+        if (makeQCDtest) {
+          for (unsigned int fo=0;fo<fobs.size();++fo) {
+            if (deltaR(jet.p4(),fobs[fo].p4())<drcut) {
+              isLep =true;
+              break;
+            }
+          }
+        } else {
+          for (unsigned int gl=0;gl<goodleps.size();++gl) {
+            if (deltaR(jet.p4(),goodleps[gl].p4())<drcut) {
+              isLep =true;
+              break;
+            }
+          }
+        }
+        if (isLep) continue;
+        if (debug) cout << "jet pass lepton clean" << endl;
+        float jetpt = jet.pt();
+        if (jetpt>40.) {
+          if (debug) cout << "jet pass pT cut" << endl;
+          njets++;
+          jets.push_back(jet);
+          ht+=jetpt;
+          if (jet.csv()>0.679) {
+            nbtag++;
+            btags.push_back(jet);
+          }
+        }
       }
+      std::sort(jets.begin(),jets.end(),jetptsort);
+      std::sort(btags.begin(),btags.end(),jetptsort);
 
       //met
       if (debug) cout << "met" << endl;
