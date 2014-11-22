@@ -47,7 +47,7 @@ private:
 };
 
 struct Jet {
-Jet(int idx):idx_(idx){}
+  Jet(int idx):idx_(idx){}
   LorentzVector p4() {return cms2.pfjets_p4()[idx_]*cms2.pfjets_corL1FastL2L3()[idx_];}
   float pt() {return p4().pt();}
   float eta() {return p4().eta();}

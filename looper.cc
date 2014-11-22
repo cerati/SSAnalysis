@@ -51,6 +51,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
   if (whatTest=="SSskim" ){makeSSskim     = 1; makehist = 0;}
   if (whatTest=="QCDskim") makeQCDskim    = 1;
 
+  cout << "Processing " << prefix << " " << postfix << " " << whatTest << endl;
+
   bool debug = 0;  
   if (debug) cout << "running with flags: makeQCDtest=" << makeQCDtest << " makeDYtest=" << makeDYtest 
 		  << " makeWZtest=" << makeWZtest << " makeSSskim=" << makeSSskim << " makeQCDskim=" << makeQCDskim 
@@ -764,6 +766,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  if ( hypleps[gl].pdgId()!=-vetoleps[vl].pdgId() ) continue; 
 	  float mll = (hypleps[gl].p4()+vetoleps[vl].p4()).mass();
 	  if ( (fabs(mll-91.2)<15&&vetoleps[vl].pt()>10. ) || (mll<12&&vetoleps[vl].pt()>5. ) ) {
+	    if (debug) cout << "mll=" << mll << " l1id=" << hypleps[gl].pdgId() << " pt=" << hypleps[gl].pt() << " vlid=" << vetoleps[vl].pdgId() << " pt=" << vetoleps[vl].pt() << endl;
 	    leptonVeto = true;
 	    break;
 	  }
@@ -771,6 +774,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       if (leptonVeto) {
 	if (debug) cout<< "skip, 3rd lepton veto" << endl;	
+	if (debug) cout<< "hyp leps id=" << hypleps[0].pdgId() << " pt=" << hypleps[0].pt() << " id=" << hypleps[1].pdgId() << " pt=" << hypleps[1].pt() << endl;
 	continue;
       }
 
@@ -800,7 +804,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    if (pt>maxPt) pt=maxPt;
 	    if (eta>maxEta) eta=maxEta;
 	    float fr = fr_h->GetBinContent(fr_h->FindBin(pt,eta));
-	    float fre = fr_h->GetBinError(fr_h->FindBin(pt,eta));
+	    //float fre = fr_h->GetBinError(fr_h->FindBin(pt,eta));
 	    float frW = fr/(1.-fr);
 	    //std::cout << "fake rate=" << fr << " +/- " << fre << std::endl;
 	    makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_close":"fr_el_close"),(pdgid==13?"fr_mu_close":"fr_el_close"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_*frW);
@@ -877,15 +881,17 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (hyp.charge()!=0) {
 	  //same sign
 
+	  if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) continue;
+
 	  if (debug) {
 	    cout << endl << "NEW SS EVENT" << endl << endl;	  
-	    cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
+	    cout << "lead lep id=" << hyp.leadLep().pdgId() << " pt=" << hyp.leadLep().pt() << " eta=" << hyp.leadLep().eta() << " p4=" << hyp.leadLep().p4() 
 		 << " mcid=" << hyp.leadLep().mc_id() << " mcp4=" << hyp.leadLep().mc_p4() << " mother_id=" << hyp.leadLep().mc_motherid()
 		 << " mc3idx=" << hyp.leadLep().mc3idx() << " mc3_id=" << hyp.leadLep().mc3_id() 
 		 << " mc3_motheridx=" << hyp.leadLep().mc3_motheridx() << " mc3_mother_id=" << hyp.leadLep().mc3_motherid()
 		 << " genps_id_mother()[hyp.leadLep().mc3_motheridx()]=" << genps_id_mother()[hyp.leadLep().mc3_motheridx()]
 		 << endl;
-	    cout << "trai lep id=" << hyp.traiLep().pdgId() << " p4=" << hyp.traiLep().p4() 
+	    cout << "trai lep id=" << hyp.traiLep().pdgId() << " pt=" << hyp.traiLep().pt() << " eta=" << hyp.traiLep().eta() << " p4=" << hyp.traiLep().p4() 
 		 << " mcid=" << hyp.traiLep().mc_id() << " mcp4=" << hyp.traiLep().mc_p4()  << " mother_id=" << hyp.traiLep().mc_motherid()
 		 << " mc3idx=" << hyp.traiLep().mc3idx() << " mc3_id=" << hyp.traiLep().mc3_id() 
 		 << " mc3_motheridx=" << hyp.traiLep().mc3_motheridx() << " mc3_mother_id=" << hyp.traiLep().mc3_motherid()
@@ -899,6 +905,9 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  makeFillHisto1D<TH1F,int>("hyp_ss_nbtag","hyp_ss_nbtag",20,0,20,nbtag,weight_);
 	  makeFillHisto1D<TH1F,float>("hyp_ss_ht","hyp_ss_ht",50,0,2000,ht,weight_);
 	  makeFillHisto1D<TH1F,float>("hyp_ss_met","hyp_ss_met",50,0,500,met,weight_);
+
+	  makeFillHisto1D<TH1F,int>("hyp_ss_leadjetpt","hyp_ss_leadjetpt",50,0,1000,jets[0].pt(),weight_);
+	  if (btags.size()>0) makeFillHisto1D<TH1F,int>("hyp_ss_leadbtagpt","hyp_ss_leadbtagpt",50,0,1000,btags[0].pt(),weight_);
 
 	  makeFillHisto1D<TH1F,float>("hyp_ss_mll","hyp_ss_mll",100,0,1000,hyp.p4().mass(),weight_);
 	  makeFillHisto1D<TH1F,float>("hyp_ss_ptll","hyp_ss_ptll",100,0,1000,hyp.p4().pt(),weight_);
@@ -970,7 +979,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  }
 
 	  if (ac_base & 1<<HighPt) {
-	    if (prefix=="ttbar") cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << " ls=" << ls_ << endl;
+	    //if (prefix=="ttbar") cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << " ls=" << ls_ << endl;
+	    if (prefix=="ttbar2") cout << ls_  << " *    " << evt_ << endl;
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_br","hyp_highpt_br",30,0,30,br,weight_);
 	    if ( isFromW(hyp.traiLep()) && isFromW(hyp.leadLep()) ) {
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromW","hyp_highpt_br_fromW",30,0,30,br,weight_);
@@ -1015,150 +1025,153 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	  if (prefix=="ttbar") {
 
-	  bool isLeadPrompt = 0;
-	  bool isTrailPrompt = 0;
-	  int leadType = -1;
-	  int trailType = -1;
-
-	  if ( !isFromW(hyp.traiLep()) ) {
-	    //check fakes (mother not W)
-
-	    makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc","hyp_ss_faketrail_"+lt+"_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc_mother","hyp_ss_faketrail_"+lt+"_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc3","hyp_ss_faketrail_"+lt+"_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc3_mother","hyp_ss_faketrail_"+lt+"_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
-
-	    makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_relIso03","hyp_ss_faketrail_"+lt+"_relIso03",100,0.,1.,hyp.traiLep().relIso03(),weight_);
-
-	    if (isFromB(hyp.traiLep()) ) trailType=FakeB;
-	    else if (isFromC(hyp.traiLep()) ) trailType=FakeC;
-	    else if (isFromLight(hyp.traiLep())) trailType=FakeLightTrue;
-	    else if (isFromLightFake(hyp.traiLep())) trailType=FakeLightFake;
-	    else if (hyp.traiLep().mc_id()==22 && hyp.traiLep().mc_p4().pt()>hyp.traiLep().pt()/2.) {
-	      trailType=FakeHiPtGamma;
-	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc","hyp_ss_faketrail_"+lt+"_hiptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc_mother","hyp_ss_faketrail_"+lt+"_hiptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc3","hyp_ss_faketrail_"+lt+"_hiptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc3_mother","hyp_ss_faketrail_"+lt+"_hiptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_pt","hyp_ss_faketrail_"+lt+"_hiptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_ptmc","hyp_ss_faketrail_"+lt+"_hiptgamma_ptmc",50,0,100,hyp.traiLep().mc_p4().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_deltaptoverpt","hyp_ss_faketrail_"+lt+"_hiptgamma_deltaptoverpt",100,-0.5,0.5,(hyp.traiLep().pt()-hyp.traiLep().mc_p4().pt())/hyp.traiLep().mc_p4().pt(),weight_);
-	    } else  {
-	      trailType=FakeUnknown;
-	      if (hyp.traiLep().mc_id()==22 && hyp.traiLep().mc_p4().pt()<1.) {
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,FakeLowPtGamma,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc","hyp_ss_faketrail_"+lt+"_lowptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc_mother","hyp_ss_faketrail_"+lt+"_lowptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc3","hyp_ss_faketrail_"+lt+"_lowptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc3_mother","hyp_ss_faketrail_"+lt+"_lowptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_lowptgamma_pt","hyp_ss_faketrail_"+lt+"_category_lowptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
-	      } else if (hyp.traiLep().mc_id()==-9999 && hyp.traiLep().mc_motherid()==-9999 && hyp.traiLep().mc3_id()==-9999 && hyp.traiLep().mc3_motherid()==-9999) {
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,All9999,weight_);
-		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_all9999_pt","hyp_ss_faketrail_"+lt+"_category_all9999_pt",50,0,100,hyp.traiLep().pt(),weight_);
+	    bool isLeadPrompt = 0;
+	    bool isTrailPrompt = 0;
+	    int leadType = -1;
+	    int trailType = -1;
+	    
+	    if ( !isFromW(hyp.traiLep()) ) {
+	      //check fakes (mother not W)
+	      
+	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc","hyp_ss_faketrail_"+lt+"_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc_mother","hyp_ss_faketrail_"+lt+"_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc3","hyp_ss_faketrail_"+lt+"_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc3_mother","hyp_ss_faketrail_"+lt+"_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+	      
+	      makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_relIso03","hyp_ss_faketrail_"+lt+"_relIso03",100,0.,1.,hyp.traiLep().relIso03(),weight_);
+	      
+	      if (isFromB(hyp.traiLep()) ) trailType=FakeB;
+	      else if (isFromC(hyp.traiLep()) ) trailType=FakeC;
+	      else if (isFromLight(hyp.traiLep())) trailType=FakeLightTrue;
+	      else if (isFromLightFake(hyp.traiLep())) trailType=FakeLightFake;
+	      else if (hyp.traiLep().mc_id()==22 && hyp.traiLep().mc_p4().pt()>hyp.traiLep().pt()/2.) {
+		trailType=FakeHiPtGamma;
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc","hyp_ss_faketrail_"+lt+"_hiptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc_mother","hyp_ss_faketrail_"+lt+"_hiptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc3","hyp_ss_faketrail_"+lt+"_hiptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc3_mother","hyp_ss_faketrail_"+lt+"_hiptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_pt","hyp_ss_faketrail_"+lt+"_hiptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_ptmc","hyp_ss_faketrail_"+lt+"_hiptgamma_ptmc",50,0,100,hyp.traiLep().mc_p4().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_hiptgamma_deltaptoverpt","hyp_ss_faketrail_"+lt+"_hiptgamma_deltaptoverpt",100,-0.5,0.5,(hyp.traiLep().pt()-hyp.traiLep().mc_p4().pt())/hyp.traiLep().mc_p4().pt(),weight_);
+	      } else  {
+		trailType=FakeUnknown;
+		if (hyp.traiLep().mc_id()==22 && hyp.traiLep().mc_p4().pt()<1.) {
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,FakeLowPtGamma,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc","hyp_ss_faketrail_"+lt+"_lowptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc_mother","hyp_ss_faketrail_"+lt+"_lowptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc3","hyp_ss_faketrail_"+lt+"_lowptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc3_mother","hyp_ss_faketrail_"+lt+"_lowptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_lowptgamma_pt","hyp_ss_faketrail_"+lt+"_category_lowptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
+		} else if (hyp.traiLep().mc_id()==-9999 && hyp.traiLep().mc_motherid()==-9999 && hyp.traiLep().mc3_id()==-9999 && hyp.traiLep().mc3_motherid()==-9999) {
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,All9999,weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_all9999_pt","hyp_ss_faketrail_"+lt+"_category_all9999_pt",50,0,100,hyp.traiLep().pt(),weight_);
+		}
+		else {
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,Other,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc","hyp_ss_faketrail_"+lt+"_other_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc_mother","hyp_ss_faketrail_"+lt+"_other_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc3","hyp_ss_faketrail_"+lt+"_other_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc3_mother","hyp_ss_faketrail_"+lt+"_other_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_other_pt","hyp_ss_faketrail_"+lt+"_category_other_pt",50,0,100,hyp.traiLep().pt(),weight_);
+		  /*
+		    cout << "UNKNOWN FAKE LEPTON " << lt << endl;
+		    cout << "trai lep id=" << hyp.traiLep().pdgId() << " p4=" << hyp.traiLep().p4() 
+		    << " mcid=" << hyp.traiLep().mc_id() << " mcp4=" << hyp.traiLep().mc_p4()  << " mother_id=" << hyp.traiLep().mc_motherid()
+		    << " mc3idx=" << hyp.traiLep().mc3idx() << " mc3_id=" << hyp.traiLep().mc3_id() 
+		    << " mc3_motheridx=" << hyp.traiLep().mc3_motheridx() << " mc3_mother_id=" << hyp.traiLep().mc3_motherid()
+		    << " genps_id_mother()[hyp.traiLep().mc3_motheridx()]=" << genps_id_mother()[hyp.traiLep().mc3_motheridx()]
+		    << endl;
+		  */
+		}
 	      }
-	      else {
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,Other,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc","hyp_ss_faketrail_"+lt+"_other_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc_mother","hyp_ss_faketrail_"+lt+"_other_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc3","hyp_ss_faketrail_"+lt+"_other_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_other_mc3_mother","hyp_ss_faketrail_"+lt+"_other_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_other_pt","hyp_ss_faketrail_"+lt+"_category_other_pt",50,0,100,hyp.traiLep().pt(),weight_);
-		/*
-		cout << "UNKNOWN FAKE LEPTON " << lt << endl;
-		cout << "trai lep id=" << hyp.traiLep().pdgId() << " p4=" << hyp.traiLep().p4() 
-		     << " mcid=" << hyp.traiLep().mc_id() << " mcp4=" << hyp.traiLep().mc_p4()  << " mother_id=" << hyp.traiLep().mc_motherid()
-		     << " mc3idx=" << hyp.traiLep().mc3idx() << " mc3_id=" << hyp.traiLep().mc3_id() 
-		     << " mc3_motheridx=" << hyp.traiLep().mc3_motheridx() << " mc3_mother_id=" << hyp.traiLep().mc3_motherid()
-		     << " genps_id_mother()[hyp.traiLep().mc3_motheridx()]=" << genps_id_mother()[hyp.traiLep().mc3_motheridx()]
-		     << endl;
-		*/
-	      }
+	      
+	    } else {
+	      
+	      isTrailPrompt = 1;
+	      if ( hyp.traiLep().pdgId()==hyp.traiLep().mc_id() ) trailType=Prompt;
+	      else if ( abs(hyp.traiLep().pdgId())==abs(hyp.traiLep().mc_id()) ) trailType=PromptWS;
+	      else if ( abs(hyp.traiLep().pdgId())==11 ? abs(hyp.traiLep().mc_id())==13 : abs(hyp.traiLep().mc_id())==11 ) trailType=PromptWF;
+	      else if ( hyp.traiLep().mc_id()==22) trailType=PromptFSR;
+	      else cout << "UNKNOWN PROMPT LEPTON " << lt << endl;
+	      
 	    }
+	    if ( !isFromW(hyp.leadLep()) ) {
+	      
+	      makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc","hyp_ss_fakelead_"+ll+"_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc_mother","hyp_ss_fakelead_"+ll+"_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc3","hyp_ss_fakelead_"+ll+"_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc3_mother","hyp_ss_fakelead_"+ll+"_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid(),weight_);
 
-	  } else {
-
-	    isTrailPrompt = 1;
-	    if ( hyp.traiLep().pdgId()==hyp.traiLep().mc_id() ) trailType=Prompt;
-	    else if ( abs(hyp.traiLep().pdgId())==abs(hyp.traiLep().mc_id()) ) trailType=PromptWS;
-	    else if ( abs(hyp.traiLep().pdgId())==11 ? abs(hyp.traiLep().mc_id())==13 : abs(hyp.traiLep().mc_id())==11 ) trailType=PromptWF;
-	    else if ( hyp.traiLep().mc_id()==22) trailType=PromptFSR;
-	    else cout << "UNKNOWN PROMPT LEPTON " << lt << endl;
-
-	  }
-	  if ( !isFromW(hyp.leadLep()) ) {
-
-	    makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc","hyp_ss_fakelead_"+ll+"_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc_mother","hyp_ss_fakelead_"+ll+"_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc3","hyp_ss_fakelead_"+ll+"_mc3",11001,-5500.5,5500.5,hyp.leadLep().mc3_id(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc3_mother","hyp_ss_fakelead_"+ll+"_mc3_mother",11001,-5500.5,5500.5,hyp.leadLep().mc3_motherid(),weight_);
-
-	    if (isFromB(hyp.leadLep()) ) leadType=FakeB;
-	    else if (isFromC(hyp.leadLep()) ) leadType=FakeC;
-	    else if (isFromLight(hyp.leadLep())) leadType=FakeLightTrue;
-	    else if (isFromLightFake(hyp.leadLep())) leadType=FakeLightFake;
-	    else if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()>hyp.leadLep().pt()/2.) leadType=FakeHiPtGamma;
-	    else {
-	      leadType=FakeUnknown;
-	      if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()<1.) 
-		makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,FakeLowPtGamma,weight_);
-	      else if (hyp.leadLep().mc_id()==-9999 && hyp.leadLep().mc_motherid()==-9999 && hyp.leadLep().mc3_id()==-9999 && hyp.leadLep().mc3_motherid()==-9999)
-		makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,All9999,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_ss_fakelead_"+lt+"_relIso03","hyp_ss_fakelead_"+lt+"_relIso03",100,0.,1.,hyp.leadLep().relIso03(),weight_);
+	      
+	      if (isFromB(hyp.leadLep()) ) leadType=FakeB;
+	      else if (isFromC(hyp.leadLep()) ) leadType=FakeC;
+	      else if (isFromLight(hyp.leadLep())) leadType=FakeLightTrue;
+	      else if (isFromLightFake(hyp.leadLep())) leadType=FakeLightFake;
+	      else if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()>hyp.leadLep().pt()/2.) leadType=FakeHiPtGamma;
 	      else {
-		makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,Other,weight_);
-		/*
-		cout << "UNKNOWN FAKE LEPTON " << ll << endl;
-		cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
-		     << " mcid=" << hyp.leadLep().mc_id() << " mcp4=" << hyp.leadLep().mc_p4() << " mother_id=" << hyp.leadLep().mc_motherid()
-		     << " mc3idx=" << hyp.leadLep().mc3idx() << " mc3_id=" << hyp.leadLep().mc3_id() 
-		     << " mc3_motheridx=" << hyp.leadLep().mc3_motheridx() << " mc3_mother_id=" << hyp.leadLep().mc3_motherid()
-		     << " genps_id_mother()[hyp.leadLep().mc3_motheridx()]=" << genps_id_mother()[hyp.leadLep().mc3_motheridx()]
-		     << endl;
-		*/
+		leadType=FakeUnknown;
+		if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()<1.) 
+		  makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,FakeLowPtGamma,weight_);
+		else if (hyp.leadLep().mc_id()==-9999 && hyp.leadLep().mc_motherid()==-9999 && hyp.leadLep().mc3_id()==-9999 && hyp.leadLep().mc3_motherid()==-9999)
+		  makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,All9999,weight_);
+		else {
+		  makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_category","hyp_ss_fakelead_"+ll+"_category",End,0,End,Other,weight_);
+		  /*
+		    cout << "UNKNOWN FAKE LEPTON " << ll << endl;
+		    cout << "lead lep id=" << hyp.leadLep().pdgId() << " p4=" << hyp.leadLep().p4() 
+		    << " mcid=" << hyp.leadLep().mc_id() << " mcp4=" << hyp.leadLep().mc_p4() << " mother_id=" << hyp.leadLep().mc_motherid()
+		    << " mc3idx=" << hyp.leadLep().mc3idx() << " mc3_id=" << hyp.leadLep().mc3_id() 
+		    << " mc3_motheridx=" << hyp.leadLep().mc3_motheridx() << " mc3_mother_id=" << hyp.leadLep().mc3_motherid()
+		    << " genps_id_mother()[hyp.leadLep().mc3_motheridx()]=" << genps_id_mother()[hyp.leadLep().mc3_motheridx()]
+		    << endl;
+		  */
+		}
 	      }
+	      
+	    } else {
+	      
+	      isLeadPrompt = 1;
+	      if ( hyp.leadLep().pdgId()==hyp.leadLep().mc_id() ) leadType=Prompt;
+	      else if ( abs(hyp.leadLep().pdgId())==abs(hyp.leadLep().mc_id()) ) leadType=PromptWS;
+	      else if ( abs(hyp.leadLep().pdgId())==11 ? abs(hyp.leadLep().mc_id())==13 : abs(hyp.leadLep().mc_id())==11 ) leadType=PromptWF;
+	      else if ( hyp.leadLep().mc_id()==22) leadType=PromptFSR;
+	      else cout << "UNKNOWN PROMPT LEPTON " << ll << endl;
+	      
 	    }
-
-	  } else {
-
-	    isLeadPrompt = 1;
-	    if ( hyp.leadLep().pdgId()==hyp.leadLep().mc_id() ) leadType=Prompt;
-	    else if ( abs(hyp.leadLep().pdgId())==abs(hyp.leadLep().mc_id()) ) leadType=PromptWS;
-	    else if ( abs(hyp.leadLep().pdgId())==11 ? abs(hyp.leadLep().mc_id())==13 : abs(hyp.leadLep().mc_id())==11 ) leadType=PromptWF;
-	    else if ( hyp.leadLep().mc_id()==22) leadType=PromptFSR;
-	    else cout << "UNKNOWN PROMPT LEPTON " << ll << endl;
+	    
+	    if (trailType>-1) makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_category","hyp_ss_trail_"+lt+"_category",End,0,End,trailType,weight_);
+	    if (leadType>-1 ) makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_category","hyp_ss_lead_"+ll+"_category",End,0,End,leadType,weight_);
+	    
+	    if (abs(hyp.traiLep().pdgId())==13 && hyp.traiLep().pt()>10 && trailType>-1) makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_ptGt10_category","hyp_ss_trail_"+lt+"_ptGt10_category",End,0,End,trailType,weight_);
+	    else if (abs(hyp.traiLep().pdgId())==13 && hyp.traiLep().pt()<10 && trailType>-1) makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_ptLt10_category","hyp_ss_trail_"+lt+"_ptLt10_category",End,0,End,trailType,weight_);
+	    
+	    int prompttype = -1;
+	    if (isLeadPrompt && isTrailPrompt) prompttype=0;
+	    if (isLeadPrompt && !isTrailPrompt) prompttype=1;
+	    if (!isLeadPrompt && isTrailPrompt) prompttype=2;
+	    if (!isLeadPrompt && !isTrailPrompt) prompttype=3;
+	    makeFillHisto1D<TH1F,int>("hyp_prompttype","hyp_prompttype",5,0,5,prompttype,weight_);
+	    if (trailType==PromptWS) makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,1,weight_);
+	    else if (leadType==PromptWS) makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,2,weight_);
+	    else makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,0,weight_);
+	    
+	    if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) makeFillHisto1D<TH1F,int>("hyp_ismcss","hyp_ismcss",3,0,3,0,weight_);
+	    else makeFillHisto1D<TH1F,int>("hyp_ismcss","hyp_ismcss",3,0,3,1,weight_);
+	    
+	    if (isLeadPrompt && isTrailPrompt) {
+	      int leadprompttype = -1;
+	      if (leadType==0 && trailType==0) {
+		leadprompttype=0;
+		//cout << "UNEXPECTED DOUBLE PROMPT" << endl;
+	      } else if (leadType==1 || trailType==1) leadprompttype=1;
+	      else if (leadType==2 || trailType==2) leadprompttype=1;
+	      else  leadprompttype=3;
+	      makeFillHisto1D<TH1F,int>("hyp_leadprompttype","hyp_leadprompttype",5,0,5,leadprompttype,weight_);
+	    }
 	    
 	  }
 
-	  if (trailType>-1) makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_category","hyp_ss_trail_"+lt+"_category",End,0,End,trailType,weight_);
-	  if (leadType>-1 ) makeFillHisto1D<TH1F,int>("hyp_ss_lead_"+ll+"_category","hyp_ss_lead_"+ll+"_category",End,0,End,leadType,weight_);
-
-	  if (abs(hyp.traiLep().pdgId())==13 && hyp.traiLep().pt()>10 && trailType>-1) makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_ptGt10_category","hyp_ss_trail_"+lt+"_ptGt10_category",End,0,End,trailType,weight_);
-	  else if (abs(hyp.traiLep().pdgId())==13 && hyp.traiLep().pt()<10 && trailType>-1) makeFillHisto1D<TH1F,int>("hyp_ss_trail_"+lt+"_ptLt10_category","hyp_ss_trail_"+lt+"_ptLt10_category",End,0,End,trailType,weight_);
-
-	  int prompttype = -1;
-	  if (isLeadPrompt && isTrailPrompt) prompttype=0;
-	  if (isLeadPrompt && !isTrailPrompt) prompttype=1;
-	  if (!isLeadPrompt && isTrailPrompt) prompttype=2;
-	  if (!isLeadPrompt && !isTrailPrompt) prompttype=3;
-	  makeFillHisto1D<TH1F,int>("hyp_prompttype","hyp_prompttype",5,0,5,prompttype,weight_);
-	  if (trailType==PromptWS) makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,1,weight_);
-	  else if (leadType==PromptWS) makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,2,weight_);
-	  else makeFillHisto1D<TH1F,int>("hyp_fliptype","hyp_fliptype",3,0,3,0,weight_);
-
-	  if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) makeFillHisto1D<TH1F,int>("hyp_sstype","hyp_sstype",3,0,3,0,weight_);
-	  else makeFillHisto1D<TH1F,int>("hyp_sstype","hyp_sstype",3,0,3,1,weight_);
-
-	  if (isLeadPrompt && isTrailPrompt) {
-	    int leadprompttype = -1;
-	    if (leadType==0 && trailType==0) {
-	      leadprompttype=0;
-	      cout << "UNEXPECTED DOUBLE PROMPT" << endl;
-	    } else if (leadType==1 || trailType==1) leadprompttype=1;
-	    else if (leadType==2 || trailType==2) leadprompttype=1;
-	    else  leadprompttype=3;
-	    makeFillHisto1D<TH1F,int>("hyp_leadprompttype","hyp_leadprompttype",5,0,5,leadprompttype,weight_);
-	  }
-
-	  }
 	  /*
 	  //dump genps
 	  for (unsigned int gp_idx=0;gp_idx<genps_p4().size();++gp_idx) {
