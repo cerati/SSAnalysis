@@ -26,6 +26,8 @@ struct Lep {
   int mc_motherid() {return abs(pdgid_)==11 ? cms2.els_mc_motherid().at(idx_) : cms2.mus_mc_motherid().at(idx_);}
   LorentzVector mc_p4() { return abs(pdgid_)==11 ? cms2.els_mc_p4().at(idx_) : cms2.mus_mc_p4().at(idx_);}
   float relIso03() { return abs(pdgid_)==11 ? eleRelIso03(idx_) : muRelIso03(idx_);}
+  float dxyPV() { return abs(pdgid_)==11 ? cms2.els_dxyPV().at(idx_) : cms2.mus_dxyPV().at(idx_);}
+  float dzPV() { return abs(pdgid_)==11 ? cms2.els_dzPV().at(idx_) : cms2.mus_dzPV().at(idx_);}
 private:
   int pdgid_, idx_;
 };
@@ -51,7 +53,12 @@ struct Jet {
   LorentzVector p4() {return cms2.pfjets_p4()[idx_]*cms2.pfjets_corL1FastL2L3()[idx_];}
   float pt() {return p4().pt();}
   float eta() {return p4().eta();}
+  float phi() {return p4().phi();}
   float csv() {return cms2.pfjets_combinedSecondaryVertexBJetTag()[idx_];}
+  int   mc3_id() {return cms2.pfjets_mc3_id()[idx_];}
+  LorentzVector genjet_p4() {return cms2.pfjets_mc_p4()[idx_];}
+  LorentzVector genps_p4() {return cms2.pfjets_mc_gp_p4()[idx_];}
+  int idx() {return idx_;}
 private:
   int idx_;
 };
@@ -85,7 +92,9 @@ bool passHLTTriggerPattern(const char*);
 
 bool idIsCharm(int id);
 bool idIsBeauty(int id);
+bool isFromWZ(Lep lep);
 bool isFromW(Lep lep);
+bool isFromZ(Lep lep);
 bool isFromB(Lep lep);
 bool isFromC(Lep lep);
 bool isFromLight(Lep lep);

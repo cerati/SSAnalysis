@@ -22,8 +22,8 @@ using namespace std;
 bool ptsort (int i,int j) { return (genps_p4()[i].pt()>genps_p4()[j].pt()); }
 
 bool lepsort (Lep i,Lep j) { 
-  if ( abs(i.pdgId())==abs(j.pdgId()) ) return ( i.pt()>j.pt() ); 
-  else return ( abs(i.pdgId())>abs(j.pdgId()) );
+  if ( abs(i.pdgId())==abs(j.pdgId()) ) return ( i.pt()>j.pt() ); //sort by pt if same flavor
+  else return ( abs(i.pdgId())>abs(j.pdgId()) && i.pt()>20. ); //prefer muons over electrons, but check that mu have pt>20//fixme, need to sync
 }
 
 bool jetptsort (Jet i,Jet j) { return (i.pt()>j.pt()); }
@@ -134,43 +134,12 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       float lumi = 10.;
 
       /*
-      if (evt_event()!=  13505442    &&
-          // evt_event()!= 13257188    &&
-          // evt_event()!= 23477869    &&
-          // evt_event()!= 23637563    &&
-          // evt_event()!= 24057459    &&
-          // evt_event()!= 27882277    &&
-          evt_event()!=  31523263   &&
-          evt_event()!=  43046287   &&
-          // evt_event()!= 48749515    &&
-          // evt_event()!= 52510072    &&
-          // evt_event()!= 59752897    &&
-          evt_event()!=  62070700   &&
-          // evt_event()!= 68718274    &&
-          evt_event()!=  73473787   &&
-          evt_event()!=  75196857   &&
-          // evt_event()!= 74994186    &&
-          // evt_event()!= 81183414    &&
-          evt_event()!=  83053767   &&
-          // evt_event()!= 83394082    &&
-          evt_event()!=  93203227   &&
-          // evt_event()!= 98760784    &&
-          evt_event()!= 103341316   &&
-          evt_event()!= 108415158   &&
-          evt_event()!= 112556492   &&
-          // evt_event()!=  112516047  &&
-          evt_event()!= 113641646   &&
-          evt_event()!= 113872516   &&
-          evt_event()!= 113953497
-          // evt_event()!=  124975131
+      if (evt_event()!=  35245  
           )  continue;
       std::cout << "event =" << evt_event() << std::endl;
-      */
-      /*
-      if (evt_event()!= 568709)  continue;
-      std::cout << "event =" << evt_event() << std::endl;
       cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << endl;      
-      */  
+      debug=1;
+      */
 
       //fill baby
       run_   = evt_run();
@@ -192,18 +161,40 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	continue;
       }
 
+      //make sure there are genuine SS leptons for cut_flow_ss
+      int qp=0,qn=0;
+      for (unsigned int gp=0;gp<genps_id().size();++gp) {
+	int pdgid = abs(genps_id()[gp]);
+	if (pdgid!=13 && pdgid!=11) continue;
+	if (genps_id_mother()[gp]!=23 && abs(genps_id_mother()[gp])!=24) continue;
+	if (genps_status()[gp]!=1) continue;//is this needed?
+	if (fabs(genps_p4()[gp].eta())>2.4) continue;
+	if (genps_p4()[gp].pt()<5) continue;
+	if (pdgid==11 && genps_p4()[gp].pt()<10) continue;
+	if (genps_charge()[gp]==1) qp++;
+	if (genps_charge()[gp]==-1) qn++;
+      }
+      bool isGenSS = false;
+      if (qp>1 || qn>1) isGenSS = true;
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,0,weight_);
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,0,weight_);
 
       //start selection
       //vertex
       //fixme: check leptons are from this vertex!
-      if (firstGoodVertex()!=0) continue;
+      if (firstGoodVertex()<0) {
+        if (debug) cout << "does not pass firstGoodVertex" << endl;
+        continue;
+      }
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,1,weight_);
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,1,weight_);
 
       //fakable objects
       if (debug) cout << "fobs" << endl;
       vector<Lep> fobs;
       for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
 	//electron fo selection
-	if (debug) cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " q=" << els_charge()[elidx] << endl;
+	if (debug) cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " phi=" << els_p4()[elidx].phi() << " q=" << els_charge()[elidx] << endl;
 	if (isFakableElectron(elidx)==0) continue;
 	if (debug) cout << "pass FO selection" << endl;
 	Lep foel(-1*els_charge().at(elidx)*11,elidx);
@@ -211,13 +202,15 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
 	//muon fo selection
-	if (debug) cout << "mu pt=" << mus_p4()[muidx].pt() << " eta=" << mus_p4()[muidx].eta() << " q=" << mus_charge()[muidx]<< endl;
+	if (debug) cout << "mu pt=" << mus_p4()[muidx].pt() << " eta=" << mus_p4()[muidx].eta() << " phi=" << mus_p4()[muidx].phi() << " q=" << mus_charge()[muidx]<< endl;
 	if (isFakableMuon(muidx)==0) continue;
 	if (debug) cout << "pass FO selection" << endl;
 	Lep fomu(-1*mus_charge().at(muidx)*13,muidx);
 	fobs.push_back(fomu);
       }
       if (fobs.size()==0) continue;
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,2,weight_);
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,2,weight_);
 
       //write skim here (only qcd)
       if (makeQCDskim) {
@@ -238,12 +231,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (isGoodElectron(elidx)==0) continue;
 	Lep goodel(-1*els_charge().at(elidx)*11,elidx);
 	goodleps.push_back(goodel);
+	if (debug) cout << "good el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " phi=" << els_p4()[elidx].phi() << " q=" << els_charge()[elidx] << endl;
       }
       for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
 	//good muon selection
 	if (isGoodMuon(muidx)==0) continue;
 	Lep goodmu(-1*mus_charge().at(muidx)*13,muidx);
 	goodleps.push_back(goodmu);
+	if (debug) cout << "good mu pt=" << mus_p4()[muidx].pt() << " eta=" << mus_p4()[muidx].eta() << " phi=" << mus_p4()[muidx].phi() << " q=" << mus_charge()[muidx]<< endl;
       }
 
       //veto leptons
@@ -266,7 +261,13 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (debug) cout << "jets" << endl;
       int njets = 0;
       vector<Jet> jets;
+      vector<Jet> alljets;
+      vector<Jet> lepjets;
       int nbtag = 0;
+      int nbtag_pt35 = 0;
+      int nbtag_pt30 = 0;
+      int nbtag_pt25 = 0;
+      int nbtag_pt20 = 0;
       vector<Jet> btags;
       float ht=0;
       //fixme: should add corrections
@@ -274,11 +275,13 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (makeQCDtest) drcut = 1.0;
       for (unsigned int pfjidx=0;pfjidx<pfjets_p4().size();++pfjidx) {
         Jet jet(pfjidx);
+        if (debug) cout << "jet pt=" << jet.pt() << " eta=" << jet.eta() << " phi=" << jet.phi() << endl;
+      }
+      for (unsigned int pfjidx=0;pfjidx<pfjets_p4().size();++pfjidx) {
+        Jet jet(pfjidx);
         if (debug) cout << "jet pt=" << jet.pt() << " eta=" << jet.eta() << endl;
         if (fabs(jet.eta())>2.4) continue;
         if (debug) cout << "jet pass eta" << endl;
-        if (isLoosePFJet(pfjidx)==false) continue;
-        if (debug) cout << "jet pass loose pf id" << endl;
         //add pu jet id pfjets_pileupJetId()>????
         bool isLep = false;
         //fixme: should be checked agains fo or good leptons?
@@ -293,12 +296,22 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
           for (unsigned int gl=0;gl<goodleps.size();++gl) {
             if (deltaR(jet.p4(),goodleps[gl].p4())<drcut) {
               isLep =true;
+	      if (debug) cout << "jet overlapping with lepton" << endl;
+              break;
+            }
+          }
+          for (unsigned int fo=0;fo<fobs.size();++fo) {
+            if (deltaR(jet.p4(),fobs[fo].p4())<0.7) {
+	      lepjets.push_back(jet);
+	      if (debug) cout << "found lepjet inerfering with fo" << endl;
               break;
             }
           }
         }
         if (isLep) continue;
         if (debug) cout << "jet pass lepton clean" << endl;
+        if (isLoosePFJet(pfjidx)==false) continue;
+        if (debug) cout << "jet pass loose pf id" << endl;
         float jetpt = jet.pt();
         if (jetpt>40.) {
           if (debug) cout << "jet pass pT cut" << endl;
@@ -310,14 +323,22 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
             btags.push_back(jet);
           }
         }
+	alljets.push_back(jet);
+	if (jetpt>20. && jet.csv()>0.679) nbtag_pt20++;
+	if (jetpt>25. && jet.csv()>0.679) nbtag_pt25++;
+	if (jetpt>30. && jet.csv()>0.679) nbtag_pt30++;
+	if (jetpt>35. && jet.csv()>0.679) nbtag_pt35++;
       }
       std::sort(jets.begin(),jets.end(),jetptsort);
       std::sort(btags.begin(),btags.end(),jetptsort);
+
 
       //met
       if (debug) cout << "met" << endl;
       float met = evt_pfmet();
       if (met<30. && ht<500. && !makeQCDskim && !makeQCDtest && !makeDYtest) continue;
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,3,weight_);
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,3,weight_);
 
       if (makeQCDtest) {
 	if (debug) cout << "qcdtest" << endl;
@@ -434,21 +455,32 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	for (unsigned int gp=0;gp<genps_id().size();++gp) {
 	  int pdgid = abs(genps_id()[gp]);
 	  if (pdgid!=13 && pdgid!=11) continue;
-	  if (genps_id_mother()[gp]!=23) continue;
+	  if (genps_id_mother()[gp]!=23 && abs(genps_id_mother()[gp])!=24) continue;
 	  if (genps_status()[gp]!=1) continue;//is this needed?
-	  if (genps_p4()[gp].eta()>2.5) continue;
+	  if (fabs(genps_p4()[gp].eta())>2.4) continue;
 	  if (genps_p4()[gp].pt()<5) continue;
 	  if (pdgid==11 && genps_p4()[gp].pt()<10) continue;
 	  //denominator
-	  makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_den":"ef_el_den"),(pdgid==13?"ef_mu_den":"ef_el_den"),10,0.,50.,genps_p4()[gp].pt(),5,0.,2.5,fabs(genps_p4()[gp].eta()),weight_);
+	  makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_den":"ef_el_den"),(pdgid==13?"ef_mu_den":"ef_el_den"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
 	  //numerator
 	  for (unsigned int gl=0;gl<goodleps.size();++gl) {
 	    if (abs(goodleps[gl].pdgId())==pdgid && deltaR(goodleps[gl].p4(),genps_p4()[gp])<0.1) {
 	      //cout << "goodleps.size()=" << goodleps.size() << endl;
-	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num":"ef_el_num"),(pdgid==13?"ef_mu_num":"ef_el_num"),10,0.,50.,genps_p4()[gp].pt(),5,0.,2.5,fabs(genps_p4()[gp].eta()),weight_);
+	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num":"ef_el_num"),(pdgid==13?"ef_mu_num":"ef_el_num"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
 	      //charge flip
 	      makeFillHisto2D<TH2F,float>((pdgid==13?"flip_mu_den":"flip_el_den"),(pdgid==13?"flip_mu_den":"flip_el_den"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
 	      if (goodleps[gl].pdgId()==-genps_id()[gp]) makeFillHisto2D<TH2F,float>((pdgid==13?"flip_mu_num":"flip_el_num"),(pdgid==13?"flip_mu_num":"flip_el_num"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
+	      break;
+	    }
+	  }
+	  //numerator for fobs (i.e. ~relax iso) //fixme apply all cuts except iso
+	  for (unsigned int fo=0;fo<fobs.size();++fo) {
+	    if (abs(fobs[fo].pdgId())==pdgid && deltaR(fobs[fo].p4(),genps_p4()[gp])<0.1) {
+	      //cout << "fobs.size()=" << fobs.size() << endl;
+	      if (fabs(fobs[fo].dzPV())>0.1) continue;
+	      if (fabs(fobs[fo].dxyPV())>0.01) continue;
+	      if (pdgid==13 && fabs(fobs[fo].dxyPV())>0.005) continue;
+	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num_fo":"ef_el_num_fo"),(pdgid==13?"ef_mu_num_fo":"ef_el_num_fo"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
 	      break;
 	    }
 	  }
@@ -727,11 +759,16 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (debug) cout << "skip, fobs size=" << fobs.size() << " hypleps size=" << hypleps.size() << endl;
 	continue;
       }
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,4,weight_);
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,4,weight_);
+
       DilepHyp hyp = (hypleps.size()==2 ? DilepHyp(hypleps[0],hypleps[1]) : DilepHyp(fobs[0],fobs[1]) );
       if (hyp.p4().mass()<8) {
 	if (debug) cout<< "skip, hyp mass=" << hyp.p4().mass() <<endl;
 	continue;
       }
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,5,weight_);
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,5,weight_);
 
       unsigned int ac_base = analysisCategory(hyp.leadLep(),hyp.traiLep());
       passesBaselineCuts(njets, nbtag, met, ht, ac_base);
@@ -742,6 +779,9 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	}
 	continue;
       }
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,6,weight_);
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,6,weight_);
+
       int br = baselineRegion(nbtag);
       unsigned int ac_sig = ac_base;
       passesSignalRegionCuts(ht, met, ac_sig);
@@ -777,6 +817,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (debug) cout<< "hyp leps id=" << hypleps[0].pdgId() << " pt=" << hypleps[0].pt() << " id=" << hypleps[1].pdgId() << " pt=" << hypleps[1].pt() << endl;
 	continue;
       }
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,7,weight_);
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,7,weight_);
 
       //compute fake rate in ss ttbar
       if (hyp.charge()!=0 && prefix=="ttbar") {
@@ -812,6 +854,96 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	}
       }
 
+      bool ht400met120 = false;
+      if (ht>400. || met>120.) ht400met120 = true;//continue;//fixme
+
+      TString ll = abs(hyp.leadLep().pdgId())==13 ? "mu" : "el";
+      TString lt = abs(hyp.traiLep().pdgId())==13 ? "mu" : "el";
+      if (hyp.leadLep().pt()>20 && hyp.traiLep().pt()>20) {
+	//make sure all cuts pass except isolation
+	if (fabs(hyp.traiLep().dzPV())<0.1 && fabs(hyp.traiLep().dxyPV())<0.01 && (abs(hyp.traiLep().pdgId())==11 || fabs(hyp.traiLep().dxyPV())<0.005) ) {
+	  if (isFromW(hyp.traiLep())) {
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_relIso03","hyp_ss_foFromWtrail_"+lt+"_relIso03",10,0.,1.,hyp.traiLep().relIso03(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_iso03","hyp_ss_foFromWtrail_"+lt+"_iso03",10,0.,20.,hyp.traiLep().relIso03()*hyp.traiLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_pt","hyp_ss_foFromWtrail_"+lt+"_pt",10,0.,200.,hyp.traiLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_dxyPV","hyp_ss_foFromWtrail_"+lt+"_dxyPV",100,0,0.1,fabs(hyp.traiLep().dxyPV()),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_dzPV","hyp_ss_foFromWtrail_"+lt+"_dzPV",100,0,0.5,fabs(hyp.traiLep().dzPV()),weight_);
+	  } else {
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFaketrail_"+lt+"_relIso03","hyp_ss_foFaketrail_"+lt+"_relIso03",10,0.,1.,hyp.traiLep().relIso03(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFaketrail_"+lt+"_iso03","hyp_ss_foFaketrail_"+lt+"_iso03",10,0.,20.,hyp.traiLep().relIso03()*hyp.traiLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFaketrail_"+lt+"_pt","hyp_ss_foFaketrail_"+lt+"_pt",10,0.,200.,hyp.traiLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFaketrail_"+lt+"_dxyPV","hyp_ss_foFaketrail_"+lt+"_dxyPV",100,0,0.1,fabs(hyp.traiLep().dxyPV()),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFaketrail_"+lt+"_dzPV","hyp_ss_foFaketrail_"+lt+"_dzPV",100,0,0.5,fabs(hyp.traiLep().dzPV()),weight_);
+	  }
+	}
+
+	//make sure all cuts pass except isolation
+	if (fabs(hyp.leadLep().dzPV())<0.1 && fabs(hyp.leadLep().dxyPV())<0.01 && (abs(hyp.leadLep().pdgId())==11 || fabs(hyp.leadLep().dxyPV())<0.005) ) {
+	  if (isFromW(hyp.leadLep())) {
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_relIso03","hyp_ss_foFromWlead_"+ll+"_relIso03",10,0.,1.,hyp.leadLep().relIso03(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_iso03","hyp_ss_foFromWlead_"+ll+"_iso03",10,0.,20.,hyp.leadLep().relIso03()*hyp.leadLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_pt","hyp_ss_foFromWlead_"+ll+"_pt",10,0.,200.,hyp.leadLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+lt+"_dxyPV","hyp_ss_foFromWlead_"+lt+"_dxyPV",100,0,0.1,fabs(hyp.leadLep().dxyPV()),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+lt+"_dzPV","hyp_ss_foFromWlead_"+lt+"_dzPV",100,0,0.5,fabs(hyp.leadLep().dzPV()),weight_);
+	    
+	    if (hyp.leadLep().relIso03()>0.1) {	    
+	      //test min dR between leptons and jets
+	      int lepjetidx = -1;
+	      if (debug) cout << "prompt non iso lepton with lepjets.size()=" << lepjets.size() << endl;
+	      float mindr = 0.7;
+	      for (unsigned int j=0;j<lepjets.size();++j) {
+		float dr = deltaR(lepjets[j].p4(),hyp.leadLep().p4());
+		if (debug) cout << "dr=" << dr << endl;
+		if (dr<mindr) {
+		  mindr = dr;
+		  lepjetidx = j;
+		}
+	      } 
+	      if (lepjetidx>=0) {
+		float sinA = fabs(hyp.leadLep().p4().x()*lepjets[lepjetidx].p4().y()-hyp.leadLep().p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(hyp.leadLep().p4().x()*hyp.leadLep().p4().x()+hyp.leadLep().p4().y()*hyp.leadLep().p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
+		float ptrel = hyp.leadLep().pt()*sinA;
+		if (debug) cout << "sinA=" << sinA << endl;
+		makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_ptrel","hyp_ss_foFromWlead_"+ll+"_ptrel",10,0.,20.,ptrel,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_sinA","hyp_ss_foFromWlead_"+ll+"_sinA",10,0.,1.,ptrel/hyp.leadLep().pt(),weight_);
+	      }
+	    }
+	    
+	  } else {
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+ll+"_relIso03","hyp_ss_foFakelead_"+ll+"_relIso03",10,0.,1.,hyp.leadLep().relIso03(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+ll+"_iso03","hyp_ss_foFakelead_"+ll+"_iso03",10,0.,20.,hyp.leadLep().relIso03()*hyp.leadLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+ll+"_pt","hyp_ss_foFakelead_"+ll+"_pt",10,0.,200.,hyp.leadLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+lt+"_dxyPV","hyp_ss_foFakelead_"+lt+"_dxyPV",100,0,0.1,fabs(hyp.leadLep().dxyPV()),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+lt+"_dzPV","hyp_ss_foFakelead_"+lt+"_dzPV",100,0,0.5,fabs(hyp.leadLep().dzPV()),weight_);
+	    
+	    if (hyp.leadLep().relIso03()>0.1) {	    
+	      //test min dR between leptons and jets
+	      int lepjetidx = -1;
+	      if (debug) cout << "prompt non iso lepton with lepjets.size()=" << lepjets.size() << endl;
+	      float mindr = 0.7;
+	      for (unsigned int j=0;j<lepjets.size();++j) {
+		float dr = deltaR(lepjets[j].p4(),hyp.leadLep().p4());
+		if (debug) cout << "dr=" << dr << endl;
+		if (dr<mindr) {
+		  mindr = dr;
+		  lepjetidx = j;
+		}
+	      } 
+	      if (lepjetidx>=0) {
+		float sinA = fabs(hyp.leadLep().p4().x()*lepjets[lepjetidx].p4().y()-hyp.leadLep().p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(hyp.leadLep().p4().x()*hyp.leadLep().p4().x()+hyp.leadLep().p4().y()*hyp.leadLep().p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
+		float ptrel = hyp.leadLep().pt()*sinA;
+		if (debug) cout << "sinA=" << sinA << endl;
+		makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+ll+"_ptrel","hyp_ss_foFakelead_"+ll+"_ptrel",10,0.,20.,ptrel,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+ll+"_sinA","hyp_ss_foFakelead_"+ll+"_sinA",10,0.,1.,ptrel/hyp.leadLep().pt(),weight_);
+	      }
+	    }
+	  } 
+	}
+      }
+
+      if (hypleps.size()==2) {
+	makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,8,weight_);//check that passes ID
+	if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,8,weight_);
+      }
       if (hypleps.size()!=2 || hypleps[0].pt()<20 || hypleps[1].pt()<20) {
 	if (debug) {
 	  cout << "skip, not passing lepton cuts" << endl; 
@@ -829,6 +961,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	}
 	continue;
       }
+      makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,9,weight_);//so this is pT
+      if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,9,weight_);
 
       if (debug) {
 	cout << "Good leptons = " << hypleps.size() << " pdgids=" << hypleps[0].pdgId() << ", " << hypleps[1].pdgId() << endl;
@@ -875,13 +1009,12 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (abs(hyp.traiLep().pdgId())==11 && abs(hyp.leadLep().pdgId())==11) type=3;
 	makeFillHisto1D<TH1F,int>("hyp_type","hyp_type",5,0,5,type,weight_);
 
-	TString ll = abs(hyp.leadLep().pdgId())==13 ? "mu" : "el";
-	TString lt = abs(hyp.traiLep().pdgId())==13 ? "mu" : "el";
-
 	if (hyp.charge()!=0) {
 	  //same sign
 
 	  if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) continue;
+	  makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,10,weight_);
+	  if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,10,weight_);
 
 	  if (debug) {
 	    cout << endl << "NEW SS EVENT" << endl << endl;	  
@@ -905,6 +1038,47 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  makeFillHisto1D<TH1F,int>("hyp_ss_nbtag","hyp_ss_nbtag",20,0,20,nbtag,weight_);
 	  makeFillHisto1D<TH1F,float>("hyp_ss_ht","hyp_ss_ht",50,0,2000,ht,weight_);
 	  makeFillHisto1D<TH1F,float>("hyp_ss_met","hyp_ss_met",50,0,500,met,weight_);
+
+	  makeFillHisto2D<TH2F,float>("hyp_ss_met_vs_ht","hyp_ss_met_vs_ht",40,0,2000,ht,20,0,500,met,weight_);
+
+	  //test min dR between leptons and jets
+	  float mindr = 99999.;
+	  for (unsigned int j=0;j<jets.size();++j) {
+	    for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	      float dr = deltaR(jets[j].p4(),goodleps[gl].p4());
+	      if (dr<mindr) {
+		mindr = dr;
+	      }
+	    }
+	  } 
+	  //test min dR between leptons and btagged jets
+	  makeFillHisto1D<TH1F,float>("hyp_ss_mindRlj","hyp_ss_mindRlj",50,0,5,mindr,weight_);
+	  float mindrb = 99999.;
+	  for (unsigned int j=0;j<btags.size();++j) {
+	    for (unsigned int gl=0;gl<goodleps.size();++gl) {
+	      float dr = deltaR(btags[j].p4(),goodleps[gl].p4());
+	      if (dr<mindrb) {
+		mindrb = dr;
+	      }
+	    }
+	  } 
+	  makeFillHisto1D<TH1F,float>("hyp_ss_mindRlb","hyp_ss_mindRlb",50,0,5,mindrb,weight_);
+	  //test min dR between jets
+	  float mindrj = 99999.;
+	  float mass_mindrj = 99999.;
+	  for (unsigned int j=0;j<jets.size();++j) {
+	    for (unsigned int i=j+1;i<jets.size();++i) {
+	      float dr = deltaR(jets[j].p4(),jets[i].p4());
+	      if (dr<mindrj) {
+		mindrj = dr;
+		mass_mindrj = (jets[j].p4()+jets[i].p4()).mass();
+	      }
+	    }
+	  } 
+	  makeFillHisto1D<TH1F,float>("hyp_ss_mindRjj","hyp_ss_mindRjj",50,0,5,mindrj,weight_);
+	  makeFillHisto1D<TH1F,float>("hyp_ss_mass_mindRjj","hyp_ss_mass_mindRjj",50,0,500,mass_mindrj,weight_);
+	  //test dR between leptons
+	  makeFillHisto1D<TH1F,float>("hyp_ss_dRll","hyp_ss_dRll",50,0,5,deltaR(goodleps[0].p4(),goodleps[1].p4()),weight_);
 
 	  makeFillHisto1D<TH1F,int>("hyp_ss_leadjetpt","hyp_ss_leadjetpt",50,0,1000,jets[0].pt(),weight_);
 	  if (btags.size()>0) makeFillHisto1D<TH1F,int>("hyp_ss_leadbtagpt","hyp_ss_leadbtagpt",50,0,1000,btags[0].pt(),weight_);
@@ -979,22 +1153,25 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  }
 
 	  if (ac_base & 1<<HighPt) {
-	    //if (prefix=="ttbar") cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << " ls=" << ls_ << endl;
-	    if (prefix=="ttbar2") cout << ls_  << " *    " << evt_ << endl;
+	    if (prefix=="TTWJets" && debug) cout << left << setw(10) << ls_  << " "  << setw(10) << evt_ << " "  << setw(10) << njets << " "  << setw(10) << nbtag << " "  << setw(10) << std::setprecision(8) << ht << " "  << setw(10) << std::setprecision(8) << met << " " << sr << endl;
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_br","hyp_highpt_br",30,0,30,br,weight_);
-	    if ( isFromW(hyp.traiLep()) && isFromW(hyp.leadLep()) ) {
-	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromW","hyp_highpt_br_fromW",30,0,30,br,weight_);
+	    if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromWZ","hyp_highpt_br_fromWZ",30,0,30,br,weight_);
 	    }
 	    if (sr>0) {
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,br,weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,sr,weight_);
-	      if ( isFromW(hyp.traiLep()) && isFromW(hyp.leadLep()) ) {
-		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromW","hyp_highpt_sr_fromW",30,0,30,br,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromW","hyp_highpt_sr_fromW",30,0,30,sr,weight_);
+	      if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
+		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",30,0,30,br,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",30,0,30,sr,weight_);
 	      }
 	    }
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_njets","hyp_highpt_njets",8,0,8,njets,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag","hyp_highpt_nbtag",4,0,4,nbtag,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag","hyp_highpt_nbtag",8,0,8,nbtag,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt20","hyp_highpt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt25","hyp_highpt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt30","hyp_highpt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt35","hyp_highpt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_ht","hyp_highpt_ht",13,80,600,ht,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_met","hyp_highpt_met",10,0,250,met,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_mll","hyp_highpt_mll",100,0,1000,hyp.p4().mass(),weight_);
@@ -1004,6 +1181,133 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_pttrai","hyp_highpt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_etalead","hyp_highpt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_etatrai","hyp_highpt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_mtmin","hyp_highpt_mtmin",15,0,300,mtmin,weight_);
+
+	    if (mtmin>100.) {
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_br","hyp_highptmt_br",30,0,30,br,weight_);
+	      if (sr>0) {
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",30,0,30,br,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",30,0,30,sr,weight_);
+	      }
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_njets","hyp_highptmt_njets",8,0,8,njets,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag","hyp_highptmt_nbtag",8,0,8,nbtag,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt20","hyp_highptmt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt25","hyp_highptmt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt30","hyp_highptmt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt35","hyp_highptmt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ht","hyp_highptmt_ht",13,80,600,ht,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_met","hyp_highptmt_met",10,0,250,met,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_mll","hyp_highptmt_mll",100,0,1000,hyp.p4().mass(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ptll","hyp_highptmt_ptll",100,0,1000,hyp.p4().pt(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_type","hyp_highptmt_type",5,0,5,type,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ptlead","hyp_highptmt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_pttrai","hyp_highptmt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_etalead","hyp_highptmt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_etatrai","hyp_highptmt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_mtmin","hyp_highptmt_mtmin",15,0,300,mtmin,weight_);
+	    }
+
+	    if (ht400met120) {
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_br","hyp_highpthtmet_br",30,0,30,br,weight_);
+	      if (sr>0) {
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",30,0,30,br,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",30,0,30,sr,weight_);
+	      }
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_njets","hyp_highpthtmet_njets",8,0,8,njets,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag","hyp_highpthtmet_nbtag",8,0,8,nbtag,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt20","hyp_highpthtmet_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt25","hyp_highpthtmet_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt30","hyp_highpthtmet_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt35","hyp_highpthtmet_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ht","hyp_highpthtmet_ht",13,80,600,ht,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_met","hyp_highpthtmet_met",10,0,250,met,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mll","hyp_highpthtmet_mll",100,0,1000,hyp.p4().mass(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptll","hyp_highpthtmet_ptll",100,0,1000,hyp.p4().pt(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_type","hyp_highpthtmet_type",5,0,5,type,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptlead","hyp_highpthtmet_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_pttrai","hyp_highpthtmet_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_etalead","hyp_highpthtmet_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_etatrai","hyp_highpthtmet_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mtmin","hyp_highpthtmet_mtmin",15,0,300,mtmin,weight_);
+
+	      if (mtmin>100.) {
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_br","hyp_highpthtmetmt_br",30,0,30,br,weight_);
+		if (sr>0) {
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",30,0,30,br,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",30,0,30,sr,weight_);
+		}
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_njets","hyp_highpthtmetmt_njets",8,0,8,njets,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag","hyp_highpthtmetmt_nbtag",8,0,8,nbtag,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt20","hyp_highpthtmetmt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt25","hyp_highpthtmetmt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt30","hyp_highpthtmetmt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt35","hyp_highpthtmetmt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ht","hyp_highpthtmetmt_ht",13,80,600,ht,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_met","hyp_highpthtmetmt_met",10,0,250,met,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mll","hyp_highpthtmetmt_mll",100,0,1000,hyp.p4().mass(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptll","hyp_highpthtmetmt_ptll",100,0,1000,hyp.p4().pt(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_type","hyp_highpthtmetmt_type",5,0,5,type,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptlead","hyp_highpthtmetmt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_pttrai","hyp_highpthtmetmt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_etalead","hyp_highpthtmetmt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_etatrai","hyp_highpthtmetmt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mtmin","hyp_highpthtmetmt_mtmin",15,0,300,mtmin,weight_);
+	      }
+	    }
+
+	    //test gen level btag (but starting from jets with |eta|<2.4)
+	    int genbjets = 0;
+	    int genbjets_pt20 = 0;
+	    int genbjets_pt25 = 0;
+	    int genbjets_pt30 = 0;
+	    int genbjets_pt35 = 0;
+	    int genbjets_pt40 = 0;
+	    vector<Jet> jetsbmatch;
+	    for (unsigned int j=0;j<alljets.size();++j) {
+	      Jet jet = alljets[j];
+	      if (abs(jet.mc3_id())==5) {
+		genbjets++;
+		jetsbmatch.push_back(jet);
+		if (jet.pt()>20) {
+		  genbjets_pt20++;
+		  if (jet.pt()>25) genbjets_pt25++;
+		  if (jet.pt()>30) genbjets_pt30++;
+		  if (jet.pt()>35) genbjets_pt35++;
+		  if (jet.pt()>40) genbjets_pt40++;
+		  makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_csv","hyp_highpt_genbjets_csv",50,0,1.,jet.csv(),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_tche","hyp_highpt_genbjets_tche",50,-5.,5.,pfjets_trackCountingHighEffBJetTag()[jet.idx()],weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_tchp","hyp_highpt_genbjets_tchp",50,-5.,5.,pfjets_trackCountingHighPurBJetTag()[jet.idx()],weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_jbp","hyp_highpt_genbjets_jbp",50,0,10.,pfjets_jetBProbabilityBJetTag()[jet.idx()],weight_);
+		}
+	      } else {
+		if (jet.pt()>20) {
+		  makeFillHisto1D<TH1F,float>("hyp_highpt_gennobjets_csv","hyp_highpt_gennobjets_csv",50,0,1.,jet.csv(),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpt_gennobjets_tche","hyp_highpt_gennobjets_tche",50,-5.,5.,pfjets_trackCountingHighEffBJetTag()[jet.idx()],weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpt_gennobjets_tchp","hyp_highpt_gennobjets_tchp",50,-5.,5.,pfjets_trackCountingHighPurBJetTag()[jet.idx()],weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpt_gennobjets_jbp","hyp_highpt_gennobjets_jbp",50,0,10.,pfjets_jetBProbabilityBJetTag()[jet.idx()],weight_);
+		  /*
+		    OBJ: TNamed	pfjets_combinedSecondaryVertexBJetTag	floats_pfJetMaker_pfjetscombinedSecondaryVertexBJetTag_CMS2.obj : 0 at: 0x7fb6f3a4bf20
+		    OBJ: TNamed	pfjets_jetBProbabilityBJetTag	floats_pfJetMaker_pfjetsjetBProbabilityBJetTag_CMS2.obj : 0 at: 0x7fb6f3a4c540
+		    OBJ: TNamed	pfjets_jetProbabilityBJetTag	floats_pfJetMaker_pfjetsjetProbabilityBJetTag_CMS2.obj : 0 at: 0x7fb6f3a4c600
+		    OBJ: TNamed	pfjets_simpleSecondaryVertexHighEffBJetTag	floats_pfJetMaker_pfjetssimpleSecondaryVertexHighEffBJetTag_CMS2.obj : 0 at: 0x7fb6f3a4ca80
+		    OBJ: TNamed	pfjets_trackCountingHighEffBJetTag	floats_pfJetMaker_pfjetstrackCountingHighEffBJetTag_CMS2.obj : 0 at: 0x7fb6f3a4cc40
+		    OBJ: TNamed	pfjets_trackCountingHighPurBJetTag	floats_pfJetMaker_pfjetstrackCountingHighPurBJetTag_CMS2.obj : 0 at: 0x7fb6f3a4cd10
+		  */
+		}
+	      }
+	    }
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets","hyp_highpt_genbjets",8,0,8,genbjets,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt20","hyp_highpt_genbjets_pt20",8,0,8,genbjets_pt20,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt25","hyp_highpt_genbjets_pt25",8,0,8,genbjets_pt25,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt30","hyp_highpt_genbjets_pt30",8,0,8,genbjets_pt30,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt35","hyp_highpt_genbjets_pt35",8,0,8,genbjets_pt35,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt40","hyp_highpt_genbjets_pt40",8,0,8,genbjets_pt40,weight_);
+	    std::sort(jetsbmatch.begin(),jetsbmatch.end(),jetptsort);
+	    if (jetsbmatch.size()>0) makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_pt0","hyp_highpt_genbjets_pt0",40,0,200,jetsbmatch[0].pt(),weight_);
+	    if (jetsbmatch.size()>1) makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_pt1","hyp_highpt_genbjets_pt1",40,0,200,jetsbmatch[1].pt(),weight_);
+	    if (jetsbmatch.size()>2) makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_pt2","hyp_highpt_genbjets_pt2",40,0,200,jetsbmatch[2].pt(),weight_);
+	    //now check the performance as a function of the btagging algo & discriminator
+
 	  }
 	  if (ac_base & 1<<LowPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,br,weight_);

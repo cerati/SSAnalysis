@@ -580,6 +580,7 @@ bool idIsBeauty(int id) {
 
 
 bool isFakableElectron(unsigned int elidx){
+  if (fabs(els_p4().at(elidx).eta())>2.4) return false;
   if (els_p4().at(elidx).pt()<10.) return false;//fixme
   if (isElectronFO(elidx)==0) return false;
   if (threeChargeAgree(elidx)==0) return false;
@@ -602,6 +603,7 @@ bool isGoodElectron(unsigned int elidx){
 }
 
 bool isFakableMuon(unsigned int muidx){
+  if (fabs(mus_p4().at(muidx).eta())>2.4) return false;
   if (mus_p4().at(muidx).pt()<5.) return false;//fixme
   if (isMuonFO(muidx)==0) return false;
   if (muRelIso03(muidx)>1.0 ) return false;
@@ -622,11 +624,20 @@ bool isGoodMuon(unsigned int muidx){
   return true;
 }
 
+bool isFromWZ(Lep lep) {return isFromW(lep) || isFromZ(lep);}
 bool isFromW(Lep lep) {
   //status 1 leptons with mother W or with mother tau whose mother is W
   if ( (abs(lep.mc_id())==11 || abs(lep.mc_id())==13) && (abs(lep.mc_motherid())==24 || (abs(lep.mc_motherid())==15 && abs(genps_id_mother()[lep.mc3_motheridx()])==24) ) ) return true;
   //status 1 photons whose mother is a lepton, matching status 3 leptons whose mother is W
   if ( abs(lep.mc_id())==22 && abs(lep.mc_motherid())==abs(lep.pdgId()) && abs(lep.mc3_id())==abs(lep.pdgId()) && abs(lep.mc3_motherid())==24 ) return true;
+  //everything else
+  return false;
+}
+bool isFromZ(Lep lep) {
+  //status 1 leptons with mother Z or with mother tau whose mother is Z
+  if ( (abs(lep.mc_id())==11 || abs(lep.mc_id())==13) && (abs(lep.mc_motherid())==23 || (abs(lep.mc_motherid())==15 && abs(genps_id_mother()[lep.mc3_motheridx()])==23) ) ) return true;
+  //status 1 photons whose mother is a lepton, matching status 3 leptons whose mother is Z
+  if ( abs(lep.mc_id())==22 && abs(lep.mc_motherid())==abs(lep.pdgId()) && abs(lep.mc3_id())==abs(lep.pdgId()) && abs(lep.mc3_motherid())==23 ) return true;
   //everything else
   return false;
 }

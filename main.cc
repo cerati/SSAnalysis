@@ -7,8 +7,18 @@ int main() {
 
   bool skimAll = false;
   bool runAll  = true;
+  bool runLepEff = false;
 
   //looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents)
+
+  // TChain *chain_ttbar2 = new TChain("Events");
+  // chain_ttbar2->Add("./TTJets_skimSS/merged_ntuple_*.root");
+  // //chain_ttbar->Add("/hadoop/cms/store/group/snt/csa14/MC_CMS3_V07-00-04/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/merged/merged_ntuple_*.root");
+  // l->ScanChain(chain_ttbar2,"ttbar2","",0,"",-1);
+
+    // TChain *chain_TTZJets = new TChain("Events");
+    // chain_TTZJets->Add("./TTZJets_skimSS/merged_ntuple_*.root");
+    // l->ScanChain(chain_TTZJets,"TTZJets_test","",0,"",-1);
 
   if (skimAll) {
     TChain *chain_T1ttttG1200skim = new TChain("Events");
@@ -78,7 +88,7 @@ int main() {
     chain_ttbar->Add("./TTJets_skimSS/merged_ntuple_*.root");
     //chain_ttbar->Add("/hadoop/cms/store/group/snt/csa14/MC_CMS3_V07-00-04/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/merged/merged_ntuple_*.root");
     l->ScanChain(chain_ttbar,"ttbar","",0,"",-1);
-    
+
     TChain *chain_TTWJets = new TChain("Events");
     chain_TTWJets->Add("./TTWJets_skimSS/merged_ntuple_*.root");
     l->ScanChain(chain_TTWJets,"TTWJets","",0,"",-1);
@@ -87,9 +97,9 @@ int main() {
     chain_TTZJets->Add("./TTZJets_skimSS/merged_ntuple_*.root");
     l->ScanChain(chain_TTZJets,"TTZJets","",0,"",-1);
     
-    TChain *chain_WHZHJets = new TChain("Events");
-    chain_WHZHJets->Add("./WHZHJets_skimSS/merged_ntuple_*.root");
-    l->ScanChain(chain_WHZHJets,"WHZHJets","",0,"",-1);
+    TChain *chain_WHZH = new TChain("Events");
+    chain_WHZH->Add("./WHZH_skimSS/merged_ntuple_*.root");
+    l->ScanChain(chain_WHZH,"WHZH","",0,"",-1);
     
     TChain *chain_WW = new TChain("Events");
     chain_WW->Add("./WW_skimSS/merged_ntuple_*.root");
@@ -114,8 +124,35 @@ int main() {
     TChain *chain_T5Full1500 = new TChain("Events");
     chain_T5Full1500->Add("./T5Full1500_skimSS/merged_ntuple_*.root");
     l->ScanChain(chain_T5Full1500,"T5Full1500","",0,"",-1);
+
   }
   
+
+  if (runLepEff) {
+
+    TChain *chain_dy = new TChain("Events");
+    chain_dy->Add("./DYJetsLL/merged_ntuple_1.root");
+    l->ScanChain(chain_dy,"dy","effic",0,"DYtest",-1);
+
+    TChain *chain_T1ttttG1200 = new TChain("Events");
+    chain_T1ttttG1200->Add("./T1ttttG1200_skimSS/merged_ntuple_*.root");
+    l->ScanChain(chain_T1ttttG1200,"T1ttttG1200","effic",0,"DYtest",-1);
+    
+    TChain *chain_T1ttttG1500 = new TChain("Events");
+    chain_T1ttttG1500->Add("./T1ttttG1500_skimSS/merged_ntuple_*.root");
+    l->ScanChain(chain_T1ttttG1500,"T1ttttG1500","effic",0,"DYtest",-1);
+    
+    TChain *chain_T5Full1200 = new TChain("Events");
+    chain_T5Full1200->Add("./T5Full1200_skimSS/merged_ntuple_*.root");
+    l->ScanChain(chain_T5Full1200,"T5Full1200","effic",0,"DYtest",-1);
+    
+    TChain *chain_T5Full1500 = new TChain("Events");
+    chain_T5Full1500->Add("./T5Full1500_skimSS/merged_ntuple_*.root");
+    l->ScanChain(chain_T5Full1500,"T5Full1500","effic",0,"DYtest",-1);
+
+
+  }
+
   // TChain *chain_qcd80to120 = new TChain("Events");
   // chain_qcd80to120->Add("./QCD_Pt-80to120/merged_ntuple_*_skimQCD.root");
   // l->ScanChain(chain_qcd80to120,"qcd","pt-80to120",0,"QCDtest",-1);
