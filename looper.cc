@@ -208,7 +208,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	Lep fomu(-1*mus_charge().at(muidx)*13,muidx);
 	fobs.push_back(fomu);
       }
-      if (fobs.size()==0) continue;
+      if (fobs.size()==0 && !makeDYtest) continue;
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,2,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,2,weight_);
 
