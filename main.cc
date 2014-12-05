@@ -9,7 +9,7 @@ int main() {
 
   bool skimAll = false;
   bool runAll  = true;
-  bool runLepEff = true;
+  bool runLepEff = false;
 
   //looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents)
 
@@ -92,6 +92,7 @@ int main() {
     l->ScanChain(chain_T1ttttG1500,"T1ttttG1500","effic",0,"DYtest",-1);
     l->ScanChain(chain_T5Full1200,"T5Full1200","effic",0,"DYtest",-1);
     l->ScanChain(chain_T5Full1500,"T5Full1500","effic",0,"DYtest",-1);
+    l->ScanChain(chain_TTWJets,"TTWJets","effic",0,"DYtest",-1);
   }
 
 }
