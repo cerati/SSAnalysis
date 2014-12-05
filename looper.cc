@@ -182,7 +182,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //start selection
       //vertex
       //fixme: check leptons are from this vertex!
-      if (firstGoodVertex()<0) {
+      if (firstGoodVertex()<0 && (makeSSskim==0||isGenSS==0)) {
         if (debug) cout << "does not pass firstGoodVertex" << endl;
         continue;
       }
@@ -208,7 +208,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	Lep fomu(-1*mus_charge().at(muidx)*13,muidx);
 	fobs.push_back(fomu);
       }
-      if (fobs.size()==0 && !makeDYtest) continue;
+      if (fobs.size()==0 && !makeDYtest && (makeSSskim==0||isGenSS==0)) continue;
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,2,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,2,weight_);
 
@@ -336,7 +336,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //met
       if (debug) cout << "met" << endl;
       float met = evt_pfmet();
-      if (met<30. && ht<500. && !makeQCDskim && !makeQCDtest && !makeDYtest) continue;
+      if (met<30. && ht<500. && !makeQCDskim && !makeQCDtest && !makeDYtest && (makeSSskim==0||isGenSS==0)) continue;
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,3,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,3,weight_);
 
@@ -755,15 +755,50 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	hypleps.push_back(goodleps[1]);	
       }      
 
-      if (fobs.size()!=2 && hypleps.size()!=2) {
-	if (debug) cout << "skip, fobs size=" << fobs.size() << " hypleps size=" << hypleps.size() << endl;
+      //if (fobs.size()!=2 && hypleps.size()!=2) {
+      if (fobs.size()<2 && (makeSSskim==0||isGenSS==0)) {
+	if (debug) {
+	  cout << "skip, fobs size=" << fobs.size() << " hypleps size=" << hypleps.size() << endl;
+	  if (isGenSS) {
+	    for (unsigned int gp=0;gp<genps_id().size();++gp) {
+	      int pdgid = abs(genps_id()[gp]);
+	      if (pdgid!=13 && pdgid!=11) continue;
+	      if (genps_id_mother()[gp]!=23 && abs(genps_id_mother()[gp])!=24) continue;
+	      if (genps_status()[gp]!=1) continue;//is this needed?
+	      if (fabs(genps_p4()[gp].eta())>2.4) continue;
+	      if (genps_p4()[gp].pt()<5) continue;
+	      if (pdgid==11 && genps_p4()[gp].pt()<10) continue;
+	      cout << "gen lep id=" << genps_id()[gp] << " eta=" << genps_p4()[gp].eta() << " pt=" << genps_p4()[gp].pt() << endl;	  
+	      if (pdgid==11) {
+		for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
+		  if (fabs(ROOT::Math::VectorUtil::DeltaR(els_p4()[elidx],genps_p4()[gp]))>0.1) continue;
+		  cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " q=" << els_charge()[elidx] << " iso=" << eleRelIso03(elidx)<< endl;
+		  int failmode = 0;
+		  if (isElectronFO(elidx)==0) failmode = isElectronFO_debug(elidx);
+		  if (threeChargeAgree(elidx)==0) failmode = 10;
+		  if (fabs(els_p4().at(elidx).eta())>2.4) failmode = 11;
+		  if (els_p4().at(elidx).pt()<10.) failmode = 12;
+		  if (isFakableElectron(elidx)==0) {
+		    makeFillHisto1D<TH1F,int>("el_fo_fail_mode","el_fo_fail_mode",15,0,15,failmode,weight_);
+		    continue;
+		  }
+		  cout << "pass FO selection" << endl;
+		}
+	      }
+	    }
+	    
+	    for (unsigned int fo=0;fo<fobs.size();++fo) {
+	      cout<< "fo lep id=" << fobs[fo].pdgId() << " eta=" << fobs[fo].eta() << " pt=" << fobs[fo].pt() << " relIso=" << fobs[fo].relIso03()<< endl;
+	    }
+	  }
+	}
 	continue;
       }
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,4,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,4,weight_);
 
       DilepHyp hyp = (hypleps.size()==2 ? DilepHyp(hypleps[0],hypleps[1]) : DilepHyp(fobs[0],fobs[1]) );
-      if (hyp.p4().mass()<8) {
+      if (hyp.p4().mass()<8 && (makeSSskim==0||isGenSS==0)) {
 	if (debug) cout<< "skip, hyp mass=" << hyp.p4().mass() <<endl;
 	continue;
       }
@@ -772,7 +807,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
       unsigned int ac_base = analysisCategory(hyp.leadLep(),hyp.traiLep());
       passesBaselineCuts(njets, nbtag, met, ht, ac_base);
-      if (ac_base==0) {
+      if (ac_base==0 && (makeSSskim==0||isGenSS==0)) {
 	if (debug) {
 	  cout << "skip, not passing baseline cuts" << endl;
 	  cout << "njets=" << njets << " nbtag=" << nbtag << " ht=" << ht << " met=" << met << endl;
@@ -790,7 +825,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //write skim here (only ss)
       if (makeSSskim) {
 	if (debug) cout << "ss skim" << endl;
-	if (hyp.charge()!=0) {
+	if (hyp.charge()!=0 || isGenSS) {
 	  cms2.LoadAllBranches();
 	  skim_file->cd(); 
 	  skim_tree->Fill();

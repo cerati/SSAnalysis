@@ -80,6 +80,7 @@ bool isVetoElectron(unsigned int);
 bool isLooseElectron(unsigned int);
 bool isMediumElectron(unsigned int);
 bool isElectronFO(unsigned int);
+int  isElectronFO_debug(unsigned int);
 bool isTightElectron(unsigned int);
 bool isLooseMuon(unsigned int);
 bool isTightMuon(unsigned int);
