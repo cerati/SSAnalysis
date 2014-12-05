@@ -93,7 +93,7 @@ bool isVetoElectron(unsigned int elIdx){
     if(fabs(els_dxyPV().at(elIdx)) >= 0.031) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.5) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.32) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.24) return false; 
+    if( eleRelIso03(elIdx) >= 0.6) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 2) return false;
     //csa14 cuts 50ns
@@ -108,7 +108,7 @@ bool isVetoElectron(unsigned int elIdx){
     if(fabs(els_dxyPV().at(elIdx)) >= 0.22) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.91) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.13) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.24 ) return false; 
+    if( eleRelIso03(elIdx) >= 0.6 ) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 3) return false;
     //csa14 cuts 50ns

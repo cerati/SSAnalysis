@@ -1177,8 +1177,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_mll","hyp_highpt_mll",100,0,1000,hyp.p4().mass(),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_ptll","hyp_highpt_ptll",100,0,1000,hyp.p4().pt(),weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_type","hyp_highpt_type",5,0,5,type,weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_ptlead","hyp_highpt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_pttrai","hyp_highpt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_ptlead","hyp_highpt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_highpt_pttrai","hyp_highpt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_etalead","hyp_highpt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_etatrai","hyp_highpt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_mtmin","hyp_highpt_mtmin",15,0,300,mtmin,weight_);
@@ -1200,8 +1200,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      makeFillHisto1D<TH1F,float>("hyp_highptmt_mll","hyp_highptmt_mll",100,0,1000,hyp.p4().mass(),weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ptll","hyp_highptmt_ptll",100,0,1000,hyp.p4().pt(),weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highptmt_type","hyp_highptmt_type",5,0,5,type,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ptlead","hyp_highptmt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_pttrai","hyp_highptmt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ptlead","hyp_highptmt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highptmt_pttrai","hyp_highptmt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highptmt_etalead","hyp_highptmt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highptmt_etatrai","hyp_highptmt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highptmt_mtmin","hyp_highptmt_mtmin",15,0,300,mtmin,weight_);
@@ -1224,8 +1224,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mll","hyp_highpthtmet_mll",100,0,1000,hyp.p4().mass(),weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptll","hyp_highpthtmet_ptll",100,0,1000,hyp.p4().pt(),weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_type","hyp_highpthtmet_type",5,0,5,type,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptlead","hyp_highpthtmet_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_pttrai","hyp_highpthtmet_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptlead","hyp_highpthtmet_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_pttrai","hyp_highpthtmet_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_etalead","hyp_highpthtmet_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_etatrai","hyp_highpthtmet_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mtmin","hyp_highpthtmet_mtmin",15,0,300,mtmin,weight_);
@@ -1247,8 +1247,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mll","hyp_highpthtmetmt_mll",100,0,1000,hyp.p4().mass(),weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptll","hyp_highpthtmetmt_ptll",100,0,1000,hyp.p4().pt(),weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_type","hyp_highpthtmetmt_type",5,0,5,type,weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptlead","hyp_highpthtmetmt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_pttrai","hyp_highpthtmetmt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptlead","hyp_highpthtmetmt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_pttrai","hyp_highpthtmetmt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_etalead","hyp_highpthtmetmt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_etatrai","hyp_highpthtmetmt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mtmin","hyp_highpthtmetmt_mtmin",15,0,300,mtmin,weight_);

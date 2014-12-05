@@ -8,12 +8,17 @@
   plot = "hyp_highpt_genbjets_pt40";
   plot = "hyp_highpt_genbjets_pt1";
   plot = "hyp_highpt_gennobjets_csv";
-  plot = "hyp_highpthtmetmt_pttrai";
-  plot = "hyp_highpthtmet_mtmin";
-  plot = "hyp_highpthtmetmt_sr";
   plot = "hyp_highpthtmet_nbtag";
+  plot = "hyp_ss_foFromWtrail_mu_relIso03";
   plot = "hyp_ss_foFromWlead_mu_relIso03";
-  bool norm = true;
+  plot = "hyp_highpt_mtmin";
+  plot = "hyp_highpthtmet_mtmin";
+  plot = "hyp_highpt_genbjets_pt20";
+  plot = "hyp_highpthtmetmt_nbtag";
+  plot = "hyp_highpthtmetmt_pttrai";
+  plot = "hyp_highpthtmetmt_sr";
+  plot = "hyp_highpt_sr";
+  bool norm = false;
   bool save = false;
   bool logy = false;
 
@@ -30,8 +35,8 @@
   TFile *TTW_file = TFile::Open("TTWJets_histos.root");
   TH1F* TTW_h = (TTW_file->GetListOfKeys()->Contains(plot) ? (TH1F*) TTW_file->Get(plot) : 0);
   if (TTW_h) {
-    if (norm) TTW_h->SetLineColor(kOrange);
-    else TTW_h->SetFillColor(kOrange);
+    if (norm) TTW_h->SetLineColor(kOrange+1);
+    else TTW_h->SetFillColor(kOrange+1);
   }
 
   TFile *TTZ_file = TFile::Open("TTZJets_histos.root");
@@ -49,7 +54,7 @@
   }
 
   TFile *WW_file = TFile::Open("WW_histos.root");
-  TH1F* WW_h = 0;//(WW_file->GetListOfKeys()->Contains(plot) ? (TH1F*) WW_file->Get(plot) : 0);
+  TH1F* WW_h = (WW_file->GetListOfKeys()->Contains(plot) ? (TH1F*) WW_file->Get(plot) : 0);
   if (WW_h) {
     if (norm) WW_h->SetLineColor(kGreen-1);
     else WW_h->SetFillColor(kGreen-1);
@@ -88,7 +93,7 @@
     if (WZ_h  && WZ_h->GetMaximum()>maxy) maxy = WZ_h->GetMaximum();
     if (WW_h  && WW_h->GetMaximum()>maxy) maxy = WW_h->GetMaximum();
 
-    h0->Draw("HIST");
+    if (h0) h0->Draw("HIST");
 
     if (ttbar_h) TTW_h->Draw("SAME,HIST");
     if (TTW_h)   TTW_h->Draw("SAME,HIST");
@@ -112,7 +117,13 @@
   T1ttttG1500_h->SetLineColor(kRed);
   T1ttttG1500_h->SetLineStyle(1);
   T1ttttG1500_h->SetLineWidth(2);
-  if (norm) T1ttttG1500_h->Scale(1./T1ttttG1500_h->Integral());
+  if (norm) {
+    T1ttttG1500_h->Scale(1./T1ttttG1500_h->Integral());
+    if (h0==0) {
+      h0=T1ttttG1500_h;
+      h0->Draw("HIST");
+    }
+  }
   T1ttttG1500_h->Draw("SAME,HIST");
   if (T1ttttG1500_h && T1ttttG1500_h->GetMaximum()>maxy) maxy = T1ttttG1500_h->GetMaximum();
 

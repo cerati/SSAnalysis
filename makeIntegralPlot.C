@@ -25,6 +25,7 @@
   for (unsigned int bin=1;bin<=h1->GetNbinsX();++bin) {
     h1_integral->SetBinContent(bin,h1->Integral(bin,h1->GetNbinsX()+1));
   }
+  h1_integral->GetYaxis()->SetRangeUser(0.,1.1);
   h1_integral->Draw("HIST");
 
   TFile *_file2 = TFile::Open(file2);
@@ -39,6 +40,6 @@
   }
   h2_integral->Draw("HIST,SAME");
 
-
+  if (save) c1.SaveAs(plot2+".png");
 
 }
