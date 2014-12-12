@@ -62,6 +62,7 @@ class looper
   template<class T, class U> void makeFillHisto1D(const char* name,const char* title,
 						  int nbins,U minx,U maxx,U value, 
 						  float weight = 1.) {
+    if (makehist==0) return;
     T* h = (T*) outf->Get(name);
     if (!h) {
       outf->cd();
@@ -74,6 +75,7 @@ class looper
 						  int nbinsx,U minx,U maxx,U valuex,
 						  int nbinsy,U miny,U maxy,U valuey, 
 						  float weight = 1.) {
+    if (makehist==0) return;
     T* h = (T*) outf->Get(name);
     if (!h) {
       outf->cd();
