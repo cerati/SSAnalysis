@@ -163,6 +163,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
       //make sure there are genuine SS leptons for cut_flow_ss
       int qp=0,qn=0;
+      int qpe=0,qne=0;
+      int qpm=0,qnm=0;
       for (unsigned int gp=0;gp<genps_id().size();++gp) {
 	int pdgid = abs(genps_id()[gp]);
 	if (pdgid!=13 && pdgid!=11) continue;
@@ -171,11 +173,19 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (fabs(genps_p4()[gp].eta())>2.4) continue;
 	if (genps_p4()[gp].pt()<5) continue;
 	if (pdgid==11 && genps_p4()[gp].pt()<10) continue;
-	if (genps_charge()[gp]==1) qp++;
+	if (genps_charge()[gp]==1 ) qp++;
 	if (genps_charge()[gp]==-1) qn++;
+	if (pdgid==11 && genps_charge()[gp]==1 ) qpe++;
+	if (pdgid==11 && genps_charge()[gp]==-1) qne++;
+	if (pdgid==13 && genps_charge()[gp]==1 ) qpm++;
+	if (pdgid==13 && genps_charge()[gp]==-1) qnm++;
       }
       bool isGenSS = false;
+      bool isGenSSee = false;
+      bool isGenSSmm = false;
       if (qp>1 || qn>1) isGenSS = true;
+      if (qpe>1 || qne>1) isGenSSee = true;
+      if (qpm>1 || qnm>1) isGenSSmm = true;
 
       if (makeSSskim&&isGenSS) {
 	  cms2.LoadAllBranches();
@@ -186,6 +196,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,0,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,0,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,0,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,0,weight_);
 
       //start selection
       //vertex
@@ -196,6 +208,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,1,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,1,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,1,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,1,weight_);
 
       //fakable objects
       if (debug) cout << "fobs" << endl;
@@ -219,6 +233,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (fobs.size()==0 && !makeDYtest) continue;
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,2,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,2,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,2,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,2,weight_);
 
       //write skim here (only qcd)
       if (makeQCDskim) {
@@ -234,6 +250,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //leptons
       if (debug) cout << "goodleps" << endl;
       vector<Lep> goodleps;
+      /*
       for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
 	//medium electron selection
 	if (isGoodElectron(elidx)==0) continue;
@@ -247,6 +264,13 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	Lep goodmu(-1*mus_charge().at(muidx)*13,muidx);
 	goodleps.push_back(goodmu);
 	if (debug) cout << "good mu pt=" << mus_p4()[muidx].pt() << " eta=" << mus_p4()[muidx].eta() << " phi=" << mus_p4()[muidx].phi() << " q=" << mus_charge()[muidx]<< endl;
+      }
+      */
+      for (unsigned int fo=0;fo<fobs.size();++fo) {
+	if (fabs(fobs[fo].dxyPV())>0.01 || (abs(fobs[fo].pdgId())==13&&fabs(fobs[fo].dxyPV())>0.005)) continue;
+	if (fabs(fobs[fo].dzPV())>0.1) continue;
+	if (fobs[fo].relIso03()>0.1) continue;
+	goodleps.push_back(fobs[fo]);
       }
 
       //veto leptons
@@ -340,6 +364,28 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       std::sort(jets.begin(),jets.end(),jetptsort);
       std::sort(btags.begin(),btags.end(),jetptsort);
 
+      /*
+      //add back fobs not passing iso but passing ptrel wrt lepjet
+      for (unsigned int fo=0;fo<fobs.size();++fo) {
+	if (fabs(fobs[fo].dxyPV())>0.01 || (abs(fobs[fo].pdgId())==13&&fabs(fobs[fo].dxyPV())>0.005)) continue;
+	if (fabs(fobs[fo].dzPV())>0.1) continue;
+	if (fobs[fo].relIso03()<0.1) continue;//ok, this is inverted here
+	int lepjetidx = -1;
+	float mindr = 0.7;
+	for (unsigned int j=0;j<lepjets.size();++j) {
+	  float dr = deltaR(lepjets[j].p4(),fobs[fo].p4());
+	  if (dr<mindr) {
+	    mindr = dr;
+	    lepjetidx = j;
+	  }
+	} 
+	if (lepjetidx>=0) {
+	  float sinA = fabs(fobs[fo].p4().x()*lepjets[lepjetidx].p4().y()-fobs[fo].p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(fobs[fo].p4().x()*fobs[fo].p4().x()+fobs[fo].p4().y()*fobs[fo].p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
+	  float ptrel = fobs[fo].pt()*sinA;
+	  if (ptrel>8.) goodleps.push_back(fobs[fo]);
+	}
+      }
+      */
 
       //met
       if (debug) cout << "met" << endl;
@@ -347,6 +393,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (met<30. && ht<500. && !makeQCDskim && !makeQCDtest && !makeDYtest) continue;
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,3,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,3,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,3,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,3,weight_);
 
       if (makeQCDtest) {
 	if (debug) cout << "qcdtest" << endl;
@@ -481,15 +529,31 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      break;
 	    }
 	  }
-	  //numerator for fobs (i.e. ~relax iso) //fixme apply all cuts except iso
+	  //numerator for fobs
+	  for (unsigned int fo=0;fo<fobs.size();++fo) {
+	    if (abs(fobs[fo].pdgId())==pdgid && deltaR(fobs[fo].p4(),genps_p4()[gp])<0.1) {
+	      //cout << "fobs.size()=" << fobs.size() << endl;
+	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num_fo":"ef_el_num_fo"),(pdgid==13?"ef_mu_num_fo":"ef_el_num_fo"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
+	      break;
+	    }
+	  }
+	  //numerator for tight id and fobs isolation
 	  for (unsigned int fo=0;fo<fobs.size();++fo) {
 	    if (abs(fobs[fo].pdgId())==pdgid && deltaR(fobs[fo].p4(),genps_p4()[gp])<0.1) {
 	      //cout << "fobs.size()=" << fobs.size() << endl;
 	      if (fabs(fobs[fo].dzPV())>0.1) continue;
 	      if (fabs(fobs[fo].dxyPV())>0.01) continue;
 	      if (pdgid==13 && fabs(fobs[fo].dxyPV())>0.005) continue;
-	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num_fo":"ef_el_num_fo"),(pdgid==13?"ef_mu_num_fo":"ef_el_num_fo"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
+	      makeFillHisto2D<TH2F,float>((pdgid==13?"ef_mu_num_foiso":"ef_el_num_foiso"),(pdgid==13?"ef_mu_num_foiso":"ef_el_num_foiso"),5,0.,100.,genps_p4()[gp].pt(),3,0.,3.0,fabs(genps_p4()[gp].eta()),weight_);
 	      break;
+	    }
+	  }
+	  if (pdgid==11){
+	    for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
+	      if (deltaR(els_p4()[elidx],genps_p4()[gp])>0.1) continue;
+	      if (fabs(els_etaSC().at(elidx)) <= 1.479) {
+		makeFillHisto1D<TH1F,float>("el_fo_sietaieta_barrel","el_fo_sietaieta_barrel",50,0.,0.025,els_sigmaIEtaIEta().at(elidx),weight_);
+	      }
 	    }
 	  }
 	}
@@ -813,6 +877,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		    else makeFillHisto1D<TH1F,int>("el_fo_q3fail_mode_endcap","el_fo_q3fail_mode_endcap",7,0,7,6,weight_);
 		  }
 		}
+		if (fabs(els_etaSC().at(elidx)) <= 1.479)
+		  makeFillHisto1D<TH1F,float>("el_fo_fail_sietaieta_barrel","el_fo_fail_sietaieta_barrel",25,0.,0.025,els_sigmaIEtaIEta().at(elidx),weight_);
+		else
+		  makeFillHisto1D<TH1F,float>("el_fo_fail_sietaieta_endcap","el_fo_fail_sietaieta_endcap",25,0.,0.050,els_sigmaIEtaIEta().at(elidx),weight_);
 		if (fabs(els_p4().at(elidx).eta())>2.4) failmode = 11;
 		if (els_p4().at(elidx).pt()<10.) failmode = 12;
 		if (isFakableElectron(elidx)==0) {
@@ -835,6 +903,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,4,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,4,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,4,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,4,weight_);
 
       DilepHyp hyp = (hypleps.size()==2 ? DilepHyp(hypleps[0],hypleps[1]) : DilepHyp(fobs[0],fobs[1]) );
       if (hyp.p4().mass()<8) {
@@ -843,6 +913,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,5,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,5,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,5,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,5,weight_);
 
       unsigned int ac_base = analysisCategory(hyp.leadLep(),hyp.traiLep());
       passesBaselineCuts(njets, nbtag, met, ht, ac_base);
@@ -855,6 +927,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,6,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,6,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,6,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,6,weight_);
 
       int br = baselineRegion(nbtag);
       unsigned int ac_sig = ac_base;
@@ -893,6 +967,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,7,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,7,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,7,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,7,weight_);
 
       //compute fake rate in ss ttbar
       if (hyp.charge()!=0 && prefix=="ttbar") {
@@ -1033,6 +1109,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (hypleps.size()==2) {
 	makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,8,weight_);//check that passes ID
 	if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,8,weight_);
+	if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,8,weight_);
+	if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,8,weight_);
       }
       if (hypleps.size()!=2 || hypleps[0].pt()<20 || hypleps[1].pt()<20) {
 	if (debug) {
@@ -1053,6 +1131,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,9,weight_);//so this is pT
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,9,weight_);
+      if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,9,weight_);
+      if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,9,weight_);
 
       if (debug) {
 	cout << "Good leptons = " << hypleps.size() << " pdgids=" << hypleps[0].pdgId() << ", " << hypleps[1].pdgId() << endl;
@@ -1103,6 +1183,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) continue;
 	  makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,10,weight_);
 	  if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,10,weight_);
+	  if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,10,weight_);
+	  if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,10,weight_);
 
 	  if (debug) {
 	    cout << endl << "NEW SS EVENT" << endl << endl;	  
