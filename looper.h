@@ -16,6 +16,8 @@
 
 
 class TChain;
+struct Lep;
+struct DilepHyp;
 
 class looper
 {
@@ -44,6 +46,11 @@ class looper
   void fillUnderOverFlow(TH1F *h1, float value, float weight = 1);
   
   void printEvent(  ostream& ostr = std::cout );
+
+  void runQCDtest( std::vector<Lep>& fobs, std::vector<Lep>& goodleps, int& njets, float& met);
+  void runDYtest( std::vector<Lep>& fobs, std::vector<Lep>& goodleps, int& njets, float& met);
+  void runWZtest( std::vector<Lep>& vetoleps, std::vector<Lep>& fobs, std::vector<Lep>& goodleps, int& njets, float& met);
+  void fakeStudy( DilepHyp& hyp, TString& ll, TString& lt );
   
   float deltaPhi( float phi1 , float phi2 ) {
     float dphi = fabs( phi1 - phi2 );
