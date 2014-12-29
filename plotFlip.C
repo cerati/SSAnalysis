@@ -8,7 +8,7 @@
 
   TString sample = "dy";
 
-  TFile* f = TFile::Open(sample+"_histos_effic_all.root");
+  TFile* f = TFile::Open(sample+"_histos_effic.root");
 
   TH2F* mud = (TH2F*) (doFlip ? f->Get("flip_mu_den") : f->Get("ef_mu_den"));
   TH2F* mun = (TH2F*) (doFlip ? f->Get("flip_mu_num") : f->Get("ef_mu_num"));
@@ -73,6 +73,7 @@
   c1.SaveAs(sample+"_mu_"+label+".png");
   c2.SaveAs(sample+"_el_"+label+".png");
 
+  /*
   TCanvas c3;
   c3.SetLogz();
   TH2F* elf8TeV = (TH2F*) elf->Clone("ef_el8TeV");
@@ -104,4 +105,5 @@
   elf8TeV->SetBinError  (5,3,4.39E-04);
   elf8TeV->Draw("texte,colz");
   c3.SaveAs(sample+"_el_"+label+"_8TeV.png");
+  */
 }

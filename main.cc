@@ -8,7 +8,7 @@ int main() {
   bool useSkim = true;
 
   bool skimAll = false;
-  bool runAll  = false;
+  bool runAll  = true;
   bool runLepEff = false;
 
   //looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents)
@@ -60,7 +60,7 @@ int main() {
     //chain_WHZH->Add(       dir+"WH_ZH_HToWW_M-125_13TeV_pythia6/"+tag+"/merged_ntuple_*.root");
     //chain_WW->Add(         dir+"WWTo2L2Nu_CT10_13TeV-powheg-pythia8-tauola/"+tag+"/merged_ntuple_*.root");
     chain_WZJets->Add(     dir+"WZJetsTo3LNu_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_*.root");
-    chain_DY->Add(         dir+"DYJetsToLL_M-50_13TeV-madgraph-pythia8/"+tag+"/merged_ntuple_1.root");//fixme
+    chain_DY->Add(         dir+"DYJetsToLL_M-50_13TeV-madgraph-pythia8_Phys14DR-PU20bx25_PHYS14_25_V1-v1/CMS3_"+tag+"/merged_ntuple_*.root");//fixme
   }
 
   if (skimAll) {
@@ -82,21 +82,21 @@ int main() {
     l->ScanChain(chain_TTJets,"ttbar","",0,"",-1);
     l->ScanChain(chain_TTWJets,"TTWJets","",0,"",-1);
     l->ScanChain(chain_TTZJets,"TTZJets","",0,"",-1);
-    l->ScanChain(chain_WHZH,"WHZH","",0,"",-1);
-    l->ScanChain(chain_WW,"WW","",0,"",-1);
+    //l->ScanChain(chain_WHZH,"WHZH","",0,"",-1);
+    //l->ScanChain(chain_WW,"WW","",0,"",-1);
     l->ScanChain(chain_WZJets,"WZJets","",0,"",-1);
     l->ScanChain(chain_T1ttttG1200,"T1ttttG1200","",0,"",-1);
     l->ScanChain(chain_T1ttttG1500,"T1ttttG1500","",0,"",-1);
-    l->ScanChain(chain_T5Full1200,"T5Full1200","",0,"",-1);
-    l->ScanChain(chain_T5Full1500,"T5Full1500","",0,"",-1);
+    //l->ScanChain(chain_T5Full1200,"T5Full1200","",0,"",-1);
+    //l->ScanChain(chain_T5Full1500,"T5Full1500","",0,"",-1);
   }
   
   if (runLepEff) {
     l->ScanChain(chain_DY,"dy","effic",0,"DYtest",-1);
     l->ScanChain(chain_T1ttttG1200,"T1ttttG1200","effic",0,"DYtest",-1);
     l->ScanChain(chain_T1ttttG1500,"T1ttttG1500","effic",0,"DYtest",-1);
-    l->ScanChain(chain_T5Full1200,"T5Full1200","effic",0,"DYtest",-1);
-    l->ScanChain(chain_T5Full1500,"T5Full1500","effic",0,"DYtest",-1);
+    //l->ScanChain(chain_T5Full1200,"T5Full1200","effic",0,"DYtest",-1);
+    //l->ScanChain(chain_T5Full1500,"T5Full1500","effic",0,"DYtest",-1);
     l->ScanChain(chain_TTWJets,"TTWJets","effic",0,"DYtest",-1);
   }
 

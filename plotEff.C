@@ -5,10 +5,11 @@
   gStyle->SetPaintTextFormat("4.2f");
 
   TString sample = "dy";
-  sample = "T1ttttG1200";
-  sample = "T5Full1200";
+  //sample = "T1ttttG1200";
+  //sample = "T5Full1200";
+  //sample = "TTWJets";
 
-  bool dofo = true;
+  bool dofo = false;
 
   TFile* f = TFile::Open(sample+"_histos_effic.root");
 
