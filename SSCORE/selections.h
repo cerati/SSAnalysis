@@ -50,11 +50,11 @@ private:
 
 struct Jet {
   Jet(int idx):idx_(idx){}
-  LorentzVector p4() {return cms2.pfjets_p4()[idx_]*cms2.pfjets_corL1FastL2L3()[idx_];}
+  LorentzVector p4() {return cms2.pfjets_p4()[idx_]/**cms2.pfjets_corL1FastL2L3()[idx_]*/;}//fixme
   float pt() {return p4().pt();}
   float eta() {return p4().eta();}
   float phi() {return p4().phi();}
-  float csv() {return cms2.pfjets_combinedSecondaryVertexBJetTag()[idx_];}
+  float csv() {return cms2.pfjets_pfCombinedSecondaryVertexBJetTag()[idx_];}
   int   mc3_id() {return cms2.pfjets_mc3_id()[idx_];}
   LorentzVector genjet_p4() {return cms2.pfjets_mc_p4()[idx_];}
   LorentzVector genps_p4() {return cms2.pfjets_mc_gp_p4()[idx_];}
