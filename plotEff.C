@@ -4,14 +4,16 @@
   gStyle->SetOptStat(0);
   gStyle->SetPaintTextFormat("4.2f");
 
+  TString dir = "results_PHYS14";
+
   TString sample = "dy";
-  //sample = "T1ttttG1200";
+  //sample = "T1ttttG1500";
   //sample = "T5Full1200";
   //sample = "TTWJets";
 
   bool dofo = false;
 
-  TFile* f = TFile::Open(sample+"_histos_effic.root");
+  TFile* f = TFile::Open(dir+"/"+sample+"_histos_effic.root");
 
   TH2F* mud = (TH2F*) f->Get("ef_mu_den");
   TH2F* mun = (TH2F*) f->Get(dofo ? "ef_mu_num_fo" :  "ef_mu_num");
@@ -74,11 +76,11 @@
   c2.RedrawAxis();
 
   if (dofo) {
-    c1.SaveAs(sample+"_mu_ef_fo.png");
-    c2.SaveAs(sample+"_el_ef_fo.png");
+    c1.SaveAs(dir+"/"+sample+"_mu_ef_fo.png");
+    c2.SaveAs(dir+"/"+sample+"_el_ef_fo.png");
   } else {
-    c1.SaveAs(sample+"_mu_ef.png");
-    c2.SaveAs(sample+"_el_ef.png");
+    c1.SaveAs(dir+"/"+sample+"_mu_ef.png");
+    c2.SaveAs(dir+"/"+sample+"_el_ef.png");
   }
 
 }

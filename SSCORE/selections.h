@@ -6,8 +6,12 @@
 enum AnalysisBit { HighPt = 0, LowPt = 1, VeryLowPt = 2 };
 
 float muRelIso03(unsigned int);
-float muRelIso04(unsigned int);
 float eleRelIso03(unsigned int);
+float muRelIso03EA(unsigned int);
+float eleRelIso03EA(unsigned int);
+float muRelIso03DB(unsigned int);
+float muRelIso04DB(unsigned int);
+float eleRelIso03DB(unsigned int);
 
 struct Lep {
   Lep(int pdgid, int idx):pdgid_(pdgid),idx_(idx){}

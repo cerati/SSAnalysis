@@ -9,8 +9,6 @@
   plot = "hyp_highpt_genbjets_pt1";
   plot = "hyp_highpt_gennobjets_csv";
   plot = "hyp_highpthtmet_nbtag";
-  plot = "hyp_ss_foFromWtrail_mu_relIso03";
-  plot = "hyp_ss_foFromWlead_mu_relIso03";
   plot = "hyp_highpt_mtmin";
   plot = "hyp_highpthtmet_mtmin";
   plot = "hyp_highpt_genbjets_pt20";
@@ -18,43 +16,47 @@
   plot = "hyp_highpthtmetmt_pttrai";
   plot = "hyp_highpthtmetmt_sr";
   plot = "hyp_highpt_sr";
-  bool norm = false;
-  bool save = false;
+  plot = "hyp_ss_foFromWlead_mu_relIso03";
+  plot = "hyp_ss_foFromWtrail_mu_relIso03";
+  bool norm = true;
+  bool save = true;
   bool logy = false;
+
+  TString dir = "results_PHYS14";
 
   TCanvas c1;
   if (logy) c1.SetLogy();
 
-  TFile *ttbar_file = TFile::Open("ttbar_histos.root");
-  TH1F* ttbar_h = (ttbar_file->GetListOfKeys()->Contains(plot) ? (TH1F*) ttbar_file->Get(plot) : 0);
+  TFile *ttbar_file = TFile::Open(dir+"/ttbar_histos.root");
+  TH1F* ttbar_h = 0;//(ttbar_file->GetListOfKeys()->Contains(plot) ? (TH1F*) ttbar_file->Get(plot) : 0);
   if (ttbar_h) {
     if (norm) ttbar_h->SetLineColor(kBlue);
     else ttbar_h->SetFillColor(kBlue);
   }
 
-  TFile *TTW_file = TFile::Open("TTWJets_histos.root");
+  TFile *TTW_file = TFile::Open(dir+"/TTWJets_histos.root");
   TH1F* TTW_h = (TTW_file->GetListOfKeys()->Contains(plot) ? (TH1F*) TTW_file->Get(plot) : 0);
   if (TTW_h) {
     if (norm) TTW_h->SetLineColor(kOrange+1);
     else TTW_h->SetFillColor(kOrange+1);
   }
 
-  TFile *TTZ_file = TFile::Open("TTZJets_histos.root");
-  TH1F* TTZ_h = (TTZ_file->GetListOfKeys()->Contains(plot) ? (TH1F*) TTZ_file->Get(plot) : 0);
+  TFile *TTZ_file = TFile::Open(dir+"/TTZJets_histos.root");
+  TH1F* TTZ_h = 0;//(TTZ_file->GetListOfKeys()->Contains(plot) ? (TH1F*) TTZ_file->Get(plot) : 0);
   if (TTZ_h) {
     if (norm) TTZ_h->SetLineColor(kYellow+1);
     else TTZ_h->SetFillColor(kYellow+1);
   }
 
-  TFile *WZ_file = TFile::Open("WZJets_histos.root");
-  TH1F* WZ_h = (WZ_file->GetListOfKeys()->Contains(plot) ? (TH1F*) WZ_file->Get(plot) : 0);
+  TFile *WZ_file = TFile::Open(dir+"/WZJets_histos.root");
+  TH1F* WZ_h = 0;//(WZ_file->GetListOfKeys()->Contains(plot) ? (TH1F*) WZ_file->Get(plot) : 0);
   if (WZ_h) {
     if (norm) WZ_h->SetLineColor(kGreen+2);
     else WZ_h->SetFillColor(kGreen+2);
   }
 
-  TFile *WW_file = TFile::Open("WW_histos.root");
-  TH1F* WW_h = (WW_file->GetListOfKeys()->Contains(plot) ? (TH1F*) WW_file->Get(plot) : 0);
+  TFile *WW_file = TFile::Open(dir+"/WW_histos.root");
+  TH1F* WW_h = (WW_file && WW_file->GetListOfKeys()->Contains(plot) ? (TH1F*) WW_file->Get(plot) : 0);
   if (WW_h) {
     if (norm) WW_h->SetLineColor(kGreen-1);
     else WW_h->SetFillColor(kGreen-1);
@@ -112,7 +114,7 @@
     hs.Draw("HIST");
   }
 
-  TFile *T1ttttG1500_file = TFile::Open("T1ttttG1500_histos.root");
+  TFile *T1ttttG1500_file = TFile::Open(dir+"/T1ttttG1500_histos.root");
   TH1F* T1ttttG1500_h = (TH1F*) T1ttttG1500_file->Get(plot);
   T1ttttG1500_h->SetLineColor(kRed);
   T1ttttG1500_h->SetLineStyle(1);
@@ -127,7 +129,7 @@
   T1ttttG1500_h->Draw("SAME,HIST");
   if (T1ttttG1500_h && T1ttttG1500_h->GetMaximum()>maxy) maxy = T1ttttG1500_h->GetMaximum();
 
-  TFile *T1ttttG1200_file = TFile::Open("T1ttttG1200_histos.root");
+  TFile *T1ttttG1200_file = TFile::Open(dir+"/T1ttttG1200_histos.root");
   TH1F* T1ttttG1200_h = (TH1F*) T1ttttG1200_file->Get(plot);
   T1ttttG1200_h->SetLineColor(kRed);
   T1ttttG1200_h->SetLineStyle(7);
@@ -136,8 +138,8 @@
   T1ttttG1200_h->Draw("SAME,HIST");
   if (T1ttttG1200_h && T1ttttG1200_h->GetMaximum()>maxy) maxy = T1ttttG1200_h->GetMaximum();
 
-  TFile *T5Full1500_file = TFile::Open("T5Full1500_histos.root");
-  TH1F* T5Full1500_h = (TH1F*) T5Full1500_file->Get(plot);
+  TFile *T5Full1500_file = TFile::Open(dir+"/T5Full1500_histos.root");
+  TH1F* T5Full1500_h = ( T5Full1500_file ? (TH1F*) T5Full1500_file->Get(plot) : 0);
   if (T5Full1500_h && T5Full1500_h->GetEntries()>20) {
     T5Full1500_h->SetLineColor(kBlack);
     T5Full1500_h->SetLineStyle(1);
@@ -147,8 +149,8 @@
     if (T5Full1500_h && T5Full1500_h->GetMaximum()>maxy) maxy = T5Full1500_h->GetMaximum();
   }
 
-  TFile *T5Full1200_file = TFile::Open("T5Full1200_histos.root");
-  TH1F* T5Full1200_h = (TH1F*) T5Full1200_file->Get(plot);
+  TFile *T5Full1200_file = TFile::Open(dir+"/T5Full1200_histos.root");
+  TH1F* T5Full1200_h = ( T5Full1200_file ? (TH1F*) T5Full1200_file->Get(plot) : 0);
   if (T5Full1200_h && T5Full1200_h->GetEntries()>20) {
     T5Full1200_h->SetLineColor(kBlack);
     T5Full1200_h->SetLineStyle(7);
@@ -182,6 +184,6 @@
   if (T5Full1200_h)  leg->AddEntry(T5Full1200_h,"T5_1200","L");
   leg->Draw();
 
-  if (save) c1.SaveAs(plot+".png");
+  if (save) c1.SaveAs(dir+"/"+plot+".png");
 
 }
