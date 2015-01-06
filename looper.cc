@@ -350,7 +350,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
           njets++;
           jets.push_back(jet);
           ht+=jetpt;
-          if (jet.csv()>0.679) {
+          if (jet.isBtag()) {
             nbtag++;
             btags.push_back(jet);
           }

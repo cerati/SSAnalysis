@@ -59,6 +59,8 @@ struct Jet {
   float eta() {return p4().eta();}
   float phi() {return p4().phi();}
   float csv() {return cms2.pfjets_pfCombinedSecondaryVertexBJetTag()[idx_];}
+  float csvivf() {return cms2.pfjets_combinedInclusiveSecondaryVertexV2BJetTag()[idx_];}
+  bool isBtag() {return csvivf()>0.814;}
   int   mc3_id() {return cms2.pfjets_mc3_id()[idx_];}
   LorentzVector genjet_p4() {return cms2.pfjets_mc_p4()[idx_];}
   LorentzVector genps_p4() {return cms2.pfjets_mc_gp_p4()[idx_];}

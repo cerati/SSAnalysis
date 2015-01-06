@@ -14,12 +14,12 @@
   plot = "hyp_highpt_genbjets_pt20";
   plot = "hyp_highpthtmetmt_nbtag";
   plot = "hyp_highpthtmetmt_pttrai";
-  plot = "hyp_highpthtmetmt_sr";
-  plot = "hyp_highpt_sr";
   plot = "hyp_ss_foFromWlead_mu_relIso03";
   plot = "hyp_ss_foFromWtrail_mu_relIso03";
-  bool norm = true;
-  bool save = true;
+  plot = "hyp_highpt_sr";
+  plot = "hyp_highpthtmetmt_sr";
+  bool norm = false;
+  bool save = false;
   bool logy = false;
 
   TString dir = "results_PHYS14";
@@ -28,7 +28,7 @@
   if (logy) c1.SetLogy();
 
   TFile *ttbar_file = TFile::Open(dir+"/ttbar_histos.root");
-  TH1F* ttbar_h = 0;//(ttbar_file->GetListOfKeys()->Contains(plot) ? (TH1F*) ttbar_file->Get(plot) : 0);
+  TH1F* ttbar_h = (ttbar_file->GetListOfKeys()->Contains(plot) ? (TH1F*) ttbar_file->Get(plot) : 0);
   if (ttbar_h) {
     if (norm) ttbar_h->SetLineColor(kBlue);
     else ttbar_h->SetFillColor(kBlue);
@@ -42,14 +42,14 @@
   }
 
   TFile *TTZ_file = TFile::Open(dir+"/TTZJets_histos.root");
-  TH1F* TTZ_h = 0;//(TTZ_file->GetListOfKeys()->Contains(plot) ? (TH1F*) TTZ_file->Get(plot) : 0);
+  TH1F* TTZ_h = (TTZ_file->GetListOfKeys()->Contains(plot) ? (TH1F*) TTZ_file->Get(plot) : 0);
   if (TTZ_h) {
     if (norm) TTZ_h->SetLineColor(kYellow+1);
     else TTZ_h->SetFillColor(kYellow+1);
   }
 
   TFile *WZ_file = TFile::Open(dir+"/WZJets_histos.root");
-  TH1F* WZ_h = 0;//(WZ_file->GetListOfKeys()->Contains(plot) ? (TH1F*) WZ_file->Get(plot) : 0);
+  TH1F* WZ_h = (WZ_file->GetListOfKeys()->Contains(plot) ? (TH1F*) WZ_file->Get(plot) : 0);
   if (WZ_h) {
     if (norm) WZ_h->SetLineColor(kGreen+2);
     else WZ_h->SetFillColor(kGreen+2);
