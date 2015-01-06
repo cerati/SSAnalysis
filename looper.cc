@@ -949,16 +949,16 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	  if (ac_base & 1<<HighPt) {
 	    if (prefix=="TTWJets" && debug) cout << left << setw(10) << ls_  << " "  << setw(10) << evt_ << " "  << setw(10) << njets << " "  << setw(10) << nbtag << " "  << setw(10) << std::setprecision(8) << ht << " "  << setw(10) << std::setprecision(8) << met << " " << sr << endl;
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_br","hyp_highpt_br",30,0,30,br,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_highpt_br","hyp_highpt_br",40,0,40,br,weight_);
 	    if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
-	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromWZ","hyp_highpt_br_fromWZ",30,0,30,br,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromWZ","hyp_highpt_br_fromWZ",40,0,40,br,weight_);
 	    }
 	    if (sr>0) {
-	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,br,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",30,0,30,sr,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",40,0,40,br,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",40,0,40,sr,weight_);
 	      if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
-		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",30,0,30,br,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",30,0,30,sr,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",40,0,40,br,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",40,0,40,sr,weight_);
 	      }
 	    }
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_njets","hyp_highpt_njets",8,0,8,njets,weight_);
@@ -979,10 +979,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,float>("hyp_highpt_mtmin","hyp_highpt_mtmin",15,0,300,mtmin,weight_);
 
 	    if (mtmin>100.) {
-	      makeFillHisto1D<TH1F,int>("hyp_highptmt_br","hyp_highptmt_br",30,0,30,br,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highptmt_br","hyp_highptmt_br",40,0,40,br,weight_);
 	      if (sr>0) {
-		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",30,0,30,br,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",30,0,30,sr,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",40,0,40,br,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",40,0,40,sr,weight_);
 	      }
 	      makeFillHisto1D<TH1F,int>("hyp_highptmt_njets","hyp_highptmt_njets",8,0,8,njets,weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag","hyp_highptmt_nbtag",8,0,8,nbtag,weight_);
@@ -1003,10 +1003,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    }
 
 	    if (ht400met120) {
-	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_br","hyp_highpthtmet_br",30,0,30,br,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_br","hyp_highpthtmet_br",40,0,40,br,weight_);
 	      if (sr>0) {
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",30,0,30,br,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",30,0,30,sr,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",40,0,40,br,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",40,0,40,sr,weight_);
 	      }
 	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_njets","hyp_highpthtmet_njets",8,0,8,njets,weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag","hyp_highpthtmet_nbtag",8,0,8,nbtag,weight_);
@@ -1026,10 +1026,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mtmin","hyp_highpthtmet_mtmin",15,0,300,mtmin,weight_);
 
 	      if (mtmin>100.) {
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_br","hyp_highpthtmetmt_br",30,0,30,br,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_br","hyp_highpthtmetmt_br",40,0,40,br,weight_);
 		if (sr>0) {
-		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",30,0,30,br,weight_);
-		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",30,0,30,sr,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",40,0,40,br,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",40,0,40,sr,weight_);
 		}
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_njets","hyp_highpthtmetmt_njets",8,0,8,njets,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag","hyp_highpthtmetmt_nbtag",8,0,8,nbtag,weight_);
@@ -1105,8 +1105,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	  }
 	  if (ac_base & 1<<LowPt) {
-	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,br,weight_);
-	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",30,0,30,sr,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",40,0,40,br,weight_);
+	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",40,0,40,sr,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_njets","hyp_lowpt_njets",20,0,20,njets,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_nbtag","hyp_lowpt_nbtag",20,0,20,nbtag,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_lowpt_ht","hyp_lowpt_ht",50,0,2000,ht,weight_);
@@ -1118,8 +1118,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,float>("hyp_lowpt_pttrai","hyp_lowpt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
 	  }
 	  if (ac_base & 1<<VeryLowPt) {
-	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",30,0,30,br,weight_);
-	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",30,0,30,sr,weight_);
+	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",40,0,40,br,weight_);
+	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",40,0,40,sr,weight_);
 	  }
 
 	  if (prefix=="ttbar") {

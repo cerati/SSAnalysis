@@ -649,7 +649,8 @@ void passesBaselineCuts(int njets, int nbtag, float met, float ht, unsigned int&
 int baselineRegion(int nbtag) {
   if (nbtag==0) return 0;
   else if (nbtag==1) return 10;
-  else return 20;
+  else if (nbtag==2) return 20;
+  else return 30;
 }
 
 void passesSignalRegionCuts(float ht, float met, unsigned int& analysisBitMask) {
@@ -671,7 +672,8 @@ void passesSignalRegionCuts(float ht, float met, unsigned int& analysisBitMask) 
 int signalRegion(int njets, int nbtag, float met, float ht) {
   int result = 1;
   if (nbtag==1) result+=10;
-  else if (nbtag>=2) result+=20;
+  else if (nbtag==2) result+=20;
+  else if (nbtag>=3) result+=30;
   if (met>120) result+=4;
   if (njets>=4) result+=2;
   if (ht>400) result+=1;
