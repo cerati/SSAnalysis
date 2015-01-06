@@ -54,7 +54,25 @@ int main() {
     chain_T1ttttG1500->Add(dir+"SMS-T1tttt_2J_mGl-1500_mLSP-100_Tune4C_13TeV-madgraph-tauola_Phys14DR-PU20bx25_tsg_PHYS14_25_V1-v1/"+tag+"/merged_ntuple_*.root");
     //chain_T5Full1200->Add( dir+"T5Full_T5Full-1200-1000-800-Decay-MGMMatch50/"+tag+"/merged_ntuple_*.root");
     //chain_T5Full1500->Add( dir+"T5Full_T5Full-1500-800-100-Decay-MGMMatch50/"+tag+"/merged_ntuple_*.root");
-    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_*.root");//fixme 78 broken
+
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_1*.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_2*.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_3*.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_4*.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_5*.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_6*.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_8*.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_9*.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_70.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_71.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_72.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_73.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_74.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_75.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_76.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_77.root");//fixme 78 broken
+    chain_TTJets->Add(     dir+"TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_79.root");//fixme 78 broken
+
     chain_TTWJets->Add(    dir+"TTWJets_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_*.root");
     chain_TTZJets->Add(    dir+"TTZJets_Tune4C_13TeV-madgraph-tauola/"+tag+"/merged_ntuple_*.root");
     //chain_WHZH->Add(       dir+"WH_ZH_HToWW_M-125_13TeV_pythia6/"+tag+"/merged_ntuple_*.root");
