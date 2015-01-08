@@ -583,9 +583,6 @@ bool isGoodMuon(unsigned int muidx){
   if (isFakableMuon(muidx)==0) return false;
   if (isTightMuon(muidx)==0) return false;
   if (muRelIso03(muidx)>0.1 ) return false;
-
-
-
   return true;
 }
 
@@ -626,11 +623,11 @@ bool isFromLightFake(Lep lep) {
 
 unsigned int analysisCategory(Lep lep1, Lep lep2) {
   unsigned int result = 0;
-  if (lep1.pt()>25 && lep2.pt()>25) {
+  if (lep1.pt()>ptCutHigh && lep2.pt()>ptCutHigh) {
     result |= 1<<HighPt;
-  } else if (lep1.pt()>25 && lep2.pt()>15) {
+  } else if (lep1.pt()>ptCutHigh && lep2.pt()>ptCutLow) {
     result |= 1<<LowPt;
-  } else if (lep1.pt()>15 && lep2.pt()>15) {
+  } else if (lep1.pt()>ptCutLow && lep2.pt()>ptCutLow) {
     result |= 1<<VeryLowPt;
   }
   return result;

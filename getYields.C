@@ -1,6 +1,7 @@
 {
 
-  TString dir = "results_PHYS14";
+  //TString dir = "results_PHYS14";
+  TString dir = ".";
 
   TFile *ttbar_file = TFile::Open(dir+"/ttbar_histos.root");
   cout << "ttbar BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31)

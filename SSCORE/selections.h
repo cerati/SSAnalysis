@@ -3,6 +3,9 @@
 #include "CMS2.h"
 #include "TString.h"
 
+const static float ptCutHigh = 20.;
+const static float ptCutLow = 15.;
+
 enum AnalysisBit { HighPt = 0, LowPt = 1, VeryLowPt = 2 };
 
 float muRelIso03(unsigned int);

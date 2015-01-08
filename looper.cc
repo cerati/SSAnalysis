@@ -23,7 +23,7 @@ bool ptsort (int i,int j) { return (genps_p4()[i].pt()>genps_p4()[j].pt()); }
 
 bool lepsort (Lep i,Lep j) { 
   if ( abs(i.pdgId())==abs(j.pdgId()) ) return ( i.pt()>j.pt() ); //sort by pt if same flavor
-  else return ( abs(i.pdgId())>abs(j.pdgId()) && i.pt()>25. ); //prefer muons over electrons, but check that mu have pt>25//fixme, need to sync
+  else return ( abs(i.pdgId())>abs(j.pdgId()) && i.pt()>ptCutHigh ); //prefer muons over electrons, but check that mu have pt>25//fixme, need to sync
 }
 
 bool jetptsort (Jet i,Jet j) { return (i.pt()>j.pt()); }
@@ -365,7 +365,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       std::sort(btags.begin(),btags.end(),jetptsort);
 
       /*
-      //add back fobs not passing iso but passing ptrel wrt lepjet
+      //add back to goodleps those fobs not passing iso but passing ptrel wrt lepjet
       for (unsigned int fo=0;fo<fobs.size();++fo) {
 	if (fabs(fobs[fo].dxyPV())>0.01 || (abs(fobs[fo].pdgId())==13&&fabs(fobs[fo].dxyPV())>0.005)) continue;
 	if (fabs(fobs[fo].dzPV())>0.1) continue;
@@ -634,7 +634,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
       TString ll = abs(hyp.leadLep().pdgId())==13 ? "mu" : "el";
       TString lt = abs(hyp.traiLep().pdgId())==13 ? "mu" : "el";
-      if (hyp.leadLep().pt()>25 && hyp.traiLep().pt()>25) {
+      if (hyp.leadLep().pt()>ptCutHigh && hyp.traiLep().pt()>ptCutHigh) {
 	//make sure all cuts pass except isolation
 	if (fabs(hyp.traiLep().dzPV())<0.1 && fabs(hyp.traiLep().dxyPV())<0.01 && (abs(hyp.traiLep().pdgId())==11 || fabs(hyp.traiLep().dxyPV())<0.005) ) {
 	  if (isFromW(hyp.traiLep())) {
@@ -737,7 +737,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,8,weight_);
 	if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,8,weight_);
       }
-      if (hypleps.size()!=2 || hypleps[0].pt()<25 || hypleps[1].pt()<25) {
+      if (hypleps.size()!=2 || hypleps[0].pt()<ptCutHigh || hypleps[1].pt()<ptCutHigh) {
 	if (debug) {
 	  cout << "skip, not passing lepton cuts" << endl; 
 	  cout << "fobs size = " << fobs.size() << " pdgids=" << fobs[0].pdgId() << ", " << fobs[1].pdgId() << endl;
@@ -745,7 +745,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  for (unsigned int fo=0;fo<fobs.size();++fo){
 	    if (abs(fobs[fo].pdgId())!=13) continue;
 	    cout << "fob pt=" << fobs[fo].pt() << " eta=" << fobs[fo].eta() << endl;
-	    if (mus_p4().at(fobs[fo].idx()).pt()<25.) cout << "fail pt" << endl;
+	    if (mus_p4().at(fobs[fo].idx()).pt()<ptCutHigh) cout << "fail pt" << endl;
 	    if (isMuonFO(fobs[fo].idx())==0) cout << "fail FO" << endl;
 	    if (muRelIso03(fobs[fo].idx())>1.0 ) cout << "fail loose iso" << endl;
 	    if (isTightMuon(fobs[fo].idx())==0) cout << "fail tight id" << endl;
@@ -804,8 +804,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	if (hyp.charge()!=0) {
 	  //same sign
-
-	  if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) continue;
+	  //if (hyp.leadLep().mc_id()*hyp.traiLep().mc_id()<0) continue;//FIXME
 	  makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,10,weight_);
 	  if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,10,weight_);
 	  if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,10,weight_);
@@ -1213,7 +1212,7 @@ void looper::fillUnderOverFlow(TH1F *h1, float value, float weight){
 void looper::runQCDtest(vector<Lep>& fobs, vector<Lep>& goodleps, int& njets, float& met) {
 
   if (fobs.size()>1) return; 
-  if (fobs[0].pt()<25) return; 
+  if (fobs[0].pt()<ptCutHigh) return; 
   makeFillHisto1D<TH1F,int>("njets","njets",20,0,20,njets,weight_);
   for (unsigned int ipu=0;ipu<puInfo_bunchCrossing().size();ipu++)
     if (puInfo_bunchCrossing()[ipu]==0) 

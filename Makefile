@@ -85,15 +85,15 @@ LinkDef_out.cxx: LinkDef.h
 	$(QUIET) echo "Building $@"; \
 	$(CC) -o $@ $(LIBS) $(ROOTLIBS) ${@:.exe=.cc} 
 
-%.o: 	%.cc
-	$(QUIET) echo "Compiling $<"; \
-	$(CC) $(CFLAGS) $< -c -o $@
-
 %.o: 	%.cc %.h
 	$(QUIET) echo "Compiling $<"; \
 	$(CC) $(CFLAGS) $< -c -o $@
 
-%.o: %.cxx 
+%.o: 	%.cc
+	$(QUIET) echo "Compiling $<"; \
+	$(CC) $(CFLAGS) $< -c -o $@
+
+%.o:    %.cxx 
 	$(QUIET) echo "Compiling $<"; \
 	$(CC) $(CFLAGS) $< -c -o $@
 
