@@ -1,39 +1,46 @@
 {
 
-  // TFile *ttbar2_file = TFile::Open("ttbar2_histos.root");
-  // cout << "ttbar2 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
-
   TString dir = "results_PHYS14";
 
   TFile *ttbar_file = TFile::Open(dir+"/ttbar_histos.root");
-  cout << "ttbar BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  cout << "ttbar BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31)
+       << " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   TFile *TTWJets_file = TFile::Open(dir+"/TTWJets_histos.root");
-  cout << "TTWJets BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  cout << "TTWJets BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31)
+       << " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   TFile *TTZJets_file = TFile::Open(dir+"/TTZJets_histos.root");
-  cout << "TTZJets BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  cout << "TTZJets BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31) 
+       << " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   TFile *WZJets_file = TFile::Open(dir+"/WZJets_histos.root");
-  cout << "WZJets BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  cout << "WZJets BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31) 
+       << " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   // TFile *WW_file = TFile::Open(dir+"/WW_histos.root");
-  // cout << "WW BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  // cout << "WW BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31) 
+  //<< " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   // TFile *WHZH_file = TFile::Open(dir+"/WHZH_histos.root");
-  // cout << "WHZH BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  // cout << "WHZH BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31) 
+  //<< " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   TFile *T1ttttG1200_file = TFile::Open(dir+"/T1ttttG1200_histos.root");
-  cout << "T1ttttG1200 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  cout << "T1ttttG1200 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31) 
+       << " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   TFile *T1ttttG1500_file = TFile::Open(dir+"/T1ttttG1500_histos.root");
-  cout << "T1ttttG1500 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  cout << "T1ttttG1500 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31) 
+       << " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   // TFile *T5Full1200_file = TFile::Open(dir+"/T5Full1200_histos.root");
-  // cout << "T5Full1200 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  // cout << "T5Full1200 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31) 
+  //<< " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
   // TFile *T5Full1500_file = TFile::Open(dir+"/T5Full1500_histos.root");
-  // cout << "T5Full100 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  // cout << "T5Full100 BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31) 
+  //<< " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
 
 
   // TString dataset = "TTZJets";
