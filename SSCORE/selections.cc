@@ -189,7 +189,7 @@ bool isMediumElectron(unsigned int elIdx){
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
     if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
     if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(els_ip3d().at(elIdx)/els_ip3derr().at(elIdx) >= 4) return false;
+    if(fabs(els_ip3d().at(elIdx))/els_ip3derr().at(elIdx) >= 4) return false;
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
     if( eleRelIso03(elIdx) >= 0.1 ) return false; 
@@ -201,7 +201,7 @@ bool isMediumElectron(unsigned int elIdx){
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
     if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
     if(els_hOverE().at(elIdx) >= 0.1) return false; 
-    if(els_ip3d().at(elIdx)/els_ip3derr().at(elIdx) >= 4) return false;
+    if(fabs(els_ip3d().at(elIdx))/els_ip3derr().at(elIdx) >= 4) return false;
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
     if( eleRelIso03(elIdx) >= 0.1 ) return false; 
@@ -248,7 +248,7 @@ bool isTightMuon(unsigned int muIdx){
   if (!isMuonFO(muIdx)) return false;
   //fixme not applying MIP requirement in calo
   if (fabs(mus_dzPV().at(muIdx)) > 0.1)                               return false;//fixme?
-  if (mus_ip3d().at(muIdx)/mus_ip3derr().at(muIdx) >= 4)              return false;
+  if (fabs(mus_ip3d().at(muIdx))/mus_ip3derr().at(muIdx) >= 4)              return false;
   return true;
 }
 
@@ -562,7 +562,7 @@ bool isGoodVetoElectron(unsigned int elidx){
 bool isGoodElectron(unsigned int elidx){
   if (isFakableElectron(elidx)==0) return false;
   if (isMediumElectron(elidx)==0) return false;
-  if (els_ip3d().at(elidx)/els_ip3derr().at(elidx) >= 4) return false;
+  if (fabs(els_ip3d().at(elidx))/els_ip3derr().at(elidx) >= 4) return false;
   if (fabs(els_dzPV().at(elidx)) >= 0.1) return false;//fixme
   return true;
 }
