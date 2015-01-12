@@ -87,7 +87,7 @@ bool isVetoElectron(unsigned int elIdx){
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; 
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.8) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
+    if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.01) return false; 
     if(els_hOverE().at(elIdx) >= 0.15) return false; 
     if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
@@ -100,7 +100,7 @@ bool isVetoElectron(unsigned int elIdx){
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.01) return false; 
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.7) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
+    if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.03) return false; 
     //if(els_hOverE().at(elIdx) >= 0.19) return false; 
     if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
@@ -125,7 +125,7 @@ bool isElectronFO(unsigned int elIdx){//fixme
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.004) return false;
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
+    if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.01) return false; 
     if(els_hOverE().at(elIdx) >= 0.12) return false; 
     if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
@@ -138,7 +138,7 @@ bool isElectronFO(unsigned int elIdx){//fixme
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false;
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
+    if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.03) return false; 
     if(els_hOverE().at(elIdx) >= 0.1) return false; 
     if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return false; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
@@ -158,7 +158,7 @@ int isElectronFO_debug(unsigned int elIdx){//fixme
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.004) return 1;
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return 2; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return 3; 
+    if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.01) return 3; 
     if(els_hOverE().at(elIdx) >= 0.12) return 4; 
     if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return 5; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return 5; //is this wrt the correct PV?
@@ -170,7 +170,7 @@ int isElectronFO_debug(unsigned int elIdx){//fixme
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return 1;
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return 2; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return 3; 
+    if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.03) return 3; 
     if(els_hOverE().at(elIdx) >= 0.1) return 4; 
     if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return 5; //is this wrt the correct PV?
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return 5; //is this wrt the correct PV?
@@ -187,7 +187,7 @@ bool isMediumElectron(unsigned int elIdx){
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.004) return false;
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.01) return false; 
+    if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.01) return false; 
     if(els_hOverE().at(elIdx) >= 0.12) return false; 
     if(fabs(els_ip3d().at(elIdx))/els_ip3derr().at(elIdx) >= 4) return false;
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
@@ -199,7 +199,7 @@ bool isMediumElectron(unsigned int elIdx){
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false;
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
-    if(els_sigmaIEtaIEta().at(elIdx) >= 0.03) return false; 
+    if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.03) return false; 
     if(els_hOverE().at(elIdx) >= 0.1) return false; 
     if(fabs(els_ip3d().at(elIdx))/els_ip3derr().at(elIdx) >= 4) return false;
     if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?

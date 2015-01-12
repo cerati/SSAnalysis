@@ -503,9 +503,9 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		  }
 		}
 		if (fabs(els_etaSC().at(elidx)) <= 1.479)
-		  makeFillHisto1D<TH1F,float>("el_fo_fail_sietaieta_barrel","el_fo_fail_sietaieta_barrel",25,0.,0.025,els_sigmaIEtaIEta().at(elidx),weight_);
+		  makeFillHisto1D<TH1F,float>("el_fo_fail_sietaieta_barrel","el_fo_fail_sietaieta_barrel",25,0.,0.025,els_sigmaIEtaIEta_full5x5().at(elidx),weight_);
 		else
-		  makeFillHisto1D<TH1F,float>("el_fo_fail_sietaieta_endcap","el_fo_fail_sietaieta_endcap",25,0.,0.050,els_sigmaIEtaIEta().at(elidx),weight_);
+		  makeFillHisto1D<TH1F,float>("el_fo_fail_sietaieta_endcap","el_fo_fail_sietaieta_endcap",25,0.,0.050,els_sigmaIEtaIEta_full5x5().at(elidx),weight_);
 		if (fabs(els_p4().at(elidx).eta())>2.4) failmode = 11;
 		if (els_p4().at(elidx).pt()<10.) failmode = 12;
 		if (isFakableElectron(elidx)==0) {
@@ -892,7 +892,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    unsigned int elIdx = hyp.traiLep().idx();
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dEtaIn","hyp_ss_alltrail_"+lt+"_dEtaIn",100,0,0.05,fabs(els_dEtaIn().at(elIdx)),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dPhiIn","hyp_ss_alltrail_"+lt+"_dPhiIn",100,0,0.05,fabs(els_dPhiIn().at(elIdx)),weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_sIEtaIEta","hyp_ss_alltrail_"+lt+"_sIEtaIEta",100,0,0.05,els_sigmaIEtaIEta().at(elIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_sIEtaIEta","hyp_ss_alltrail_"+lt+"_sIEtaIEta",100,0,0.05,els_sigmaIEtaIEta_full5x5().at(elIdx),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_hOverE","hyp_ss_alltrail_"+lt+"_hOverE",100,0,0.5,els_hOverE().at(elIdx),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dxyPV","hyp_ss_alltrail_"+lt+"_dxyPV",100,0,0.1,fabs(els_dxyPV().at(elIdx)),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alltrail_"+lt+"_dzPV","hyp_ss_alltrail_"+lt+"_dzPV",100,0,0.5,fabs(els_dzPV().at(elIdx)),weight_);
@@ -921,7 +921,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    unsigned int elIdx = hyp.leadLep().idx();
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dEtaIn","hyp_ss_alllead_"+ll+"_dEtaIn",100,0,0.05,fabs(els_dEtaIn().at(elIdx)),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dPhiIn","hyp_ss_alllead_"+ll+"_dPhiIn",100,0,0.05,fabs(els_dPhiIn().at(elIdx)),weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_sIEtaIEta","hyp_ss_alllead_"+ll+"_sIEtaIEta",100,0,0.5,els_sigmaIEtaIEta().at(elIdx),weight_);
+	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_sIEtaIEta","hyp_ss_alllead_"+ll+"_sIEtaIEta",100,0,0.5,els_sigmaIEtaIEta_full5x5().at(elIdx),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_hOverE","hyp_ss_alllead_"+ll+"_hOverE",100,0,0.5,els_hOverE().at(elIdx),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dxyPV","hyp_ss_alllead_"+ll+"_dxyPV",100,0,0.1,fabs(els_dxyPV().at(elIdx)),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_ss_alllead_"+ll+"_dzPV","hyp_ss_alllead_"+ll+"_dzPV",100,0,0.5,fabs(els_dzPV().at(elIdx)),weight_);
@@ -1366,7 +1366,7 @@ void looper::runDYtest(vector<Lep>& fobs, vector<Lep>& goodleps, int& njets, flo
       for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
 	if (deltaR(els_p4()[elidx],genps_p4()[gp])>0.1) continue;
 	if (fabs(els_etaSC().at(elidx)) <= 1.479) {
-	  makeFillHisto1D<TH1F,float>("el_fo_sietaieta_barrel","el_fo_sietaieta_barrel",50,0.,0.025,els_sigmaIEtaIEta().at(elidx),weight_);
+	  makeFillHisto1D<TH1F,float>("el_fo_sietaieta_barrel","el_fo_sietaieta_barrel",50,0.,0.025,els_sigmaIEtaIEta_full5x5().at(elidx),weight_);
 	}
       }
     }
