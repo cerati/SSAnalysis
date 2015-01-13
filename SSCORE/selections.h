@@ -17,7 +17,7 @@ float muRelIso04DB(unsigned int);
 float eleRelIso03DB(unsigned int);
 
 struct Lep {
-  Lep(int pdgid, int idx):pdgid_(pdgid),idx_(idx){}
+  Lep(int pdgid, int idxx):pdgid_(pdgid),idx_(idxx){}
   int charge() {return -1*pdgid_/abs(pdgid_);}
   int pdgId() {return pdgid_;}
   int idx() {return idx_;}
@@ -56,7 +56,7 @@ private:
 };
 
 struct Jet {
-  Jet(int idx):idx_(idx){}
+  Jet(int idxx):idx_(idxx){}
   LorentzVector p4() {return cms2.pfjets_p4()[idx_]/**cms2.pfjets_corL1FastL2L3()[idx_]*/;}//fixme
   float pt() {return p4().pt();}
   float eta() {return p4().eta();}
