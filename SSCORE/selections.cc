@@ -575,8 +575,11 @@ bool isFakableMuon(unsigned int muidx){
   return true;
 }
 bool isGoodVetoMuon(unsigned int muidx){
+  if (mus_p4().at(muidx).pt()<5.) return false;//fixme
   if (isLooseMuon(muidx)==0) return false;
   if (muRelIso03(muidx)>0.5 ) return false;
+  if (fabs(mus_dxyPV().at(muidx)) >= 0.05) return false;
+  if (fabs(mus_dzPV().at(muidx)) >= 0.1) return false;
   return true;
 }
 bool isGoodMuon(unsigned int muidx){
