@@ -554,7 +554,7 @@ bool isFakableElectron(unsigned int elidx){
 }
 
 bool isGoodVetoElectron(unsigned int elidx){
-  if (els_p4().at(elidx).pt()<10.) return false;//fixme
+  if (els_p4().at(elidx).pt()<7.) return false;//fixme
   if (isVetoElectron(elidx)==0) return false;
   if( eleRelIso03(elidx) >= 0.5) return false; 
   return true;

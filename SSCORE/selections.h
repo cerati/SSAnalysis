@@ -3,8 +3,8 @@
 #include "CMS2.h"
 #include "TString.h"
 
-const static float ptCutHigh = 20.;
-const static float ptCutLow = 15.;
+const static float ptCutHigh = 25.;
+const static float ptCutLow = 10.;
 
 enum AnalysisBit { HighPt = 0, LowPt = 1, VeryLowPt = 2 };
 
