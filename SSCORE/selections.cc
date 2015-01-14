@@ -83,7 +83,6 @@ bool isTightPFJet(unsigned int pfJetIdx){
 //2012 Electron IDs
 //https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaCutBasedIdentification#Electron_ID_Working_Points
 bool isVetoElectron(unsigned int elIdx){
-
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; 
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.8) return false; 
@@ -96,7 +95,6 @@ bool isVetoElectron(unsigned int elIdx){
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 2) return false;
     return true;
-
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.01) return false; 
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.7) return false; 
@@ -109,15 +107,7 @@ bool isVetoElectron(unsigned int elIdx){
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 2) return false;
     return true;
-
   } else return false;
-
-}
-
-bool isLooseElectron(unsigned int elIdx){
-
-  return false;
-
 }
 
 bool isElectronFO(unsigned int elIdx){//fixme
@@ -134,7 +124,6 @@ bool isElectronFO(unsigned int elIdx){//fixme
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 0) return false;
     return true;
-
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false;
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
@@ -147,12 +136,8 @@ bool isElectronFO(unsigned int elIdx){//fixme
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 0) return false;
     return true;
-
   } else return false;
-
-
 }
-
 
 int isElectronFO_debug(unsigned int elIdx){//fixme
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
@@ -212,24 +197,14 @@ bool isMediumElectron(unsigned int elIdx){
 
 }
 
-bool isTightElectron(unsigned int elIdx){
-  return false;
-}
-
-
 bool isLooseMuon(unsigned int muIdx){
-
-  if(!mus_pid_PFMuon().at(muIdx)) return false; 
-   
+  if(!mus_pid_PFMuon().at(muIdx)) return false;    
   bool isGlobal  = true;
   bool isTracker = true;
   if (((mus_type().at(muIdx)) & (1<<1)) == 0) isGlobal  = false;
   if (((mus_type().at(muIdx)) & (1<<2)) == 0) isTracker = false;
-
-  if(!(isGlobal || isTracker)) return false;
-  
+  if(!(isGlobal || isTracker)) return false;  
   return true;
-
 }
 
 bool isMuonFO(unsigned int muIdx){
@@ -248,18 +223,12 @@ bool isTightMuon(unsigned int muIdx){
   if (!isMuonFO(muIdx)) return false;
   //fixme not applying MIP requirement in calo
   if (fabs(mus_dzPV().at(muIdx)) > 0.1)                               return false;//fixme?
-  if (fabs(mus_ip3d().at(muIdx))/mus_ip3derr().at(muIdx) >= 4)              return false;
+  if (fabs(mus_ip3d().at(muIdx))/mus_ip3derr().at(muIdx) >= 4)        return false;
   return true;
 }
 
-
 bool threeChargeAgree(unsigned int elIdx){
-
   return els_isGsfCtfScPixChargeConsistent().at(elIdx);
-  //if(els_charge().at(elIdx) != els_trk_charge().at(elIdx)) return false;
-  //if(els_charge().at(elIdx) != els_sccharge().at(elIdx))   return false;
-  //return true;
-  
 }
 
 float muRelIso03(unsigned int muIdx){
@@ -271,7 +240,6 @@ float eleRelIso03(unsigned int elIdx){
 }
 
 float muRelIso03EA(unsigned int muIdx){
-
   float chiso     = mus_isoR03_pf_ChargedHadronPt().at(muIdx);
   float nhiso     = mus_isoR03_pf_NeutralHadronEt().at(muIdx);
   float emiso     = mus_isoR03_pf_PhotonEt().at(muIdx);
@@ -284,11 +252,9 @@ float muRelIso03EA(unsigned int muIdx){
   float absiso = chiso + std::max(float(0.0), nhiso + emiso - evt_fixgrid_all_rho() * ea);
   //cout << "chiso=" << chiso << " nhiso=" << nhiso << " emiso=" << emiso << " deltaBeta=" << deltaBeta << " absiso=" << absiso << " relIso=" << absiso/(mus_p4().at(muIdx).pt()) << endl;
   return absiso/(mus_p4().at(muIdx).pt());
-
 }
 
 float eleRelIso03EA(unsigned int elIdx){
-
   float chiso     = els_pfChargedHadronIso().at(elIdx);
   float nhiso     = els_pfNeutralHadronIso().at(elIdx);
   float emiso     = els_pfPhotonIso().at(elIdx);
@@ -301,11 +267,9 @@ float eleRelIso03EA(unsigned int elIdx){
   float absiso = chiso + std::max(float(0.0), nhiso + emiso - evt_fixgrid_all_rho() * ea);
   //cout << "chiso=" << chiso << " nhiso=" << nhiso << " emiso=" << emiso << " deltaBeta=" << deltaBeta << " absiso=" << absiso << " relIso=" << absiso/(els_p4().at(elIdx).pt()) << endl;
   return absiso/(els_p4().at(elIdx).pt());
-
 }
 
 float muRelIso03DB(unsigned int muIdx){
-
   float chiso     = mus_isoR03_pf_ChargedHadronPt().at(muIdx);
   float nhiso     = mus_isoR03_pf_NeutralHadronEt().at(muIdx);
   float emiso     = mus_isoR03_pf_PhotonEt().at(muIdx);
@@ -313,21 +277,18 @@ float muRelIso03DB(unsigned int muIdx){
   float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
   //cout << "chiso=" << chiso << " nhiso=" << nhiso << " emiso=" << emiso << " deltaBeta=" << deltaBeta << " absiso=" << absiso << " relIso=" << absiso/(mus_p4().at(muIdx).pt()) << endl;
   return absiso/(mus_p4().at(muIdx).pt());
-
 }
 
 float muRelIso04DB(unsigned int muIdx){
-
   float chiso     = mus_isoR04_pf_ChargedHadronPt().at(muIdx);
   float nhiso     = mus_isoR04_pf_NeutralHadronEt().at(muIdx);
   float emiso     = mus_isoR04_pf_PhotonEt().at(muIdx);
   float deltaBeta = mus_isoR04_pf_PUPt().at(muIdx);
   float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
   return absiso/(mus_p4().at(muIdx).pt());
-
 }
-float eleRelIso03DB(unsigned int elIdx){
 
+float eleRelIso03DB(unsigned int elIdx){
   float chiso     = els_pfChargedHadronIso().at(elIdx);
   float nhiso     = els_pfNeutralHadronIso().at(elIdx);
   float emiso     = els_pfPhotonIso().at(elIdx);
@@ -335,18 +296,7 @@ float eleRelIso03DB(unsigned int elIdx){
   float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
   return absiso/(els_p4().at(elIdx).pt());
 }
-int eleTightID(unsigned int elIdx){
-  if (isTightElectron(elIdx))  return 3;
-  if (isMediumElectron(elIdx)) return 2;
-  if (isLooseElectron(elIdx))  return 1;
-  if (isVetoElectron(elIdx))   return 0;
-  return -1;
-}
-int muTightID(unsigned int muIdx){
-  if (isTightMuon(muIdx))  return 1;
-  if (isLooseMuon(muIdx))   return 0;
-  return -1;
-}
+
 //-------------------------------------------------------
 // get exact trigger name corresponding to given pattern
 //-------------------------------------------------------
@@ -544,22 +494,20 @@ bool idIsBeauty(int id) {
   else return false;
 }
 
-
-bool isFakableElectron(unsigned int elidx){
-  if (fabs(els_p4().at(elidx).eta())>2.4) return false;
-  if (els_p4().at(elidx).pt()<10.) return false;//fixme
-  if (isElectronFO(elidx)==0) return false;
-  if (threeChargeAgree(elidx)==0) return false;
-  return true;
-}
-
 bool isGoodVetoElectron(unsigned int elidx){
+  if (fabs(els_p4().at(elidx).eta())>2.4) return false;
   if (els_p4().at(elidx).pt()<7.) return false;//fixme
   if (isVetoElectron(elidx)==0) return false;
   if( eleRelIso03(elidx) >= 0.5) return false; 
   return true;
 }
-
+bool isFakableElectron(unsigned int elidx){
+  if (els_p4().at(elidx).pt()<10.) return false;//fixme
+  if (isGoodVetoElectron(elidx)==0) return false;
+  if (isElectronFO(elidx)==0) return false;
+  if (threeChargeAgree(elidx)==0) return false;
+  return true;
+}
 bool isGoodElectron(unsigned int elidx){
   if (isFakableElectron(elidx)==0) return false;
   if (isMediumElectron(elidx)==0) return false;
@@ -568,19 +516,18 @@ bool isGoodElectron(unsigned int elidx){
   return true;
 }
 
-bool isFakableMuon(unsigned int muidx){
-  if (fabs(mus_p4().at(muidx).eta())>2.4) return false;
-  if (mus_p4().at(muidx).pt()<5.) return false;//fixme
-  if (isMuonFO(muidx)==0) return false;
-  if (muRelIso03(muidx)>0.5 ) return false;
-  return true;
-}
 bool isGoodVetoMuon(unsigned int muidx){
+  if (fabs(mus_p4().at(muidx).eta())>2.4) return false;
   if (mus_p4().at(muidx).pt()<5.) return false;//fixme
   if (isLooseMuon(muidx)==0) return false;
   if (muRelIso03(muidx)>0.5 ) return false;
   if (fabs(mus_dxyPV().at(muidx)) >= 0.05) return false;
   if (fabs(mus_dzPV().at(muidx)) >= 0.1) return false;
+  return true;
+}
+bool isFakableMuon(unsigned int muidx){
+  if (isGoodVetoMuon(muidx)==0) return false;
+  if (isMuonFO(muidx)==0) return false;
   return true;
 }
 bool isGoodMuon(unsigned int muidx){

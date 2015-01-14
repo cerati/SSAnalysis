@@ -220,24 +220,31 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,1,weight_);
       if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,1,weight_);
 
+      //veto leptons
+      if (debug) cout << "vetoleps" << endl;
+      vector<Lep> vetoleps;
+      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
+	//medium electron selection
+	if (isGoodVetoElectron(elidx)==0) continue;
+	Lep vetoel(-1*els_charge().at(elidx)*11,elidx);
+	vetoleps.push_back(vetoel);
+      }
+      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
+	//veto muon selection
+	if (isGoodVetoMuon(muidx)==0) continue;
+	Lep vetomu(-1*mus_charge().at(muidx)*13,muidx);
+	vetoleps.push_back(vetomu);
+      }
+
       //fakable objects
       if (debug) cout << "fobs" << endl;
       vector<Lep> fobs;
-      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
-	//electron fo selection
-	if (debug) cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " phi=" << els_p4()[elidx].phi() << " q=" << els_charge()[elidx] << endl;
-	if (isFakableElectron(elidx)==0) continue;
-	if (debug) cout << "pass FO selection" << endl;
-	Lep foel(-1*els_charge().at(elidx)*11,elidx);
-	fobs.push_back(foel);
-      }
-      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
-	//muon fo selection
-	if (debug) cout << "mu pt=" << mus_p4()[muidx].pt() << " eta=" << mus_p4()[muidx].eta() << " phi=" << mus_p4()[muidx].phi() << " q=" << mus_charge()[muidx]<< endl;
-	if (isFakableMuon(muidx)==0) continue;
-	if (debug) cout << "pass FO selection" << endl;
-	Lep fomu(-1*mus_charge().at(muidx)*13,muidx);
-	fobs.push_back(fomu);
+      for (unsigned int vl=0;vl<vetoleps.size();++vl) {
+	if (abs(vetoleps[vl].pdgId())==13 && isFakableMuon(vetoleps[vl].idx())==0) continue;
+	if (abs(vetoleps[vl].pdgId())==11 && isFakableElectron(vetoleps[vl].idx())==0) continue;
+      	if (debug) cout << "good lep id=" << vetoleps[vl].pdgId() << " pt=" << vetoleps[vl].pt() 
+			<< " eta=" << vetoleps[vl].eta() << " phi=" << vetoleps[vl].p4().phi() << " q=" << vetoleps[vl].charge()<< endl;
+      	fobs.push_back(vetoleps[vl]);
       }
       if (fobs.size()==0 && !makeDYtest) continue;
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,2,weight_);
@@ -265,22 +272,6 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       	if (debug) cout << "good lep id=" << fobs[fo].pdgId() << " pt=" << fobs[fo].pt() 
 			<< " eta=" << fobs[fo].eta() << " phi=" << fobs[fo].p4().phi() << " q=" << fobs[fo].charge()<< endl;
       	goodleps.push_back(fobs[fo]);
-      }
-
-      //veto leptons
-      if (debug) cout << "vetoleps" << endl;
-      vector<Lep> vetoleps;
-      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
-	//medium electron selection
-	if (isGoodVetoElectron(elidx)==0) continue;
-	Lep vetoel(-1*els_charge().at(elidx)*11,elidx);
-	vetoleps.push_back(vetoel);
-      }
-      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
-	//veto muon selection
-	if (isGoodVetoMuon(muidx)==0) continue;
-	Lep vetomu(-1*mus_charge().at(muidx)*13,muidx);
-	vetoleps.push_back(vetomu);
       }
 
       //jets, ht, btags
