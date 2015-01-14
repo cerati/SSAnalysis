@@ -1,7 +1,14 @@
 {
 
-  //TString dir = "results_PHYS14";
-  TString dir = ".";
+  TFile *sync_file = TFile::Open("./synctest_histos.root");
+  cout << "sync BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31)
+       << " BR0E=" << hyp_highpt_br->GetBinContent(1) << " BR10=" << hyp_highpt_br->GetBinContent(11) << " BR20=" << hyp_highpt_br->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  cout << "sync SR0I=" << hyp_highpt_sr->GetBinContent(1)+hyp_highpt_sr->GetBinContent(11)+hyp_highpt_sr->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31)
+       << " SR0E=" << hyp_highpt_sr->GetBinContent(1) << " SR10=" << hyp_highpt_sr->GetBinContent(11) << " SR20=" << hyp_highpt_sr->GetBinContent(21) << " SR30=" << hyp_highpt_sr->GetBinContent(31) << endl;
+  cout << "ee em mm : " << hyp_highpt_type->GetBinContent(4) << " " << hyp_highpt_type->GetBinContent(2)+hyp_highpt_type->GetBinContent(3) << " " << hyp_highpt_type->GetBinContent(1) << endl;
+  return;
+
+  TString dir = "results_PHYS14";
 
   TFile *ttbar_file = TFile::Open(dir+"/ttbar_histos.root");
   cout << "ttbar BR0I=" << hyp_highpt_br->GetBinContent(1)+hyp_highpt_br->GetBinContent(11)+hyp_highpt_br->GetBinContent(21)+hyp_highpt_sr->GetBinContent(31)
