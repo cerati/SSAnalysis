@@ -255,9 +255,10 @@ bool isTightMuon(unsigned int muIdx){
 
 bool threeChargeAgree(unsigned int elIdx){
 
-  if(els_charge().at(elIdx) != els_trk_charge().at(elIdx)) return false;
-  if(els_charge().at(elIdx) != els_sccharge().at(elIdx))   return false;
-  return true;
+  return els_isGsfCtfScPixChargeConsistent().at(elIdx);
+  //if(els_charge().at(elIdx) != els_trk_charge().at(elIdx)) return false;
+  //if(els_charge().at(elIdx) != els_sccharge().at(elIdx))   return false;
+  //return true;
 
 }
 
