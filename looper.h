@@ -32,7 +32,7 @@ class looper
     delete babyTree_;
   };
   
-  int ScanChain ( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest = "", int nEvents = -1);
+  int ScanChain ( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest = "", int nEvents = -1, std::vector<int> evtToDebug = std::vector<int>());
   
   void MakeBabyNtuple (const char *);
   void InitBabyNtuple ();

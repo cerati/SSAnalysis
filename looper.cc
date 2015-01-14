@@ -23,7 +23,7 @@ bool ptsort (int i,int j) { return (genps_p4()[i].pt()>genps_p4()[j].pt()); }
 
 bool lepsort (Lep i,Lep j) { 
   if ( abs(i.pdgId())==abs(j.pdgId()) ) return ( i.pt()>j.pt() ); //sort by pt if same flavor
-  else return ( abs(i.pdgId())>abs(j.pdgId()) && i.pt()>ptCutHigh ); //prefer muons over electrons, but check that mu have pt>25//fixme, need to sync
+  else return ( abs(i.pdgId())>abs(j.pdgId()) ); //prefer muons over electrons, but check that mu have pt>25//fixme, need to sync // && i.pt()>ptCutHigh
 }
 
 bool jetptsort (Jet i,Jet j) { return (i.pt()>j.pt()); }
@@ -34,7 +34,7 @@ enum LeptonCategories { Prompt = 0, PromptWS = 1, PromptWF = 2, PromptFSR = 2,
 			FakeUnknown = 8, FakeLowPtGamma = 9, All9999 = 10,
 			Other = 11, End = 12};
 
-int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents) {
+int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents, vector<int> evtToDebug) {
 
   makebaby       = 0;
   makehist       = 1;
@@ -45,17 +45,19 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
   bool makeWZtest     = 0;
   bool makeSSskim     = 0;
   bool makeQCDskim    = 0;
+  bool makeSyncTest   = 0;
   if (whatTest=="QCDtest") makeQCDtest    = 1;
   if (whatTest=="DYtest" ) makeDYtest     = 1;
   if (whatTest=="WZtest" ) makeWZtest     = 1;
   if (whatTest=="SSskim" ){makeSSskim     = 1; makehist = 0;}
   if (whatTest=="QCDskim") makeQCDskim    = 1;
+  if (whatTest=="SyncTest")makeSyncTest   = 1;
 
   cout << "Processing " << prefix << " " << postfix << " " << whatTest << endl;
 
   bool debug = 0;  
   if (debug) cout << "running with flags: makeQCDtest=" << makeQCDtest << " makeDYtest=" << makeDYtest 
-		  << " makeWZtest=" << makeWZtest << " makeSSskim=" << makeSSskim << " makeQCDskim=" << makeQCDskim 
+		  << " makeWZtest=" << makeWZtest << " makeSSskim=" << makeSSskim << " makeQCDskim=" << makeQCDskim << " makeSyncTest=" << makeSyncTest
 		  << " makebaby=" << makebaby << " makehist=" << makehist << " maketext=" << maketext
 		  << endl;
 
@@ -133,13 +135,19 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
       float lumi = 10.;
 
-      /*
-      if (evt_event()!=  35245  
-          )  continue;
-      std::cout << "event =" << evt_event() << std::endl;
-      cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << endl;      
-      debug=1;
-      */
+      if (evtToDebug.size()>0) {
+	bool pass = false;
+	for (unsigned int evt=0;evt<evtToDebug.size();evt++) {
+	  if (evt_event()==abs(evtToDebug[evt])) {
+	    pass = true;
+	    break;
+	  }
+	}
+	if (!pass) continue;
+	std::cout << "event =" << evt_event() << std::endl;
+	cout << "file=" << currentFile->GetTitle() << " run=" << run_ << " evt=" << evt_ << endl;      
+	debug=1;
+      }
 
       //fill baby
       run_   = evt_run();
@@ -148,6 +156,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       weight_ = isData ? 1. : lumi*evt_scale1fb();
       //if (prefix=="wj") weight_*=30;//fixme using only a subset of events
       //if (prefix=="dy") weight_*=25;//fixme using only a subset of events
+      if (makeSyncTest) weight_ = 1.;
 
       if (newfile) {
 	if (debug) cout << "weight=" << weight_ << endl;
@@ -250,27 +259,12 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //leptons
       if (debug) cout << "goodleps" << endl;
       vector<Lep> goodleps;
-      /*
-      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
-	//medium electron selection
-	if (isGoodElectron(elidx)==0) continue;
-	Lep goodel(-1*els_charge().at(elidx)*11,elidx);
-	goodleps.push_back(goodel);
-	if (debug) cout << "good el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " phi=" << els_p4()[elidx].phi() << " q=" << els_charge()[elidx] << endl;
-      }
-      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
-	//good muon selection
-	if (isGoodMuon(muidx)==0) continue;
-	Lep goodmu(-1*mus_charge().at(muidx)*13,muidx);
-	goodleps.push_back(goodmu);
-	if (debug) cout << "good mu pt=" << mus_p4()[muidx].pt() << " eta=" << mus_p4()[muidx].eta() << " phi=" << mus_p4()[muidx].phi() << " q=" << mus_charge()[muidx]<< endl;
-      }
-      */
       for (unsigned int fo=0;fo<fobs.size();++fo) {
-	if (fabs(fobs[fo].dxyPV())>0.01 || (abs(fobs[fo].pdgId())==13&&fabs(fobs[fo].dxyPV())>0.005)) continue;
-	if (fabs(fobs[fo].dzPV())>0.1) continue;
-	if (fobs[fo].relIso03()>0.1) continue;
-	goodleps.push_back(fobs[fo]);
+	if (abs(fobs[fo].pdgId())==13 && isGoodMuon(fobs[fo].idx())==0) continue;
+	if (abs(fobs[fo].pdgId())==11 && isGoodElectron(fobs[fo].idx())==0) continue;
+      	if (debug) cout << "good lep id=" << fobs[fo].pdgId() << " pt=" << fobs[fo].pt() 
+			<< " eta=" << fobs[fo].eta() << " phi=" << fobs[fo].p4().phi() << " q=" << fobs[fo].charge()<< endl;
+      	goodleps.push_back(fobs[fo]);
       }
 
       //veto leptons
@@ -325,8 +319,11 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
             }
           }
         } else {
-          for (unsigned int gl=0;gl<goodleps.size();++gl) {
-            if (deltaR(jet.p4(),goodleps[gl].p4())<drcut) {
+          //for (unsigned int gl=0;gl<goodleps.size();++gl) {
+          for (unsigned int gl=0;gl<vetoleps.size();++gl) {//fixme not sure this is the best choice
+	    Lep lep = vetoleps[gl];
+	    if (lep.pt()<10) continue;
+            if (deltaR(jet.p4(),lep.p4())<drcut) {
               isLep =true;
 	      if (debug) cout << "jet overlapping with lepton" << endl;
               break;
@@ -453,7 +450,6 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }      
       if (debug) cout << "hypleps size=" << hypleps.size() << endl;
 
-      //if (fobs.size()!=2 && hypleps.size()!=2) {
       if (fobs.size()<2) {
 	if (debug) cout << "skip, fobs size=" << fobs.size() << " hypleps size=" << hypleps.size() << endl;
 	if (isGenSS) {
@@ -558,6 +554,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       int br = baselineRegion(nbtag);
       unsigned int ac_sig = ac_base;
       passesSignalRegionCuts(ht, met, ac_sig);
+      if (debug) cout << "ac_base=" << ac_base << " ac_sig=" << ac_sig << endl;
       int sr = ac_sig!=0 ? signalRegion(njets, nbtag, met, ht) : -1;
 
       //write skim here (only ss)
@@ -737,7 +734,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,8,weight_);
 	if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,8,weight_);
       }
-      if (hypleps.size()!=2 || hypleps[0].pt()<ptCutHigh || hypleps[1].pt()<ptCutHigh) {
+      if (hypleps.size()!=2 || hypleps[0].pt()<ptCutLow || hypleps[1].pt()<ptCutLow) {
 	if (debug) {
 	  cout << "skip, not passing lepton cuts" << endl; 
 	  cout << "fobs size = " << fobs.size() << " pdgids=" << fobs[0].pdgId() << ", " << fobs[1].pdgId() << endl;
@@ -745,7 +742,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  for (unsigned int fo=0;fo<fobs.size();++fo){
 	    if (abs(fobs[fo].pdgId())!=13) continue;
 	    cout << "fob pt=" << fobs[fo].pt() << " eta=" << fobs[fo].eta() << endl;
-	    if (mus_p4().at(fobs[fo].idx()).pt()<ptCutHigh) cout << "fail pt" << endl;
+	    if (mus_p4().at(fobs[fo].idx()).pt()<ptCutLow) cout << "fail pt" << endl;
 	    if (isMuonFO(fobs[fo].idx())==0) cout << "fail FO" << endl;
 	    if (muRelIso03(fobs[fo].idx())>1.0 ) cout << "fail loose iso" << endl;
 	    if (isTightMuon(fobs[fo].idx())==0) cout << "fail tight id" << endl;
@@ -766,7 +763,6 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
       //fill histos
       if (makehist) {
-	//makeFillHisto1D<TH1F,int>("dummy","dummy",2,0,2,1);
 	makeFillHisto1D<TH1F,int>("hyp_charge","hyp_charge",7,-3.5,3.5,hyp.charge(),weight_);
 	makeFillHisto1D<TH1F,float>("hyp_mll","hyp_mll",100,0,1000,hyp.p4().mass(),weight_);
 	makeFillHisto1D<TH1F,float>("hyp_ptll","hyp_ptll",100,0,1000,hyp.p4().pt(),weight_);
@@ -800,6 +796,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	if (abs(hyp.traiLep().pdgId())==13 && abs(hyp.leadLep().pdgId())==11) type=1;
 	if (abs(hyp.traiLep().pdgId())==11 && abs(hyp.leadLep().pdgId())==13) type=2;
 	if (abs(hyp.traiLep().pdgId())==11 && abs(hyp.leadLep().pdgId())==11) type=3;
+	if (debug) cout << "type=" << type << endl;
 	makeFillHisto1D<TH1F,int>("hyp_type","hyp_type",5,0,5,type,weight_);
 
 	if (hyp.charge()!=0) {
@@ -952,6 +949,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_br_fromWZ","hyp_highpt_br_fromWZ",40,0,40,br,weight_);
 	    }
+	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
+					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	    if (sr>0) {
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",40,0,40,br,weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",40,0,40,sr,weight_);
@@ -959,46 +958,46 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",40,0,40,br,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",40,0,40,sr,weight_);
 	      }
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_njets","hyp_highpt_njets",8,0,8,njets,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag","hyp_highpt_nbtag",8,0,8,nbtag,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt20","hyp_highpt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt25","hyp_highpt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt30","hyp_highpt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt35","hyp_highpt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_ht","hyp_highpt_ht",13,80,600,ht,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_met","hyp_highpt_met",10,0,250,met,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_mll","hyp_highpt_mll",100,0,1000,hyp.p4().mass(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_ptll","hyp_highpt_ptll",100,0,1000,hyp.p4().pt(),weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_type","hyp_highpt_type",5,0,5,type,weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_ptlead","hyp_highpt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_pttrai","hyp_highpt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_etalead","hyp_highpt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_etatrai","hyp_highpt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
+	      makeFillHisto1D<TH1F,float>("hyp_highpt_mtmin","hyp_highpt_mtmin",15,0,300,mtmin,weight_);
 	    }
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_njets","hyp_highpt_njets",8,0,8,njets,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag","hyp_highpt_nbtag",8,0,8,nbtag,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt20","hyp_highpt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt25","hyp_highpt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt30","hyp_highpt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt35","hyp_highpt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_ht","hyp_highpt_ht",13,80,600,ht,weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_met","hyp_highpt_met",10,0,250,met,weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_mll","hyp_highpt_mll",100,0,1000,hyp.p4().mass(),weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_ptll","hyp_highpt_ptll",100,0,1000,hyp.p4().pt(),weight_);
-	    makeFillHisto1D<TH1F,int>("hyp_highpt_type","hyp_highpt_type",5,0,5,type,weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_ptlead","hyp_highpt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_pttrai","hyp_highpt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_etalead","hyp_highpt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_etatrai","hyp_highpt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
-	    makeFillHisto1D<TH1F,float>("hyp_highpt_mtmin","hyp_highpt_mtmin",15,0,300,mtmin,weight_);
 
 	    if (mtmin>100.) {
 	      makeFillHisto1D<TH1F,int>("hyp_highptmt_br","hyp_highptmt_br",40,0,40,br,weight_);
 	      if (sr>0) {
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",40,0,40,br,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",40,0,40,sr,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_njets","hyp_highptmt_njets",8,0,8,njets,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag","hyp_highptmt_nbtag",8,0,8,nbtag,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt20","hyp_highptmt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt25","hyp_highptmt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt30","hyp_highptmt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt35","hyp_highptmt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_ht","hyp_highptmt_ht",13,80,600,ht,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_met","hyp_highptmt_met",10,0,250,met,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_mll","hyp_highptmt_mll",100,0,1000,hyp.p4().mass(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_ptll","hyp_highptmt_ptll",100,0,1000,hyp.p4().pt(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_type","hyp_highptmt_type",5,0,5,type,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_ptlead","hyp_highptmt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_pttrai","hyp_highptmt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_etalead","hyp_highptmt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_etatrai","hyp_highptmt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highptmt_mtmin","hyp_highptmt_mtmin",15,0,300,mtmin,weight_);
 	      }
-	      makeFillHisto1D<TH1F,int>("hyp_highptmt_njets","hyp_highptmt_njets",8,0,8,njets,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag","hyp_highptmt_nbtag",8,0,8,nbtag,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt20","hyp_highptmt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt25","hyp_highptmt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt30","hyp_highptmt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt35","hyp_highptmt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ht","hyp_highptmt_ht",13,80,600,ht,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_met","hyp_highptmt_met",10,0,250,met,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_mll","hyp_highptmt_mll",100,0,1000,hyp.p4().mass(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ptll","hyp_highptmt_ptll",100,0,1000,hyp.p4().pt(),weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highptmt_type","hyp_highptmt_type",5,0,5,type,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_ptlead","hyp_highptmt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_pttrai","hyp_highptmt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_etalead","hyp_highptmt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_etatrai","hyp_highptmt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highptmt_mtmin","hyp_highptmt_mtmin",15,0,300,mtmin,weight_);
 	    }
 
 	    if (ht400met120) {
@@ -1006,46 +1005,46 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      if (sr>0) {
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",40,0,40,br,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",40,0,40,sr,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_njets","hyp_highpthtmet_njets",8,0,8,njets,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag","hyp_highpthtmet_nbtag",8,0,8,nbtag,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt20","hyp_highpthtmet_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt25","hyp_highpthtmet_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt30","hyp_highpthtmet_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt35","hyp_highpthtmet_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ht","hyp_highpthtmet_ht",13,80,600,ht,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_met","hyp_highpthtmet_met",10,0,250,met,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mll","hyp_highpthtmet_mll",100,0,1000,hyp.p4().mass(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptll","hyp_highpthtmet_ptll",100,0,1000,hyp.p4().pt(),weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_type","hyp_highpthtmet_type",5,0,5,type,weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptlead","hyp_highpthtmet_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_pttrai","hyp_highpthtmet_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_etalead","hyp_highpthtmet_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_etatrai","hyp_highpthtmet_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
+		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mtmin","hyp_highpthtmet_mtmin",15,0,300,mtmin,weight_);
 	      }
-	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_njets","hyp_highpthtmet_njets",8,0,8,njets,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag","hyp_highpthtmet_nbtag",8,0,8,nbtag,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt20","hyp_highpthtmet_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt25","hyp_highpthtmet_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt30","hyp_highpthtmet_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt35","hyp_highpthtmet_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ht","hyp_highpthtmet_ht",13,80,600,ht,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_met","hyp_highpthtmet_met",10,0,250,met,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mll","hyp_highpthtmet_mll",100,0,1000,hyp.p4().mass(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptll","hyp_highpthtmet_ptll",100,0,1000,hyp.p4().pt(),weight_);
-	      makeFillHisto1D<TH1F,int>("hyp_highpthtmet_type","hyp_highpthtmet_type",5,0,5,type,weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ptlead","hyp_highpthtmet_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_pttrai","hyp_highpthtmet_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_etalead","hyp_highpthtmet_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_etatrai","hyp_highpthtmet_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
-	      makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mtmin","hyp_highpthtmet_mtmin",15,0,300,mtmin,weight_);
 
 	      if (mtmin>100.) {
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_br","hyp_highpthtmetmt_br",40,0,40,br,weight_);
 		if (sr>0) {
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",40,0,40,br,weight_);
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",40,0,40,sr,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_njets","hyp_highpthtmetmt_njets",8,0,8,njets,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag","hyp_highpthtmetmt_nbtag",8,0,8,nbtag,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt20","hyp_highpthtmetmt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt25","hyp_highpthtmetmt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt30","hyp_highpthtmetmt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt35","hyp_highpthtmetmt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ht","hyp_highpthtmetmt_ht",13,80,600,ht,weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_met","hyp_highpthtmetmt_met",10,0,250,met,weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mll","hyp_highpthtmetmt_mll",100,0,1000,hyp.p4().mass(),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptll","hyp_highpthtmetmt_ptll",100,0,1000,hyp.p4().pt(),weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_type","hyp_highpthtmetmt_type",5,0,5,type,weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptlead","hyp_highpthtmetmt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_pttrai","hyp_highpthtmetmt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_etalead","hyp_highpthtmetmt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_etatrai","hyp_highpthtmetmt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
+		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mtmin","hyp_highpthtmetmt_mtmin",15,0,300,mtmin,weight_);
 		}
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_njets","hyp_highpthtmetmt_njets",8,0,8,njets,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag","hyp_highpthtmetmt_nbtag",8,0,8,nbtag,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt20","hyp_highpthtmetmt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt25","hyp_highpthtmetmt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt30","hyp_highpthtmetmt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt35","hyp_highpthtmetmt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ht","hyp_highpthtmetmt_ht",13,80,600,ht,weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_met","hyp_highpthtmetmt_met",10,0,250,met,weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mll","hyp_highpthtmetmt_mll",100,0,1000,hyp.p4().mass(),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptll","hyp_highpthtmetmt_ptll",100,0,1000,hyp.p4().pt(),weight_);
-		makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_type","hyp_highpthtmetmt_type",5,0,5,type,weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ptlead","hyp_highpthtmetmt_ptlead",40,0,200,hyp.leadLep().pt(),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_pttrai","hyp_highpthtmetmt_pttrai",40,0,200,hyp.traiLep().pt(),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_etalead","hyp_highpthtmetmt_etalead",10,0,2.5,fabs(hyp.leadLep().eta()),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_etatrai","hyp_highpthtmetmt_etatrai",10,0,2.5,fabs(hyp.traiLep().eta()),weight_);
-		makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mtmin","hyp_highpthtmetmt_mtmin",15,0,300,mtmin,weight_);
 	      }
 	    }
 
@@ -1115,10 +1114,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_type","hyp_lowpt_type",5,0,5,type,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_lowpt_ptlead","hyp_lowpt_ptlead",20,0,200,hyp.leadLep().pt(),weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_lowpt_pttrai","hyp_lowpt_pttrai",20,0,200,hyp.traiLep().pt(),weight_);
+	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
+					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	  }
 	  if (ac_base & 1<<VeryLowPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",40,0,40,br,weight_);
 	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",40,0,40,sr,weight_);
+	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
+					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	  }
 
 	  if (prefix=="ttbar") {

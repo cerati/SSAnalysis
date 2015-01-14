@@ -259,7 +259,7 @@ bool threeChargeAgree(unsigned int elIdx){
   //if(els_charge().at(elIdx) != els_trk_charge().at(elIdx)) return false;
   //if(els_charge().at(elIdx) != els_sccharge().at(elIdx))   return false;
   //return true;
-
+  
 }
 
 float muRelIso03(unsigned int muIdx){
@@ -641,7 +641,8 @@ void passesBaselineCuts(int njets, int nbtag, float met, float ht, unsigned int&
   if (analysisBitMask & 1<<HighPt) {
     if (!(ht>80 && njets>=2 && (met>30 || ht>500)))  analysisBitMask &= ~(1<<HighPt);
   } 
-  if (!(ht>250 && njets>=2 && (met>30 || ht>500))) {
+  //if (!(ht>250 && njets>=2 && (met>30 || ht>500))) {
+  if (!(ht>80 && njets>=2 && (met>30 || ht>500))) {//fixme
     analysisBitMask &= ~(1<<LowPt);
     analysisBitMask &= ~(1<<VeryLowPt);
   }

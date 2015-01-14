@@ -10,13 +10,20 @@ int main() {
   bool skimAll = false;
   bool runAll  = true;
   bool runLepEff = false;
+  bool runSync = true;
 
   //looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents)
 
-  // TChain *chain_ttbar2 = new TChain("Events");
-  // chain_ttbar2->Add("./TTJets_skimSS/merged_ntuple_*.root");
-  // //chain_ttbar->Add("/hadoop/cms/store/group/snt/csa14/MC_CMS3_V07-00-04/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/merged/merged_ntuple_*.root");
-  // l->ScanChain(chain_ttbar2,"ttbar2","",0,"",-1);
+  if (runSync) { 
+    TChain *chain_synctest = new TChain("Events");
+    //chain_synctest->Add("./TTJets_skimSS/merged_ntuple_*.root");
+    //chain_synctest->Add("/hadoop/cms/store/group/snt/csa14/MC_CMS3_V07-00-04/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/merged/merged_ntuple_*.root");
+    chain_synctest->Add("./phys14_sync_CMS3.root");
+    std::vector<int> eventsToDebug;
+    //eventsToDebug.push_back(4878);
+    l->ScanChain(chain_synctest,"synctest","",0,"SyncTest",-1,eventsToDebug);
+    return 0;
+  }
 
     // TChain *chain_TTZJets = new TChain("Events");
     // chain_TTZJets->Add("./TTZJets_skimSS/merged_ntuple_*.root");
