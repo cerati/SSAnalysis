@@ -80,6 +80,13 @@ bool isFakableMuon(unsigned int);
 bool isGoodElectron(unsigned int);
 bool isGoodMuon(unsigned int);
 
+bool isGoodVetoElectronNoIso(unsigned int);
+bool isGoodVetoMuonNoIso(unsigned int);
+bool isFakableElectronNoIso(unsigned int);
+bool isFakableMuonNoIso(unsigned int);
+bool isGoodElectronNoIso(unsigned int);
+bool isGoodMuonNoIso(unsigned int);
+
 bool isGoodVertex(size_t ivtx);
 int firstGoodVertex();
 
