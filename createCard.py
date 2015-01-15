@@ -1,6 +1,7 @@
 import ROOT
 
 dir = "results_PHYS14_new_noptrel"
+plot = "hyp_highpt_excl_sr"
 
 class Process:
     def __init__(self, mycount, myname, myrootf):
@@ -12,7 +13,7 @@ class Process:
         self.WZ = "-"
     def rate(self): 
         f = ROOT.TFile(dir+"/"+self.rootf)
-        return f.Get("hyp_highpthtmetmt_sr").Integral()
+        return f.Get(plot).Integral()
 
 T1ttttG1500 = Process(0,"T1tttt","T1ttttG1500_histos.root")
 TTW = Process(1,"TTW","TTWJets_histos.root")
@@ -42,10 +43,11 @@ card.write("jmax *  number of backgrounds \n")
 card.write("kmax *  number of nuisance parameters \n")
 card.write(line+"\n")
 for process in processes:
-    card.write("shapes "+process.name+" * "+dir+"/"+process.rootf+" hyp_highpthtmetmt_sr"+" hyp_highpthtmetmt_sr"+"\n")
+    card.write("shapes "+process.name+" * "+dir+"/"+process.rootf+" "+plot+" "+plot+"\n")
+card.write("shapes data_obs * "+dir+"/TTWJets_histos.root "+plot+" "+plot+"\n")
 card.write(line+"\n")
 card.write("bin "+str(bin)+"\n")
-card.write("observation "+str(0)+"\n")
+card.write("observation "+str(TTW.rate())+"\n")
 card.write(line+"\n")
 card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("bin","",bin,bin,bin,bin,bin))
 card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("process","",T1ttttG1500.count,TTW.count,TTZ.count,WZ.count,ttbar.count))
