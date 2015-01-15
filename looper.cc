@@ -220,41 +220,46 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,1,weight_);
       if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,1,weight_);
 
+      //veto leptons
+      if (debug) cout << "vetoleps_noiso" << endl;
+      vector<Lep> vetoleps_noiso;
+      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
+	//medium electron selection
+	if (isGoodVetoElectronNoIso(elidx)==0) continue;
+	Lep vetoel(-1*els_charge().at(elidx)*11,elidx);
+	vetoleps_noiso.push_back(vetoel);
+      }
+      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
+	//veto muon selection
+	if (isGoodVetoMuonNoIso(muidx)==0) continue;
+	Lep vetomu(-1*mus_charge().at(muidx)*13,muidx);
+	vetoleps_noiso.push_back(vetomu);
+      }
+      if (debug) cout << "vetoleps" << endl;
+      vector<Lep> vetoleps;
+      for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
+	if (abs(vetoleps_noiso[vl].pdgId())==13 && isGoodVetoMuon(vetoleps_noiso[vl].idx())==0) continue;
+	if (abs(vetoleps_noiso[vl].pdgId())==11 && isGoodVetoElectron(vetoleps_noiso[vl].idx())==0) continue;
+      	if (debug) cout << "good lep id=" << vetoleps_noiso[vl].pdgId() << " pt=" << vetoleps_noiso[vl].pt() 
+			<< " eta=" << vetoleps_noiso[vl].eta() << " phi=" << vetoleps_noiso[vl].p4().phi() << " q=" << vetoleps_noiso[vl].charge()<< endl;
+      	vetoleps.push_back(vetoleps_noiso[vl]);
+      }
+
       //fakable objects
       if (debug) cout << "fobs" << endl;
       vector<Lep> fobs;
-      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
-	//electron fo selection
-	if (debug) cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " phi=" << els_p4()[elidx].phi() << " q=" << els_charge()[elidx] << endl;
-	if (isFakableElectron(elidx)==0) continue;
-	if (debug) cout << "pass FO selection" << endl;
-	Lep foel(-1*els_charge().at(elidx)*11,elidx);
-	fobs.push_back(foel);
-      }
-      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
-	//muon fo selection
-	if (debug) cout << "mu pt=" << mus_p4()[muidx].pt() << " eta=" << mus_p4()[muidx].eta() << " phi=" << mus_p4()[muidx].phi() << " q=" << mus_charge()[muidx]<< endl;
-	if (isFakableMuon(muidx)==0) continue;
-	if (debug) cout << "pass FO selection" << endl;
-	Lep fomu(-1*mus_charge().at(muidx)*13,muidx);
-	fobs.push_back(fomu);
+      for (unsigned int vl=0;vl<vetoleps.size();++vl) {
+	if (abs(vetoleps[vl].pdgId())==13 && isFakableMuon(vetoleps[vl].idx())==0) continue;
+	if (abs(vetoleps[vl].pdgId())==11 && isFakableElectron(vetoleps[vl].idx())==0) continue;
+      	if (debug) cout << "good lep id=" << vetoleps[vl].pdgId() << " pt=" << vetoleps[vl].pt() 
+			<< " eta=" << vetoleps[vl].eta() << " phi=" << vetoleps[vl].p4().phi() << " q=" << vetoleps[vl].charge()<< endl;
+      	fobs.push_back(vetoleps[vl]);
       }
       if (fobs.size()==0 && !makeDYtest) continue;
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,2,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,2,weight_);
       if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,2,weight_);
       if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,2,weight_);
-
-      //write skim here (only qcd)
-      if (makeQCDskim) {
-	if (debug) cout << "qcd skim" << endl;
-	if (fobs.size()!=0) {
-	  cms2.LoadAllBranches();
-	  skim_file->cd(); 
-	  skim_tree->Fill();
-	  continue;
-	}
-      }
 
       //leptons
       if (debug) cout << "goodleps" << endl;
@@ -267,22 +272,6 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       	goodleps.push_back(fobs[fo]);
       }
 
-      //veto leptons
-      if (debug) cout << "vetoleps" << endl;
-      vector<Lep> vetoleps;
-      for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
-	//medium electron selection
-	if (isGoodVetoElectron(elidx)==0) continue;
-	Lep vetoel(-1*els_charge().at(elidx)*11,elidx);
-	vetoleps.push_back(vetoel);
-      }
-      for (unsigned int muidx=0;muidx<mus_p4().size();++muidx) {
-	//veto muon selection
-	if (isGoodVetoMuon(muidx)==0) continue;
-	Lep vetomu(-1*mus_charge().at(muidx)*13,muidx);
-	vetoleps.push_back(vetomu);
-      }
-
       //jets, ht, btags
       if (debug) cout << "jets" << endl;
       int njets = 0;
@@ -290,6 +279,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       vector<Jet> alljets;
       vector<Jet> lepjets;
       int nbtag = 0;
+      int nbtag_pt40 = 0;
       int nbtag_pt35 = 0;
       int nbtag_pt30 = 0;
       int nbtag_pt25 = 0;
@@ -329,10 +319,19 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
               break;
             }
           }
-          for (unsigned int fo=0;fo<fobs.size();++fo) {
-            if (deltaR(jet.p4(),fobs[fo].p4())<0.7) {
+          // for (unsigned int fo=0;fo<fobs.size();++fo) {//fixme
+	  //   Lep lep = fobs[fo];
+          //   if (deltaR(jet.p4(),lep.p4())<0.7) {
+	  //     lepjets.push_back(jet);
+	  //     if (debug) cout << "found lepjet inerfering with fo" << endl;
+          //     //break;
+          //   }
+          // }
+          for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {//fixme
+	    Lep lep = vetoleps_noiso[vl];
+            if (deltaR(jet.p4(),lep.p4())<0.7) {
 	      lepjets.push_back(jet);
-	      if (debug) cout << "found lepjet inerfering with fo" << endl;
+	      if (debug) cout << "found lepjet inerfering with vl" << endl;
               //break;
             }
           }
@@ -347,42 +346,74 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
           njets++;
           jets.push_back(jet);
           ht+=jetpt;
-          if (jet.isBtag()) {
-            nbtag++;
-            btags.push_back(jet);
-          }
         }
 	alljets.push_back(jet);
-	if (jetpt>20. && jet.csv()>0.679) nbtag_pt20++;
-	if (jetpt>25. && jet.csv()>0.679) nbtag_pt25++;
-	if (jetpt>30. && jet.csv()>0.679) nbtag_pt30++;
-	if (jetpt>35. && jet.csv()>0.679) nbtag_pt35++;
+	if (jetpt>20. && jet.isBtag()) nbtag_pt20++;
+	if (jetpt>25. && jet.isBtag()) nbtag_pt25++;
+	if (jetpt>30. && jet.isBtag()) nbtag_pt30++;
+	if (jetpt>35. && jet.isBtag()) nbtag_pt35++;
+	if (jetpt>40. && jet.isBtag()) nbtag_pt40++;
       }
       std::sort(jets.begin(),jets.end(),jetptsort);
       std::sort(btags.begin(),btags.end(),jetptsort);
+      nbtag = nbtag_pt25;
+
+      /*
+      //add back to fobs those vetoleps_noiso not passing iso but passing ptrel wrt lepjet
+      for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
+      	if (abs(vetoleps_noiso[vl].pdgId())==13 && isFakableMuonNoIso(vetoleps_noiso[vl].idx())==0) continue;
+      	if (abs(vetoleps_noiso[vl].pdgId())==11 && isFakableElectronNoIso(vetoleps_noiso[vl].idx())==0) continue;
+      	if (vetoleps_noiso[vl].relIso03()<0.5) continue;//ok, this is inverted here
+      	int lepjetidx = -1;
+      	float mindr = 0.7;
+      	for (unsigned int j=0;j<lepjets.size();++j) {
+      	  float dr = deltaR(lepjets[j].p4(),vetoleps_noiso[vl].p4());
+      	  if (dr<mindr) {
+      	    mindr = dr;
+      	    lepjetidx = j;
+      	  }
+      	} 
+      	if (lepjetidx>=0) {
+      	  float sinA = fabs(vetoleps_noiso[vl].p4().x()*lepjets[lepjetidx].p4().y()-vetoleps_noiso[vl].p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(vetoleps_noiso[vl].p4().x()*vetoleps_noiso[vl].p4().x()+vetoleps_noiso[vl].p4().y()*vetoleps_noiso[vl].p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
+      	  float ptrel = vetoleps_noiso[vl].pt()*sinA;
+      	  if (ptrel>8.) fobs.push_back(vetoleps_noiso[vl]);
+      	}
+      }
+      */
 
       /*
       //add back to goodleps those fobs not passing iso but passing ptrel wrt lepjet
       for (unsigned int fo=0;fo<fobs.size();++fo) {
-	if (fabs(fobs[fo].dxyPV())>0.01 || (abs(fobs[fo].pdgId())==13&&fabs(fobs[fo].dxyPV())>0.005)) continue;
-	if (fabs(fobs[fo].dzPV())>0.1) continue;
-	if (fobs[fo].relIso03()<0.1) continue;//ok, this is inverted here
-	int lepjetidx = -1;
-	float mindr = 0.7;
-	for (unsigned int j=0;j<lepjets.size();++j) {
-	  float dr = deltaR(lepjets[j].p4(),fobs[fo].p4());
-	  if (dr<mindr) {
-	    mindr = dr;
-	    lepjetidx = j;
-	  }
-	} 
-	if (lepjetidx>=0) {
-	  float sinA = fabs(fobs[fo].p4().x()*lepjets[lepjetidx].p4().y()-fobs[fo].p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(fobs[fo].p4().x()*fobs[fo].p4().x()+fobs[fo].p4().y()*fobs[fo].p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
-	  float ptrel = fobs[fo].pt()*sinA;
-	  if (ptrel>8.) goodleps.push_back(fobs[fo]);
-	}
+      	if (abs(fobs[fo].pdgId())==13 && isGoodMuonNoIso(fobs[fo].idx())==0) continue;
+      	if (abs(fobs[fo].pdgId())==11 && isGoodElectronNoIso(fobs[fo].idx())==0) continue;
+      	if (fobs[fo].relIso03()<0.1) continue;//ok, this is inverted here
+      	int lepjetidx = -1;
+      	float mindr = 0.7;
+      	for (unsigned int j=0;j<lepjets.size();++j) {
+      	  float dr = deltaR(lepjets[j].p4(),fobs[fo].p4());
+      	  if (dr<mindr) {
+      	    mindr = dr;
+      	    lepjetidx = j;
+      	  }
+      	} 
+      	if (lepjetidx>=0) {
+      	  float sinA = fabs(fobs[fo].p4().x()*lepjets[lepjetidx].p4().y()-fobs[fo].p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(fobs[fo].p4().x()*fobs[fo].p4().x()+fobs[fo].p4().y()*fobs[fo].p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
+      	  float ptrel = fobs[fo].pt()*sinA;
+      	  if (ptrel>8.) goodleps.push_back(fobs[fo]);
+      	}
       }
       */
+
+      //write skim here (only qcd)
+      if (makeQCDskim) {
+	if (debug) cout << "qcd skim" << endl;
+	if (fobs.size()!=0) {
+	  cms2.LoadAllBranches();
+	  skim_file->cd(); 
+	  skim_tree->Fill();
+	  continue;
+	}
+      }
 
       //met
       if (debug) cout << "met" << endl;
@@ -954,6 +985,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    if (sr>0) {
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",40,0,40,br,weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_sr","hyp_highpt_sr",40,0,40,sr,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_excl_sr","hyp_highpt_excl_sr",40,0,40,sr,weight_);
 	      if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
 		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",40,0,40,br,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpt_sr_fromWZ","hyp_highpt_sr_fromWZ",40,0,40,sr,weight_);
@@ -964,6 +996,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt25","hyp_highpt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt30","hyp_highpt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
 	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt35","hyp_highpt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+	      makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt40","hyp_highpt_nbtag_pt40",8,0,8,nbtag_pt40,weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highpt_ht","hyp_highpt_ht",13,80,600,ht,weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highpt_met","hyp_highpt_met",10,0,250,met,weight_);
 	      makeFillHisto1D<TH1F,float>("hyp_highpt_mll","hyp_highpt_mll",100,0,1000,hyp.p4().mass(),weight_);
@@ -981,12 +1014,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      if (sr>0) {
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",40,0,40,br,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_sr","hyp_highptmt_sr",40,0,40,sr,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_excl_sr","hyp_highptmt_excl_sr",40,0,40,sr,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_njets","hyp_highptmt_njets",8,0,8,njets,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag","hyp_highptmt_nbtag",8,0,8,nbtag,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt20","hyp_highptmt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt25","hyp_highptmt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt30","hyp_highptmt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt35","hyp_highptmt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highptmt_nbtag_pt40","hyp_highptmt_nbtag_pt40",8,0,8,nbtag_pt40,weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highptmt_ht","hyp_highptmt_ht",13,80,600,ht,weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highptmt_met","hyp_highptmt_met",10,0,250,met,weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highptmt_mll","hyp_highptmt_mll",100,0,1000,hyp.p4().mass(),weight_);
@@ -1005,12 +1040,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	      if (sr>0) {
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",40,0,40,br,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_sr","hyp_highpthtmet_sr",40,0,40,sr,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_excl_sr","hyp_highpthtmet_excl_sr",40,0,40,sr,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_njets","hyp_highpthtmet_njets",8,0,8,njets,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag","hyp_highpthtmet_nbtag",8,0,8,nbtag,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt20","hyp_highpthtmet_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt25","hyp_highpthtmet_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt30","hyp_highpthtmet_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
 		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt35","hyp_highpthtmet_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+		makeFillHisto1D<TH1F,int>("hyp_highpthtmet_nbtag_pt40","hyp_highpthtmet_nbtag_pt40",8,0,8,nbtag_pt40,weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_ht","hyp_highpthtmet_ht",13,80,600,ht,weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_met","hyp_highpthtmet_met",10,0,250,met,weight_);
 		makeFillHisto1D<TH1F,float>("hyp_highpthtmet_mll","hyp_highpthtmet_mll",100,0,1000,hyp.p4().mass(),weight_);
@@ -1028,12 +1065,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 		if (sr>0) {
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",40,0,40,br,weight_);
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_sr","hyp_highpthtmetmt_sr",40,0,40,sr,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_excl_sr","hyp_highpthtmetmt_excl_sr",40,0,40,sr,weight_);
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_njets","hyp_highpthtmetmt_njets",8,0,8,njets,weight_);
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag","hyp_highpthtmetmt_nbtag",8,0,8,nbtag,weight_);
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt20","hyp_highpthtmetmt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt25","hyp_highpthtmetmt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt30","hyp_highpthtmetmt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
 		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt35","hyp_highpthtmetmt_nbtag_pt35",8,0,8,nbtag_pt35,weight_);
+		  makeFillHisto1D<TH1F,int>("hyp_highpthtmetmt_nbtag_pt40","hyp_highpthtmetmt_nbtag_pt40",8,0,8,nbtag_pt40,weight_);
 		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_ht","hyp_highpthtmetmt_ht",13,80,600,ht,weight_);
 		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_met","hyp_highpthtmetmt_met",10,0,250,met,weight_);
 		  makeFillHisto1D<TH1F,float>("hyp_highpthtmetmt_mll","hyp_highpthtmetmt_mll",100,0,1000,hyp.p4().mass(),weight_);
@@ -1104,7 +1143,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  }
 	  if (ac_base & 1<<LowPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",40,0,40,br,weight_);
-	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_lowpt_sr","hyp_lowpt_sr",40,0,40,sr,weight_);
+	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_lowpt_excl_sr","hyp_lowpt_excl_sr",40,0,40,sr,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_njets","hyp_lowpt_njets",20,0,20,njets,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_lowpt_nbtag","hyp_lowpt_nbtag",20,0,20,nbtag,weight_);
 	    makeFillHisto1D<TH1F,float>("hyp_lowpt_ht","hyp_lowpt_ht",50,0,2000,ht,weight_);
@@ -1119,7 +1158,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  }
 	  if (ac_base & 1<<VeryLowPt) {
 	    makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",40,0,40,br,weight_);
-	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_verylowpt_sr","hyp_verylowpt_sr",40,0,40,sr,weight_);
+	    if (sr>0) makeFillHisto1D<TH1F,int>("hyp_verylowpt_excl_sr","hyp_verylowpt_excl_sr",40,0,40,sr,weight_);
 	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
 					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	  }

@@ -72,12 +72,20 @@ private:
   int idx_;
 };
 
+//functions for veto, FO, Tight selection
+bool isGoodVetoElectron(unsigned int);
+bool isGoodVetoMuon(unsigned int);
 bool isFakableElectron(unsigned int);
 bool isFakableMuon(unsigned int);
 bool isGoodElectron(unsigned int);
 bool isGoodMuon(unsigned int);
-bool isGoodVetoElectron(unsigned int);
-bool isGoodVetoMuon(unsigned int);
+
+bool isGoodVetoElectronNoIso(unsigned int);
+bool isGoodVetoMuonNoIso(unsigned int);
+bool isFakableElectronNoIso(unsigned int);
+bool isFakableMuonNoIso(unsigned int);
+bool isGoodElectronNoIso(unsigned int);
+bool isGoodMuonNoIso(unsigned int);
 
 bool isGoodVertex(size_t ivtx);
 int firstGoodVertex();
@@ -86,17 +94,14 @@ bool isLoosePFJet(unsigned int pfJetIdx);
 bool isMediumPFJet(unsigned int pfJetIdx);
 bool isTightPFJet(unsigned int pfJetIdx);
 bool isVetoElectron(unsigned int);
-bool isLooseElectron(unsigned int);
-bool isMediumElectron(unsigned int);
 bool isElectronFO(unsigned int);
 int  isElectronFO_debug(unsigned int);
-bool isTightElectron(unsigned int);
+bool threeChargeAgree(unsigned int);
+bool isMediumElectron(unsigned int);
 bool isLooseMuon(unsigned int);
 bool isTightMuon(unsigned int);
 bool isMuonFO(unsigned int);
-bool threeChargeAgree(unsigned int);
-int eleTightID(unsigned int);
-int muTightID(unsigned int);
+
 TString triggerName(TString);
 bool passHLTTriggerPattern(const char*);
 

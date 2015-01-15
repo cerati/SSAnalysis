@@ -83,41 +83,25 @@ bool isTightPFJet(unsigned int pfJetIdx){
 //2012 Electron IDs
 //https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaCutBasedIdentification#Electron_ID_Working_Points
 bool isVetoElectron(unsigned int elIdx){
-
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false; 
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.8) return false; 
     if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.01) return false; 
     if(els_hOverE().at(elIdx) >= 0.15) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     //if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.32) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.5) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 2) return false;
     return true;
-
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.01) return false; 
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.7) return false; 
     if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.03) return false; 
     //if(els_hOverE().at(elIdx) >= 0.19) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.13) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.5 ) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 2) return false;
     return true;
-
   } else return false;
-
-}
-
-bool isLooseElectron(unsigned int elIdx){
-
-  return false;
-
 }
 
 bool isElectronFO(unsigned int elIdx){//fixme
@@ -127,32 +111,21 @@ bool isElectronFO(unsigned int elIdx){//fixme
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
     if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.01) return false; 
     if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.5 ) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 0) return false;
     return true;
-
   } else if((fabs(els_etaSC().at(elIdx)) > 1.479) && (fabs(els_etaSC().at(elIdx)) < 2.5)){
     if(fabs(els_dEtaIn().at(elIdx)) >= 0.007) return false;
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
     if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.03) return false; 
     if(els_hOverE().at(elIdx) >= 0.1) return false; 
-    if(fabs(els_dxyPV().at(elIdx)) >= 0.05) return false; //is this wrt the correct PV?
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.5 ) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 0) return false;
     return true;
-
   } else return false;
-
-
 }
-
 
 int isElectronFO_debug(unsigned int elIdx){//fixme
   if(fabs(els_etaSC().at(elIdx)) <= 1.479){
@@ -189,10 +162,7 @@ bool isMediumElectron(unsigned int elIdx){
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.06) return false; 
     if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.01) return false; 
     if(els_hOverE().at(elIdx) >= 0.12) return false; 
-    if(fabs(els_ip3d().at(elIdx))/els_ip3derr().at(elIdx) >= 4) return false;
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.1 ) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 0) return false;//RA5, not sure it's the right choice
     return true;
@@ -201,10 +171,7 @@ bool isMediumElectron(unsigned int elIdx){
     if(fabs(els_dPhiIn().at(elIdx)) >= 0.03) return false; 
     if(els_sigmaIEtaIEta_full5x5().at(elIdx) >= 0.03) return false; 
     if(els_hOverE().at(elIdx) >= 0.1) return false; 
-    if(fabs(els_ip3d().at(elIdx))/els_ip3derr().at(elIdx) >= 4) return false;
-    if(fabs(els_dzPV().at(elIdx)) >= 0.1) return false; //is this wrt the correct PV?
     if( fabs( (1.0/els_ecalEnergy().at(elIdx)) - (els_eOverPIn().at(elIdx)/els_ecalEnergy().at(elIdx)) ) >= 0.05) return false; // |1/E - 1/p|
-    if( eleRelIso03(elIdx) >= 0.1 ) return false; 
     if( els_conv_vtx_flag().at(elIdx) ) return false;
     if( els_exp_innerlayers().at(elIdx) > 0) return false;//RA5, not sure it's the right choice
     return true;
@@ -212,24 +179,14 @@ bool isMediumElectron(unsigned int elIdx){
 
 }
 
-bool isTightElectron(unsigned int elIdx){
-  return false;
-}
-
-
 bool isLooseMuon(unsigned int muIdx){
-
-  if(!mus_pid_PFMuon().at(muIdx)) return false; 
-   
+  if(!mus_pid_PFMuon().at(muIdx)) return false;    
   bool isGlobal  = true;
   bool isTracker = true;
   if (((mus_type().at(muIdx)) & (1<<1)) == 0) isGlobal  = false;
   if (((mus_type().at(muIdx)) & (1<<2)) == 0) isTracker = false;
-
-  if(!(isGlobal || isTracker)) return false;
-  
+  if(!(isGlobal || isTracker)) return false;  
   return true;
-
 }
 
 bool isMuonFO(unsigned int muIdx){
@@ -239,27 +196,17 @@ bool isMuonFO(unsigned int muIdx){
   if (mus_numberOfMatchedStations().at(muIdx) < 2)                    return false;
   if (mus_validPixelHits().at(muIdx) == 0)                            return false;
   if (mus_nlayers().at(muIdx) < 6)                                    return false;
-  if (fabs(mus_dxyPV().at(muIdx)) > 0.05)                             return false;
-  if (fabs(mus_dzPV().at(muIdx)) > 0.1)                               return false;
   return true;
 }
 
 bool isTightMuon(unsigned int muIdx){
   if (!isMuonFO(muIdx)) return false;
   //fixme not applying MIP requirement in calo
-  if (fabs(mus_dzPV().at(muIdx)) > 0.1)                               return false;//fixme?
-  if (fabs(mus_ip3d().at(muIdx))/mus_ip3derr().at(muIdx) >= 4)              return false;
   return true;
 }
 
-
 bool threeChargeAgree(unsigned int elIdx){
-
   return els_isGsfCtfScPixChargeConsistent().at(elIdx);
-  //if(els_charge().at(elIdx) != els_trk_charge().at(elIdx)) return false;
-  //if(els_charge().at(elIdx) != els_sccharge().at(elIdx))   return false;
-  //return true;
-  
 }
 
 float muRelIso03(unsigned int muIdx){
@@ -271,7 +218,6 @@ float eleRelIso03(unsigned int elIdx){
 }
 
 float muRelIso03EA(unsigned int muIdx){
-
   float chiso     = mus_isoR03_pf_ChargedHadronPt().at(muIdx);
   float nhiso     = mus_isoR03_pf_NeutralHadronEt().at(muIdx);
   float emiso     = mus_isoR03_pf_PhotonEt().at(muIdx);
@@ -284,11 +230,9 @@ float muRelIso03EA(unsigned int muIdx){
   float absiso = chiso + std::max(float(0.0), nhiso + emiso - evt_fixgrid_all_rho() * ea);
   //cout << "chiso=" << chiso << " nhiso=" << nhiso << " emiso=" << emiso << " deltaBeta=" << deltaBeta << " absiso=" << absiso << " relIso=" << absiso/(mus_p4().at(muIdx).pt()) << endl;
   return absiso/(mus_p4().at(muIdx).pt());
-
 }
 
 float eleRelIso03EA(unsigned int elIdx){
-
   float chiso     = els_pfChargedHadronIso().at(elIdx);
   float nhiso     = els_pfNeutralHadronIso().at(elIdx);
   float emiso     = els_pfPhotonIso().at(elIdx);
@@ -301,11 +245,9 @@ float eleRelIso03EA(unsigned int elIdx){
   float absiso = chiso + std::max(float(0.0), nhiso + emiso - evt_fixgrid_all_rho() * ea);
   //cout << "chiso=" << chiso << " nhiso=" << nhiso << " emiso=" << emiso << " deltaBeta=" << deltaBeta << " absiso=" << absiso << " relIso=" << absiso/(els_p4().at(elIdx).pt()) << endl;
   return absiso/(els_p4().at(elIdx).pt());
-
 }
 
 float muRelIso03DB(unsigned int muIdx){
-
   float chiso     = mus_isoR03_pf_ChargedHadronPt().at(muIdx);
   float nhiso     = mus_isoR03_pf_NeutralHadronEt().at(muIdx);
   float emiso     = mus_isoR03_pf_PhotonEt().at(muIdx);
@@ -313,21 +255,18 @@ float muRelIso03DB(unsigned int muIdx){
   float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
   //cout << "chiso=" << chiso << " nhiso=" << nhiso << " emiso=" << emiso << " deltaBeta=" << deltaBeta << " absiso=" << absiso << " relIso=" << absiso/(mus_p4().at(muIdx).pt()) << endl;
   return absiso/(mus_p4().at(muIdx).pt());
-
 }
 
 float muRelIso04DB(unsigned int muIdx){
-
   float chiso     = mus_isoR04_pf_ChargedHadronPt().at(muIdx);
   float nhiso     = mus_isoR04_pf_NeutralHadronEt().at(muIdx);
   float emiso     = mus_isoR04_pf_PhotonEt().at(muIdx);
   float deltaBeta = mus_isoR04_pf_PUPt().at(muIdx);
   float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
   return absiso/(mus_p4().at(muIdx).pt());
-
 }
-float eleRelIso03DB(unsigned int elIdx){
 
+float eleRelIso03DB(unsigned int elIdx){
   float chiso     = els_pfChargedHadronIso().at(elIdx);
   float nhiso     = els_pfNeutralHadronIso().at(elIdx);
   float emiso     = els_pfPhotonIso().at(elIdx);
@@ -335,18 +274,7 @@ float eleRelIso03DB(unsigned int elIdx){
   float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
   return absiso/(els_p4().at(elIdx).pt());
 }
-int eleTightID(unsigned int elIdx){
-  if (isTightElectron(elIdx))  return 3;
-  if (isMediumElectron(elIdx)) return 2;
-  if (isLooseElectron(elIdx))  return 1;
-  if (isVetoElectron(elIdx))   return 0;
-  return -1;
-}
-int muTightID(unsigned int muIdx){
-  if (isTightMuon(muIdx))  return 1;
-  if (isLooseMuon(muIdx))   return 0;
-  return -1;
-}
+
 //-------------------------------------------------------
 // get exact trigger name corresponding to given pattern
 //-------------------------------------------------------
@@ -544,49 +472,76 @@ bool idIsBeauty(int id) {
   else return false;
 }
 
-
-bool isFakableElectron(unsigned int elidx){
-  if (fabs(els_p4().at(elidx).eta())>2.4) return false;
-  if (els_p4().at(elidx).pt()<10.) return false;//fixme
-  if (isElectronFO(elidx)==0) return false;
-  if (threeChargeAgree(elidx)==0) return false;
+bool isGoodVetoElectronNoIso(unsigned int elidx){
+  if (fabs(els_p4().at(elidx).eta()) > 2.4) return false;
+  if (els_p4().at(elidx).pt() < 7.) return false;//fixme
+  if (isVetoElectron(elidx) == 0) return false;
+  if (fabs(els_dxyPV().at(elidx)) >= 0.05) return false; //is this wrt the correct PV?
+  if (fabs(els_dzPV().at(elidx)) >= 0.1) return false; //is this wrt the correct PV?
   return true;
 }
 
 bool isGoodVetoElectron(unsigned int elidx){
-  if (els_p4().at(elidx).pt()<10.) return false;//fixme
-  if (isVetoElectron(elidx)==0) return false;
-  if( eleRelIso03(elidx) >= 0.5) return false; 
+  if (isGoodVetoElectronNoIso(elidx) == 0) return false;
+  if (eleRelIso03(elidx) >= 0.5) return false; 
   return true;
 }
-
-bool isGoodElectron(unsigned int elidx){
-  if (isFakableElectron(elidx)==0) return false;
-  if (isMediumElectron(elidx)==0) return false;
+bool isFakableElectronNoIso(unsigned int elidx){
+  if (els_p4().at(elidx).pt() < 10.) return false;//fixme
+  if (isGoodVetoElectronNoIso(elidx) == 0) return false;
+  if (isElectronFO(elidx) == 0) return false;
+  if (threeChargeAgree(elidx) == 0) return false;
+  return true;
+}
+bool isFakableElectron(unsigned int elidx){
+  if (isFakableElectronNoIso(elidx) == 0) return false;
+  if (eleRelIso03(elidx) >= 0.5) return false; 
+  return true;
+}
+bool isGoodElectronNoIso(unsigned int elidx){
+  if (isFakableElectronNoIso(elidx) == 0) return false;
+  if (isMediumElectron(elidx) == 0) return false;
   if (fabs(els_ip3d().at(elidx))/els_ip3derr().at(elidx) >= 4) return false;
-  if (fabs(els_dzPV().at(elidx)) >= 0.1) return false;//fixme
+  return true;
+}
+bool isGoodElectron(unsigned int elidx){
+  if (isGoodElectronNoIso(elidx) == 0) return false;
+  if (eleRelIso03(elidx) >= 0.1) return false; 
   return true;
 }
 
-bool isFakableMuon(unsigned int muidx){
-  if (fabs(mus_p4().at(muidx).eta())>2.4) return false;
-  if (mus_p4().at(muidx).pt()<5.) return false;//fixme
-  if (isMuonFO(muidx)==0) return false;
-  if (muRelIso03(muidx)>0.5 ) return false;
-  return true;
-}
-bool isGoodVetoMuon(unsigned int muidx){
-  if (mus_p4().at(muidx).pt()<5.) return false;//fixme
-  if (isLooseMuon(muidx)==0) return false;
-  if (muRelIso03(muidx)>0.5 ) return false;
+bool isGoodVetoMuonNoIso(unsigned int muidx){
+  if (fabs(mus_p4().at(muidx).eta()) > 2.4) return false;
+  if (mus_p4().at(muidx).pt() < 5.) return false;//fixme
+  if (isLooseMuon(muidx) == 0) return false;
   if (fabs(mus_dxyPV().at(muidx)) >= 0.05) return false;
   if (fabs(mus_dzPV().at(muidx)) >= 0.1) return false;
   return true;
 }
+bool isGoodVetoMuon(unsigned int muidx){
+  if (isGoodVetoMuonNoIso(muidx) == 0) return false;
+  if (muRelIso03(muidx) > 0.5) return false;
+  return true;
+}
+bool isFakableMuonNoIso(unsigned int muidx){
+  if (isGoodVetoMuonNoIso(muidx) == 0) return false;
+  if (isMuonFO(muidx) == 0) return false;
+  return true;
+}
+bool isFakableMuon(unsigned int muidx){
+  if (isFakableMuonNoIso(muidx) == 0) return false;
+  if (muRelIso03(muidx) > 0.5) return false;
+  return true;
+}
+bool isGoodMuonNoIso(unsigned int muidx){
+  if (isFakableMuonNoIso(muidx) == 0) return false;
+  if (isTightMuon(muidx) == 0) return false;
+  if (fabs(mus_ip3d().at(muidx))/mus_ip3derr().at(muidx) >= 4) return false;
+  return true;
+}
 bool isGoodMuon(unsigned int muidx){
-  if (isFakableMuon(muidx)==0) return false;
-  if (isTightMuon(muidx)==0) return false;
-  if (muRelIso03(muidx)>0.1 ) return false;
+  if (isGoodMuonNoIso(muidx) == 0) return false;
+  if (muRelIso03(muidx) > 0.1) return false;
   return true;
 }
 
