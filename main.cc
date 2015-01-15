@@ -10,7 +10,7 @@ int main() {
   bool skimAll = false;
   bool runAll  = true;
   bool runLepEff = false;
-  bool runSync = true;
+  bool runSync = false;
 
   //looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents)
 
