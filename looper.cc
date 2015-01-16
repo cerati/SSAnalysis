@@ -358,28 +358,28 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       std::sort(btags.begin(),btags.end(),jetptsort);
       nbtag = nbtag_pt25;
 
-      /*
-      //add back to fobs those vetoleps_noiso not passing iso but passing ptrel wrt lepjet
-      for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
-      	if (abs(vetoleps_noiso[vl].pdgId())==13 && isFakableMuonNoIso(vetoleps_noiso[vl].idx())==0) continue;
-      	if (abs(vetoleps_noiso[vl].pdgId())==11 && isFakableElectronNoIso(vetoleps_noiso[vl].idx())==0) continue;
-      	if (vetoleps_noiso[vl].relIso03()<0.5) continue;//ok, this is inverted here
-      	int lepjetidx = -1;
-      	float mindr = 0.7;
-      	for (unsigned int j=0;j<lepjets.size();++j) {
-      	  float dr = deltaR(lepjets[j].p4(),vetoleps_noiso[vl].p4());
-      	  if (dr<mindr) {
-      	    mindr = dr;
-      	    lepjetidx = j;
-      	  }
-      	} 
-      	if (lepjetidx>=0) {
-      	  float sinA = fabs(vetoleps_noiso[vl].p4().x()*lepjets[lepjetidx].p4().y()-vetoleps_noiso[vl].p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(vetoleps_noiso[vl].p4().x()*vetoleps_noiso[vl].p4().x()+vetoleps_noiso[vl].p4().y()*vetoleps_noiso[vl].p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
-      	  float ptrel = vetoleps_noiso[vl].pt()*sinA;
-      	  if (ptrel>8.) fobs.push_back(vetoleps_noiso[vl]);
-      	}
-      }
-      */
+      if (makeSSskim || makeQCDskim) {
+	//add back to fobs those vetoleps_noiso not passing iso but passing ptrel wrt lepjet
+	for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
+	  if (abs(vetoleps_noiso[vl].pdgId())==13 && isFakableMuonNoIso(vetoleps_noiso[vl].idx())==0) continue;
+	  if (abs(vetoleps_noiso[vl].pdgId())==11 && isFakableElectronNoIso(vetoleps_noiso[vl].idx())==0) continue;
+	  if (vetoleps_noiso[vl].relIso03()<0.5) continue;//ok, this is inverted here
+	  int lepjetidx = -1;
+	  float mindr = 0.7;
+	  for (unsigned int j=0;j<lepjets.size();++j) {
+	    float dr = deltaR(lepjets[j].p4(),vetoleps_noiso[vl].p4());
+	    if (dr<mindr) {
+	      mindr = dr;
+	      lepjetidx = j;
+	    }
+	  } 
+	  if (lepjetidx>=0) {
+	    float sinA = fabs(vetoleps_noiso[vl].p4().x()*lepjets[lepjetidx].p4().y()-vetoleps_noiso[vl].p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(vetoleps_noiso[vl].p4().x()*vetoleps_noiso[vl].p4().x()+vetoleps_noiso[vl].p4().y()*vetoleps_noiso[vl].p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
+	    float ptrel = vetoleps_noiso[vl].pt()*sinA;
+	    if (ptrel>8.) fobs.push_back(vetoleps_noiso[vl]);
+	  }
+	}
+      }	
 
       /*
       //add back to goodleps those fobs not passing iso but passing ptrel wrt lepjet
