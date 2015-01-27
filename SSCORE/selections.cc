@@ -2,6 +2,15 @@
 
 using namespace tas;
 
+bool ptsort (int i,int j) { return (genps_p4()[i].pt()>genps_p4()[j].pt()); }
+
+bool lepsort (Lep i,Lep j) { 
+  if ( abs(i.pdgId())==abs(j.pdgId()) ) return ( i.pt()>j.pt() ); //sort by pt if same flavor
+  else return ( abs(i.pdgId())>abs(j.pdgId()) ); //prefer muons over electrons, but check that mu have pt>25//fixme, need to sync // && i.pt()>ptCutHigh
+}
+
+bool jetptsort (Jet i,Jet j) { return (i.pt()>j.pt()); }
+
 bool isGoodVertex(size_t ivtx) {
   if (cms2.vtxs_isFake()[ivtx]) return false;
   if (cms2.vtxs_ndof()[ivtx] <= 4.) return false;
@@ -545,6 +554,18 @@ bool isGoodMuon(unsigned int muidx){
   return true;
 }
 
+bool isGoodLepton(int id, int idx){
+  if (abs(id) == 11) return isGoodElectron(idx);
+  else if (abs(id) == 13) return isGoodMuon(idx);
+  return false;
+}
+
+bool isDenominatorLepton(int id, int idx){
+  if (abs(id) == 11) return isFakableElectron(idx);
+  else if (abs(id) == 13) return isFakableMuon(idx);
+  else return false;
+}
+
 bool isFromWZ(Lep lep) {return isFromW(lep) || isFromZ(lep);}
 bool isFromW(Lep lep) {
   //status 1 leptons with mother W or with mother tau whose mother is W
@@ -637,6 +658,28 @@ int signalRegion(int njets, int nbtag, float met, float ht) {
   return result;
 }
 
+float computePtRel(Lep& lep, vector<Jet> lepjets) {
+
+  if (abs(lep.pdgId())==13 && isGoodMuonNoIso(lep.idx())==0) return 0.;
+  if (abs(lep.pdgId())==11 && isGoodElectronNoIso(lep.idx())==0) return 0.;
+  if (lep.relIso03()<0.1) return 0.;//ok, this is inverted here
+  int lepjetidx = -1;
+  float mindr = 0.7;
+  for (unsigned int j=0;j<lepjets.size();++j) {
+    float dr = deltaR(lepjets[j].p4(),lep.p4());
+    if (dr<mindr) {
+      mindr = dr;
+      lepjetidx = j;
+    }
+  } 
+  if (lepjetidx>=0) {
+    float sinA = fabs(lep.p4().x()*lepjets[lepjetidx].p4().y()-lep.p4().y()*lepjets[lepjetidx].p4().x())/(sqrt(lep.p4().x()*lep.p4().x()+lep.p4().y()*lep.p4().y())*sqrt(lepjets[lepjetidx].p4().x()*lepjets[lepjetidx].p4().x()+lepjets[lepjetidx].p4().y()*lepjets[lepjetidx].p4().y()));//fixme fabs? 
+    return lep.pt()*sinA;
+  } else return 0.;
+
+}
+
+
 //#include "Math/VectorUtil.h"
 metStruct trackerMET(float deltaZCut/*, const std::vector<LorentzVector>* jets */) {
 
@@ -670,4 +713,151 @@ metStruct trackerMET(float deltaZCut/*, const std::vector<LorentzVector>* jets *
   met.metx = pX;
   met.mety = pY;
   return met;
+}
+
+
+bool makesExtraZ(int idx){
+
+  std::vector<unsigned int> ele_idx;
+  std::vector<unsigned int> mu_idx;
+
+  int lt_id           = cms2.hyp_lt_id().at(idx);
+  int ll_id           = cms2.hyp_ll_id().at(idx);
+  unsigned int lt_idx = cms2.hyp_lt_index().at(idx);
+  unsigned int ll_idx = cms2.hyp_ll_index().at(idx);
+
+  (abs(lt_id) == 11) ? ele_idx.push_back(lt_idx) : mu_idx.push_back(lt_idx);
+  (abs(ll_id) == 11) ? ele_idx.push_back(ll_idx) : mu_idx.push_back(ll_idx);
+
+  if (ele_idx.size() + mu_idx.size() != 2) {
+    std::cout << "ERROR: don't have 2 leptons in hypothesis!!!  Exiting" << std::endl;
+    return false;
+  }
+
+  if (ele_idx.size() > 0) {
+    for (unsigned int eidx = 0; eidx < cms2.els_p4().size(); eidx++) {
+
+      bool is_hyp_lep = false;
+      for (unsigned int vidx = 0; vidx < ele_idx.size(); vidx++) {
+        if (eidx == ele_idx.at(vidx)) is_hyp_lep = true;
+      }
+      if (is_hyp_lep) continue;
+      if (fabs(cms2.els_p4().at(eidx).eta()) > 2.4) continue;
+      if (cms2.els_p4().at(eidx).pt() < 10.) continue;
+
+      if (!isGoodVetoElectron(eidx)) continue;
+
+      for (unsigned int vidx = 0; vidx < ele_idx.size(); vidx++) {
+        if (cms2.els_charge().at(eidx) * cms2.els_charge().at(ele_idx.at(vidx)) > 0) continue;
+        LorentzVector zp4 = cms2.els_p4().at(eidx) + cms2.els_p4().at(ele_idx.at(vidx));
+        float zcandmass = sqrt(fabs(zp4.mass2()));
+        if (fabs(zcandmass-91.) < 15.) return true;
+      }
+    }
+  }
+
+  if (mu_idx.size() > 0) {
+    for (unsigned int midx = 0; midx < cms2.mus_p4().size(); midx++) {
+
+      bool is_hyp_lep = false;
+      for (unsigned int vidx = 0; vidx < mu_idx.size(); vidx++) {
+        if (midx == mu_idx.at(vidx)) is_hyp_lep = true;
+      }
+      if (is_hyp_lep) continue;
+      if (fabs(cms2.mus_p4().at(midx).eta()) > 2.4) continue;
+      if (cms2.mus_p4().at(midx).pt() < 10.) continue;
+
+      if (!isGoodVetoMuon(midx)) continue;
+
+      for (unsigned int vidx = 0; vidx < mu_idx.size(); vidx++) {
+        if (cms2.mus_charge().at(midx) * cms2.mus_charge().at(mu_idx.at(vidx)) > 0) continue;
+        LorentzVector zp4 = cms2.mus_p4().at(midx) + cms2.mus_p4().at(mu_idx.at(vidx));
+        float zcandmass = sqrt(fabs(zp4.mass2()));
+        if (fabs(zcandmass-91.) < 15.) return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+
+bool makesExtraGammaStar(int idx){
+
+    std::vector<unsigned int> ele_idx;
+    std::vector<unsigned int> mu_idx;
+
+    int lt_id           = cms2.hyp_lt_id().at(idx);
+    int ll_id           = cms2.hyp_ll_id().at(idx);
+    unsigned int lt_idx = cms2.hyp_lt_index().at(idx);
+    unsigned int ll_idx = cms2.hyp_ll_index().at(idx);
+
+    (abs(lt_id) == 11) ? ele_idx.push_back(lt_idx) : mu_idx.push_back(lt_idx);
+    (abs(ll_id) == 11) ? ele_idx.push_back(ll_idx) : mu_idx.push_back(ll_idx);
+
+    if (ele_idx.size() + mu_idx.size() != 2) {
+        std::cout << "ERROR: don't have 2 leptons in hypothesis!!!  Exiting" << std::endl;
+        return false;
+    }
+
+    if (ele_idx.size() > 0) {
+        for (unsigned int eidx = 0; eidx < cms2.els_p4().size(); eidx++) {
+
+            bool is_hyp_lep = false;
+            for (unsigned int vidx = 0; vidx < ele_idx.size(); vidx++) {
+                if (eidx == ele_idx.at(vidx)) is_hyp_lep = true;
+            }
+            if (is_hyp_lep) continue;
+
+            if (fabs(cms2.els_p4().at(eidx).eta()) > 2.4) continue;
+            if (cms2.els_p4().at(eidx).pt() < 7.0) continue;
+            if (!isGoodVetoElectron(eidx)) continue;
+
+            for (unsigned int vidx = 0; vidx < ele_idx.size(); vidx++) {
+                if (cms2.els_charge().at(eidx) * cms2.els_charge().at(ele_idx.at(vidx)) > 0) continue;
+                LorentzVector gamma_p4 = cms2.els_p4().at(eidx) + cms2.els_p4().at(ele_idx.at(vidx));
+                float gammacandmass = sqrt(fabs(gamma_p4.mass2()));
+                if (gammacandmass < 12.0) return true;
+            }
+        }
+    }
+
+    if (mu_idx.size() > 0) {
+        for (unsigned int midx = 0; midx < cms2.mus_p4().size(); midx++) {
+            bool is_hyp_lep = false;
+            for (unsigned int vidx = 0; vidx < mu_idx.size(); vidx++) {
+              if (midx == mu_idx.at(vidx)) is_hyp_lep = true;
+            }
+
+            if (is_hyp_lep) continue;
+            if (fabs(cms2.mus_p4().at(midx).eta()) > 2.4) continue;
+            if (cms2.mus_p4().at(midx).pt() < 5.0) continue;
+
+            if (!isGoodVetoMuon(midx)) continue;
+
+            for (unsigned int vidx = 0; vidx < mu_idx.size(); vidx++) {
+                if (cms2.mus_charge().at(midx) * cms2.mus_charge().at(mu_idx.at(vidx)) > 0) continue;
+                LorentzVector gamma_p4 = cms2.mus_p4().at(midx) + cms2.mus_p4().at(mu_idx.at(vidx));
+                float gammacandmass = sqrt(fabs(gamma_p4.mass2()));
+                if (gammacandmass < 12.0) return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool hypsFromFirstGoodVertex(size_t hypIdx, float dz_cut){
+
+    int lt_idx = cms2.hyp_lt_index()[hypIdx];
+    int ll_idx = cms2.hyp_ll_index()[hypIdx];
+
+    int lt_id = cms2.hyp_lt_id()[hypIdx];
+    int ll_id = cms2.hyp_ll_id()[hypIdx];
+
+    float lt_dz = abs(lt_id) == 11 ? tas::els_dzPV().at(lt_idx) : tas::mus_dzPV().at(lt_idx);
+    float ll_dz = abs(ll_id) == 11 ? tas::els_dzPV().at(ll_idx) : tas::mus_dzPV().at(ll_idx);
+
+    if (fabs(lt_dz) < dz_cut && fabs(ll_dz) < dz_cut) return true;
+    return false;
 }

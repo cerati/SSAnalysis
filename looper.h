@@ -14,7 +14,6 @@
 #include "Math/VectorUtil.h"
 #include "Math/LorentzVector.h"
 
-
 class TChain;
 struct Lep;
 struct DilepHyp;
@@ -23,21 +22,20 @@ class looper
 {
  public:
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LorentzVector; 
-
   looper() {
     p4_ = new LorentzVector();
   };
   ~looper() {
-    delete babyFile_;
-    delete babyTree_;
+    //delete babyFile_;
+    //delete babyTree_;
   };
   
   int ScanChain ( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest = "", int nEvents = -1, std::vector<int> evtToDebug = std::vector<int>());
   
-  void MakeBabyNtuple (const char *);
-  void InitBabyNtuple ();
-  void FillBabyNtuple (){babyTree_->Fill();}
-  void CloseBabyNtuple () { babyFile_->cd();babyTree_->Write();babyFile_->Close();}
+  //void MakeBabyNtuple (const char *);
+  //void InitBabyNtuple ();
+  //void FillBabyNtuple (){babyTree_->Fill();}
+  //void CloseBabyNtuple () { babyFile_->cd();babyTree_->Write();babyFile_->Close();}
   
   void CreateOutputFile(const char * name){
     outf = TFile::Open(name,"RECREATE");
@@ -46,26 +44,7 @@ class looper
   void fillUnderOverFlow(TH1F *h1, float value, float weight = 1);
   
   void printEvent(  ostream& ostr = std::cout );
-
-  void runQCDtest( std::vector<Lep>& fobs, std::vector<Lep>& goodleps, int& njets, float& met);
-  void runDYtest( std::vector<Lep>& fobs, std::vector<Lep>& goodleps, int& njets, float& met);
-  void runWZtest( std::vector<Lep>& vetoleps, std::vector<Lep>& fobs, std::vector<Lep>& goodleps, int& njets, float& met);
-  void fakeStudy( DilepHyp& hyp, TString& ll, TString& lt );
   
-  float deltaPhi( float phi1 , float phi2 ) {
-    float dphi = fabs( phi1 - phi2 );
-    if( dphi > TMath::Pi() ) dphi = TMath::TwoPi() - dphi;
-    return dphi;
-  }
-
-  float deltaR( LorentzVector lv1, LorentzVector lv2 ) {
-    return sqrt( pow(deltaPhi(lv1.phi(),lv2.phi()),2) + pow(lv1.eta()-lv2.eta(),2) );
-  }
-
-  float mt(float pt1, float pt2, float dphi){
-    return 2*sqrt(pt1*pt2)*fabs(sin(dphi/2));
-  }
-
   template<class T, class U> void makeFillHisto1D(const char* name,const char* title,
 						  int nbins,U minx,U maxx,U value, 
 						  float weight = 1.) {
@@ -102,8 +81,8 @@ class looper
   bool maketext;
   
   //ntuple, file
-  TFile *babyFile_;
-  TTree *babyTree_;
+  //TFile *babyFile_;
+  //TTree *babyTree_;
   TFile *outf;
   
   //baby vars

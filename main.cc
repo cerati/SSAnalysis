@@ -8,9 +8,10 @@ int main() {
   bool useSkim = true;
 
   bool skimAll = false;
-  bool runAll  = true;
+  bool runAll  = false;
   bool runLepEff = false;
   bool runSync = false;
+  bool runBaby = true;
 
   //looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents)
 
@@ -106,6 +107,15 @@ int main() {
     //l->ScanChain(chain_T5Full1200,"T5Full1200","effic",0,"DYtest",-1);
     //l->ScanChain(chain_T5Full1500,"T5Full1500","effic",0,"DYtest",-1);
     l->ScanChain(chain_TTWJets,"TTWJets","effic",0,"DYtest",-1);
+  }
+
+  if (runBaby) {
+    l->ScanChain(chain_TTJets,"ttbar","baby",0,"MakeBaby",-1);
+    l->ScanChain(chain_TTWJets,"ttw","baby",0,"MakeBaby",-1);
+    l->ScanChain(chain_TTZJets,"ttz","baby",0,"MakeBaby",-1);
+    l->ScanChain(chain_WZJets,"wz","baby",0,"MakeBaby",-1);
+    l->ScanChain(chain_T1ttttG1200,"t1tttt_1200_800","baby",0,"MakeBaby",-1);
+    l->ScanChain(chain_T1ttttG1500,"t1tttt_1500_100","baby",0,"MakeBaby",-1);
   }
 
 }

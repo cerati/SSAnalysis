@@ -8,6 +8,12 @@ const static float ptCutLow = 10.;
 
 enum AnalysisBit { HighPt = 0, LowPt = 1, VeryLowPt = 2 };
 
+//fixme: put WF and FSR in different categories
+enum LeptonCategories { Prompt = 0, PromptWS = 1, PromptWF = 2, PromptFSR = 2, 
+			FakeLightTrue = 3, FakeC = 4, FakeB = 5, FakeLightFake = 6, FakeHiPtGamma = 7, 
+			FakeUnknown = 8, FakeLowPtGamma = 9, All9999 = 10,
+			Other = 11, End = 12};
+
 float muRelIso03(unsigned int);
 float eleRelIso03(unsigned int);
 float muRelIso03EA(unsigned int);
@@ -72,7 +78,30 @@ private:
   int idx_;
 };
 
+bool ptsort (int i,int j);
+bool lepsort (Lep i,Lep j);
+bool jetptsort (Jet i,Jet j);
+
+float computePtRel(Lep& lep, vector<Jet> lepjets);
+
+inline float deltaPhi( float phi1 , float phi2 ) {
+  float dphi = fabs( phi1 - phi2 );
+  if( dphi > TMath::Pi() ) dphi = TMath::TwoPi() - dphi;
+  return dphi;
+}
+
+inline float deltaR( LorentzVector lv1, LorentzVector lv2 ) {
+  return sqrt( pow(deltaPhi(lv1.phi(),lv2.phi()),2) + pow(lv1.eta()-lv2.eta(),2) );
+}
+
+inline float mt(float pt1, float pt2, float dphi){
+  return 2*sqrt(pt1*pt2)*fabs(sin(dphi/2));
+}
+
+
 //functions for veto, FO, Tight selection
+bool isGoodLepton(int id, int idx);
+bool isDenominatorLepton(int id, int idx);
 bool isGoodVetoElectron(unsigned int);
 bool isGoodVetoMuon(unsigned int);
 bool isFakableElectron(unsigned int);
@@ -120,6 +149,10 @@ void passesBaselineCuts(int njets, int nbtag, float met, float ht, unsigned int&
 int baselineRegion(int nbtag);
 void passesSignalRegionCuts(float ht, float met, unsigned int& analysisBitMask);
 int signalRegion(int njets, int nbtag, float met, float ht);
+
+bool makesExtraZ(int idx);
+bool makesExtraGammaStar(int idx);
+bool hypsFromFirstGoodVertex(size_t hypIdx, float dz_cut = 1.0);
 
 struct metStruct{
   metStruct() : met(-999.), metphi(-999.), metx(-999.), mety(-999.), sumet(-999.)  {}
