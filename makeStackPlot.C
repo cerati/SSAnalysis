@@ -3,6 +3,8 @@
   gROOT.Reset();
   gStyle.SetOptStat(0);
   TString plot = "";
+  TString xaxis = "";
+  TString yaxis = "";
   plot = "hyp_ss_mass_mindRjj";
   plot = "hyp_mtmin";
   plot = "hyp_highpt_genbjets_pt40";
@@ -12,21 +14,24 @@
   plot = "hyp_highpt_genbjets_pt20";
   plot = "hyp_highpthtmetmt_nbtag";
   plot = "hyp_highpthtmetmt_pttrai";
-  plot = "hyp_ss_foFromWlead_mu_relIso03";
   plot = "hyp_ss_foFromWtrail_mu_relIso03";
-  plot = "hyp_highpthtmetmt_sr";
-  plot = "hyp_highpt_sr";
   plot = "hyp_highpthtmet_sr";
-  plot = "hyp_highpt_mtmin";
-  plot = "hyp_highpthtmet_mtmin";
-  bool norm = false;
-  bool save = false;
+  plot = "hyp_highpthtmetmt_sr";
+  plot = "hyp_ss_foFromWlead_mu_relIso03";xaxis="relIso03";yaxis="event fraction";
+  plot = "hyp_highpthtmet_mtmin";xaxis="mTmin [GeV]";yaxis="events/bin";
+  plot = "hyp_highpt_mtmin";xaxis="mTmin [GeV]";yaxis="events/bin";
+  plot = "hyp_highpt_excl_sr";xaxis="SR#";yaxis="events/bin";
+  plot = "hyp_highptmt100_excl_sr";xaxis="SR#";yaxis="events/bin";
+  bool norm = true;
+  bool save = true;
   bool logy = false;
 
   TString dir = "results_PHYS14";
 
   TCanvas c1;
   if (logy) c1.SetLogy();
+  c1.SetGridy();
+  c1.SetGridx();
 
   TFile *ttbar_file = TFile::Open(dir+"/ttbar_histos.root");
   TH1F* ttbar_h = (ttbar_file->GetListOfKeys()->Contains(plot) ? (TH1F*) ttbar_file->Get(plot) : 0);
@@ -96,7 +101,11 @@
     if (WZ_h  && WZ_h->GetMaximum()>maxy) maxy = WZ_h->GetMaximum();
     if (WW_h  && WW_h->GetMaximum()>maxy) maxy = WW_h->GetMaximum();
 
-    if (h0) h0->Draw("HIST");
+    if (h0) {
+      h0->GetXaxis()->SetTitle(xaxis);
+      h0->GetYaxis()->SetTitle(yaxis);
+      h0->Draw("HIST");
+    }
 
     if (ttbar_h) TTW_h->Draw("SAME,HIST");
     if (TTW_h)   TTW_h->Draw("SAME,HIST");
@@ -113,6 +122,8 @@
     if (WZ_h) hs.Add(WZ_h);
     if (WW_h) hs.Add(WW_h);
     hs.Draw("HIST");
+    hs.GetHistogram()->GetXaxis()->SetTitle(xaxis);
+    hs.GetHistogram()->GetYaxis()->SetTitle(yaxis);
   }
 
   TFile *T1ttttG1500_file = TFile::Open(dir+"/T1ttttG1500_histos.root");
