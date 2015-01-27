@@ -1,7 +1,11 @@
 import ROOT
+import sys
 
-dir = "results_PHYS14_new_noptrel"
-plot = "hyp_highpt_excl_sr"
+#example: python createCard.py hyp_highpt_excl_sr cards/card.txt
+
+dir = "results_PHYS14"
+plot = sys.argv[1]
+output = sys.argv[2]
 
 class Process:
     def __init__(self, mycount, myname, myrootf):
@@ -13,9 +17,10 @@ class Process:
         self.WZ = "-"
     def rate(self): 
         f = ROOT.TFile(dir+"/"+self.rootf)
-        return f.Get(plot).Integral()
+        if f.Get(plot): return f.Get(plot).Integral()
+        else: return 0
 
-T1ttttG1500 = Process(0,"T1tttt","T1ttttG1500_histos.root")
+T1tttt = Process(0,"T1tttt","T1ttttG1200_histos.root")
 TTW = Process(1,"TTW","TTWJets_histos.root")
 TTZ = Process(2,"TTZ","TTZJets_histos.root")
 WZ  = Process(3,"WZ","WZJets_histos.root")
@@ -27,7 +32,7 @@ WZ.WZ = "1.2"
 ttbar.fakes = "1.5"
 
 processes = []
-processes.append(T1ttttG1500)
+processes.append(T1tttt)
 processes.append(TTW)
 processes.append(TTZ)
 processes.append(WZ)
@@ -36,7 +41,7 @@ processes.append(ttbar)
 line = "---------------------------------------------------------------"
 bin = "SS"
 
-card = open('card.txt', 'w')
+card = open(str(output), 'w')
 
 card.write("imax 1  number of channels \n")
 card.write("jmax *  number of backgrounds \n")
@@ -50,11 +55,11 @@ card.write("bin "+str(bin)+"\n")
 card.write("observation "+str(TTW.rate())+"\n")
 card.write(line+"\n")
 card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("bin","",bin,bin,bin,bin,bin))
-card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("process","",T1ttttG1500.count,TTW.count,TTZ.count,WZ.count,ttbar.count))
-card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("process","",T1ttttG1500.name,TTW.name,TTZ.name,WZ.name,ttbar.name))
-card.write("%-20s %-5s %-10.3f %-10.3f %-10.3f %-10.3f %-10.3f \n" % ("rate","",T1ttttG1500.rate(),TTW.rate(),TTZ.rate(),WZ.rate(),ttbar.rate()))
+card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("process","",T1tttt.count,TTW.count,TTZ.count,WZ.count,ttbar.count))
+card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("process","",T1tttt.name,TTW.name,TTZ.name,WZ.name,ttbar.name))
+card.write("%-20s %-5s %-10.3f %-10.3f %-10.3f %-10.3f %-10.3f \n" % ("rate","",T1tttt.rate(),TTW.rate(),TTZ.rate(),WZ.rate(),ttbar.rate()))
 card.write(line+"\n")
-card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("fakes","lnN",T1ttttG1500.fakes,TTW.fakes,TTZ.fakes,WZ.fakes,ttbar.fakes))
-card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("TTV","lnN",T1ttttG1500.TTV,TTW.TTV,TTZ.TTV,WZ.TTV,ttbar.TTV))
-card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("WZ","lnN",T1ttttG1500.WZ,TTW.WZ,TTZ.WZ,WZ.WZ,ttbar.WZ))
+card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("fakes","lnN",T1tttt.fakes,TTW.fakes,TTZ.fakes,WZ.fakes,ttbar.fakes))
+card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("TTV","lnN",T1tttt.TTV,TTW.TTV,TTZ.TTV,WZ.TTV,ttbar.TTV))
+card.write("%-20s %-5s %-10s %-10s %-10s %-10s %-10s \n" % ("WZ","lnN",T1tttt.WZ,TTW.WZ,TTZ.WZ,WZ.WZ,ttbar.WZ))
 
