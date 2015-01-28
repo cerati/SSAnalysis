@@ -6,6 +6,8 @@ import subprocess
 #example: python createCard.py results_PHYS14
 #example: python createCard.py results_PHYS14 hyp_highpt_excl_sr cards/card.txt
 
+#then get expected limits with: combine -M Asymptotic results_PHYS14/card.txt --run expected --noFitAsimov
+
 #to add more nuisances edit Process, writeOneCardFromProcesses and then set values in writeOneCard
 
 class Process:
