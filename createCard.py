@@ -76,7 +76,7 @@ def writeOneCardFromProcesses(dir, plot, output, processes):
 
 def writeOneCard(dir, plot, output):
     #define processes (signal first)
-    T1tttt = Process(0,"T1tttt","T1ttttG1200_histos.root",plot)
+    T1tttt = Process(0,"T1tttt","T1ttttG1500_histos.root",plot)
     TTW = Process(1,"TTW","TTWJets_histos.root",plot)
     TTZ = Process(2,"TTZ","TTZJets_histos.root",plot)
     WZ  = Process(3,"WZ","WZJets_histos.root",plot)
@@ -97,21 +97,25 @@ def writeOneCard(dir, plot, output):
     writeOneCardFromProcesses(dir, plot, output, processes )
     return
 
-def writeAllCards(dir):
-    writeOneCard(dir, "hyp_highpt_sr", "card-hi-hi.txt" )
-    writeOneCard(dir, "hyp_lowpt_sr", "card-hi-low.txt" )
-    writeOneCard(dir, "hyp_verylowpt_sr", "card-low-low.txt" )
+def writeAllCards(dir, prefix=""):
+    writeOneCard(dir, "hyp_highpt"+prefix+"_excl_sr", "card"+prefix+"-hi-hi.txt" )
+    writeOneCard(dir, "hyp_lowpt"+prefix+"_excl_sr", "card"+prefix+"-hi-low.txt" )
+    writeOneCard(dir, "hyp_verylowpt"+prefix+"_excl_sr", "card"+prefix+"-low-low.txt" )
     olddir = os.getcwd()
     os.chdir(dir)
     #os.system("python combineCards.py card-hi-hi.txt card-hi-low.txt card-low-low.txt >& card-all.txt")
-    f = open('card-all.txt', 'wb')
-    subprocess.call(["combineCards.py","card-hi-hi.txt","card-hi-low.txt","card-low-low.txt"],stdout=f)
+    f = open('card'+prefix+'-all.txt', 'wb')
+    subprocess.call(["combineCards.py","card"+prefix+"-hi-hi.txt","card"+prefix+"-hi-low.txt","card"+prefix+"-low-low.txt"],stdout=f)
     os.chdir(olddir)
 
 #main body
 if len(sys.argv)==2:
     dir = sys.argv[1]
     writeAllCards( dir )
+elif len(sys.argv)==3:
+    dir = sys.argv[1]
+    prefix = sys.argv[2]
+    writeAllCards( dir, prefix )
 elif len(sys.argv)==4:
     dir = sys.argv[1]
     plot = sys.argv[2]
