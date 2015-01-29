@@ -237,6 +237,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
       //fakable objects
       if (debug) cout << "fobs" << endl;
+      vector<Lep> fobs_noiso;
+      for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
+	if (abs(vetoleps_noiso[vl].pdgId())==13 && isFakableMuon(vetoleps_noiso[vl].idx())==0) continue;
+        if (abs(vetoleps_noiso[vl].pdgId())==11 && isFakableElectron(vetoleps_noiso[vl].idx())==0) continue;
+        if (debug) cout << "good lep id=" << vetoleps_noiso[vl].pdgId() << " pt=" << vetoleps_noiso[vl].pt()
+                        << " eta=" << vetoleps_noiso[vl].eta() << " phi=" << vetoleps_noiso[vl].p4().phi() << " q=" << vetoleps_noiso[vl].charge()<< endl;
+        fobs_noiso.push_back(vetoleps_noiso[vl]);
+      }
       vector<Lep> fobs;
       for (unsigned int vl=0;vl<vetoleps.size();++vl) {
 	if (abs(vetoleps[vl].pdgId())==13 && isFakableMuon(vetoleps[vl].idx())==0) continue;
@@ -335,14 +343,16 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       nbtag = nbtag_pt25;
 
       //add back to fobs those vetoleps_noiso not passing iso but passing ptrel wrt lepjet
+      /*
       if (makeSSskim || makeQCDskim) {//fixme
 	for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
 	  float ptrel = computePtRel(vetoleps_noiso[vl],lepjets);
 	  if (ptrel>8.) fobs.push_back(vetoleps_noiso[vl]);
 	}
       }	
+      */
 
-      if (fobs.size()==0 && !makeDYtest) continue;
+      if (fobs_noiso.size()==0 && !makeDYtest) continue;
       makeFillHisto1D<TH1F,int>("cut_flow","cut_flow",50,0,50,2,weight_);
       if (isGenSS) makeFillHisto1D<TH1F,int>("cut_flow_ss","cut_flow_ss",50,0,50,2,weight_);
       if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,2,weight_);
@@ -394,47 +404,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	continue;
       }
 
-      vector<Lep> hypleps;
-      //select best hyp in case >3 good leps
-      if (goodleps.size()>2) {
-	vector<Lep> goodlepsp, goodlepsn;
-	for (unsigned int gl=0;gl<goodleps.size();++gl) {
-	  if (goodleps[gl].pdgId()>0) goodlepsn.push_back(goodleps[gl]);
-	  else goodlepsp.push_back(goodleps[gl]);
-	}
-	//sort goodleps by muon and then by pt
-	std::sort(goodlepsp.begin(),goodlepsp.end(),lepsort);
-	std::sort(goodlepsn.begin(),goodlepsn.end(),lepsort);
-	//take first SS hyp
-	if (goodlepsp.size()<2) {
-	  hypleps.push_back(goodlepsn[0]);
-	  hypleps.push_back(goodlepsn[1]);
-	} else if (goodlepsn.size()<2) {
-	  hypleps.push_back(goodlepsp[0]);
-	  hypleps.push_back(goodlepsp[1]);
-	} else {
-	  if ( abs(goodlepsn[0].pdgId()+goodlepsn[1].pdgId())>abs(goodlepsp[0].pdgId()+goodlepsp[1].pdgId()) ) {
-	    hypleps.push_back(goodlepsn[0]);
-	    hypleps.push_back(goodlepsn[1]);
-	  } else if ( abs(goodlepsn[0].pdgId()+goodlepsn[1].pdgId())<abs(goodlepsp[0].pdgId()+goodlepsp[1].pdgId()) ) {
-	    hypleps.push_back(goodlepsp[0]);
-	    hypleps.push_back(goodlepsp[1]);
-	  } else if ( (goodlepsn[0].pt()+goodlepsn[1].pt())>(goodlepsp[0].pt()+goodlepsp[1].pt()) ) {
-	    hypleps.push_back(goodlepsn[0]);
-	    hypleps.push_back(goodlepsn[1]);
-	  } else {
-	    hypleps.push_back(goodlepsp[0]);
-	    hypleps.push_back(goodlepsp[1]);
-	  }
-	}
-      } else if (goodleps.size()==2) {
-	hypleps.push_back(goodleps[0]);
-	hypleps.push_back(goodleps[1]);	
-      }      
-      if (debug) cout << "hypleps size=" << hypleps.size() << endl;
-
-      if (fobs.size()<2) {
-	if (debug) cout << "skip, fobs size=" << fobs.size() << " hypleps size=" << hypleps.size() << endl;
+      vector<Lep> hypfobsnoiso = getBestSSLeps(fobs_noiso);
+      if (debug) cout << "hypfobsnoiso size=" << hypfobsnoiso.size() << endl;
+      if (hypfobsnoiso.size()<2) {
+	if (debug) cout << "skip, hypfobsnoiso size=" << hypfobsnoiso.size() << endl;
 	if (isGenSS) {
 	  tests::testLepIdFailMode( this, weight_, fobs );
 	}
@@ -445,7 +418,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,4,weight_);
       if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,4,weight_);
 
-      DilepHyp hyp = (hypleps.size()==2 ? DilepHyp(hypleps[0],hypleps[1]) : DilepHyp(fobs[0],fobs[1]) );
+      vector<Lep> hypleps = getBestSSLeps(goodleps);
+      if (debug) cout << "hypleps size=" << hypleps.size() << endl;
+
+      DilepHyp hyp = (hypleps.size()==2 ? DilepHyp(hypleps[0],hypleps[1]) : DilepHyp(hypfobsnoiso[0],hypfobsnoiso[1]) );
       if (hyp.p4().mass()<8) {
 	if (debug) cout<< "skip, hyp mass=" << hyp.p4().mass() <<endl;
 	continue;

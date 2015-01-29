@@ -88,6 +88,8 @@ bool ptsort (int i,int j);
 bool lepsort (Lep i,Lep j);
 bool jetptsort (Jet i,Jet j);
 
+std::vector<Lep> getBestSSLeps(std::vector<Lep> leps);
+
 float computePtRel(Lep& lep, vector<Jet> lepjets);
 
 inline float deltaPhi( float phi1 , float phi2 ) {

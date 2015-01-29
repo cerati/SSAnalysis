@@ -11,6 +11,48 @@ bool lepsort (Lep i,Lep j) {
 
 bool jetptsort (Jet i,Jet j) { return (i.pt()>j.pt()); }
 
+std::vector<Lep> getBestSSLeps(std::vector<Lep> leps) {
+  vector<Lep> hypleps;
+  //select best hyp in case >3 good leps
+  if (leps.size()>2) {
+    vector<Lep> lepsp, lepsn;
+    for (unsigned int gl=0;gl<leps.size();++gl) {
+      if (leps[gl].pdgId()>0) lepsn.push_back(leps[gl]);
+      else lepsp.push_back(leps[gl]);
+    }
+    //sort leps by muon and then by pt
+    std::sort(lepsp.begin(),lepsp.end(),lepsort);
+    std::sort(lepsn.begin(),lepsn.end(),lepsort);
+    //take first SS hyp
+    if (lepsp.size()<2) {
+      hypleps.push_back(lepsn[0]);
+      hypleps.push_back(lepsn[1]);
+    } else if (lepsn.size()<2) {
+      hypleps.push_back(lepsp[0]);
+      hypleps.push_back(lepsp[1]);
+    } else {
+      if ( abs(lepsn[0].pdgId()+lepsn[1].pdgId())>abs(lepsp[0].pdgId()+lepsp[1].pdgId()) ) {
+	hypleps.push_back(lepsn[0]);
+	hypleps.push_back(lepsn[1]);
+      } else if ( abs(lepsn[0].pdgId()+lepsn[1].pdgId())<abs(lepsp[0].pdgId()+lepsp[1].pdgId()) ) {
+	hypleps.push_back(lepsp[0]);
+	hypleps.push_back(lepsp[1]);
+      } else if ( (lepsn[0].pt()+lepsn[1].pt())>(lepsp[0].pt()+lepsp[1].pt()) ) {
+	hypleps.push_back(lepsn[0]);
+	hypleps.push_back(lepsn[1]);
+      } else {
+	hypleps.push_back(lepsp[0]);
+	hypleps.push_back(lepsp[1]);
+      }
+    }
+  } else if (leps.size()==2) {
+    hypleps.push_back(leps[0]);
+    hypleps.push_back(leps[1]);	
+  }      
+  return hypleps;
+}
+
+
 bool isGoodVertex(size_t ivtx) {
   if (cms2.vtxs_isFake()[ivtx]) return false;
   if (cms2.vtxs_ndof()[ivtx] <= 4.) return false;

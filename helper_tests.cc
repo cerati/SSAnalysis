@@ -900,8 +900,8 @@ void tests::makeSRplots( looper* loop, float& weight_, TString label, int& br, i
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_charge","hyp_"+label+"_charge",7,-3.5,3.5,hyp.charge(),weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_njets","hyp_"+label+"_njets",8,0,8,jets.size(),weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_nbtag","hyp_"+label+"_nbtag",8,0,8,btags.size(),weight_);
-    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_ht","hyp_"+label+"_ht",13,80,600,ht,weight_);
-    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_met","hyp_"+label+"_met",10,0,250,met,weight_);
+    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_ht","hyp_"+label+"_ht",30,80,1580,ht,weight_);
+    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_met","hyp_"+label+"_met",20,0,500,met,weight_);
     loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_mll","hyp_"+label+"_mll",100,0,1000,hyp.p4().mass(),weight_);
     loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_ptll","hyp_"+label+"_ptll",100,0,1000,hyp.p4().pt(),weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_type","hyp_"+label+"_type",5,0,5,type,weight_);
