@@ -284,6 +284,69 @@ float eleRelIso03DB(unsigned int elIdx){
   return absiso/(els_p4().at(elIdx).pt());
 }
 
+float muRelIsoTest(unsigned int muIdx, float dr, float deltaZCut){
+  float chiso     = 0.;
+  float nhiso     = 0.;
+  float emiso     = 0.;
+  for (unsigned int i=0; i<cms2.pfcands_particleId().size(); ++i){
+    if ( fabs(deltaR(cms2.pfcands_p4().at(i),mus_p4().at(muIdx)))>dr ) continue;  
+    if ( fabs(pfcands_particleId().at(i))==211 && fabs(cms2.pfcands_dz().at(i)) < deltaZCut ) chiso+=pfcands_p4().at(i).pt();
+    if ( fabs(pfcands_particleId().at(i))==130 ) nhiso+=pfcands_p4().at(i).pt();
+    if ( fabs(pfcands_particleId().at(i))==22  ) emiso+=pfcands_p4().at(i).pt();
+  }
+  float absiso = chiso + std::max(float(0.0), nhiso + emiso);
+  return absiso/(mus_p4().at(muIdx).pt());
+}
+float muRelIsoTestDB(unsigned int muIdx, float dr, float deltaZCut){
+  float chiso     = 0.;
+  float nhiso     = 0.;
+  float emiso     = 0.;
+  float deltaBeta = 0.;
+  for (unsigned int i=0; i<cms2.pfcands_particleId().size(); ++i){
+    if ( fabs(deltaR(cms2.pfcands_p4().at(i),mus_p4().at(muIdx)))>dr ) continue;  
+    if ( fabs(pfcands_particleId().at(i))==211 ) {
+      if (fabs(cms2.pfcands_dz().at(i)) < deltaZCut) chiso+=pfcands_p4().at(i).pt();
+      else deltaBeta+=pfcands_p4().at(i).pt();
+    }
+    if ( fabs(pfcands_particleId().at(i))==130 ) nhiso+=pfcands_p4().at(i).pt();
+    if ( fabs(pfcands_particleId().at(i))==22  ) emiso+=pfcands_p4().at(i).pt();
+  }
+  float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
+  return absiso/(mus_p4().at(muIdx).pt());
+}
+
+float elRelIsoTest(unsigned int elIdx, float dr, float deltaZCut){
+  float chiso     = 0.;
+  float nhiso     = 0.;
+  float emiso     = 0.;
+  for (unsigned int i=0; i<cms2.pfcands_particleId().size(); ++i){
+    if ( fabs(deltaR(cms2.pfcands_p4().at(i),els_p4().at(elIdx)))>dr ) continue;  
+    if ( fabs(pfcands_particleId().at(i))==211 && fabs(cms2.pfcands_dz().at(i)) < deltaZCut ) chiso+=pfcands_p4().at(i).pt();
+    if ( fabs(pfcands_particleId().at(i))==130 ) nhiso+=pfcands_p4().at(i).pt();
+    if ( fabs(pfcands_particleId().at(i))==22  ) emiso+=pfcands_p4().at(i).pt();
+  }
+  float absiso = chiso + std::max(float(0.0), nhiso + emiso);
+  return absiso/(els_p4().at(elIdx).pt());
+}
+float elRelIsoTestDB(unsigned int elIdx, float dr, float deltaZCut){
+  float chiso     = 0.;
+  float nhiso     = 0.;
+  float emiso     = 0.;
+  float deltaBeta = 0.;
+  for (unsigned int i=0; i<cms2.pfcands_particleId().size(); ++i){
+    if ( fabs(deltaR(cms2.pfcands_p4().at(i),els_p4().at(elIdx)))>dr ) continue;  
+    if ( fabs(pfcands_particleId().at(i))==211 ) {
+      if (fabs(cms2.pfcands_dz().at(i)) < deltaZCut) chiso+=pfcands_p4().at(i).pt();
+      else deltaBeta+=pfcands_p4().at(i).pt();
+    }
+    if ( fabs(pfcands_particleId().at(i))==130 ) nhiso+=pfcands_p4().at(i).pt();
+    if ( fabs(pfcands_particleId().at(i))==22  ) emiso+=pfcands_p4().at(i).pt();
+  }
+  float absiso = chiso + std::max(0.0, nhiso + emiso - 0.5 * deltaBeta);
+  return absiso/(els_p4().at(elIdx).pt());
+}
+
+
 //-------------------------------------------------------
 // get exact trigger name corresponding to given pattern
 //-------------------------------------------------------
@@ -557,6 +620,11 @@ bool isGoodMuon(unsigned int muidx){
 bool isGoodLepton(int id, int idx){
   if (abs(id) == 11) return isGoodElectron(idx);
   else if (abs(id) == 13) return isGoodMuon(idx);
+  return false;
+}
+bool isGoodLeptonNoIso(int id, int idx){
+  if (abs(id) == 11) return isGoodElectronNoIso(idx);
+  else if (abs(id) == 13) return isGoodMuonNoIso(idx);
   return false;
 }
 

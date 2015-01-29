@@ -22,6 +22,12 @@ float muRelIso03DB(unsigned int);
 float muRelIso04DB(unsigned int);
 float eleRelIso03DB(unsigned int);
 
+float muRelIsoTest(unsigned int, float dr, float deltaZCut=0.1);
+float muRelIsoTestDB(unsigned int, float dr, float deltaZCut=0.1);
+
+float elRelIsoTest(unsigned int, float dr, float deltaZCut=0.1);
+float elRelIsoTestDB(unsigned int, float dr, float deltaZCut=0.1);
+
 struct Lep {
   Lep(int pdgid, int idxx):pdgid_(pdgid),idx_(idxx){}
   int charge() {return -1*pdgid_/abs(pdgid_);}
@@ -101,6 +107,7 @@ inline float mt(float pt1, float pt2, float dphi){
 
 //functions for veto, FO, Tight selection
 bool isGoodLepton(int id, int idx);
+bool isGoodLeptonNoIso(int id, int idx);
 bool isDenominatorLepton(int id, int idx);
 bool isGoodVetoElectron(unsigned int);
 bool isGoodVetoMuon(unsigned int);

@@ -8,10 +8,10 @@ int main() {
   bool useSkim = true;
 
   bool skimAll = false;
-  bool runAll  = false;
+  bool runAll  = true;
   bool runLepEff = false;
   bool runSync = false;
-  bool runBaby = true;
+  bool runBaby = false;
 
   //looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isData, TString whatTest, int nEvents)
 

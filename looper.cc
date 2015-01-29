@@ -348,11 +348,13 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (isGenSSee) makeFillHisto1D<TH1F,int>("cut_flow_ssee","cut_flow_ssee",50,0,50,2,weight_);
       if (isGenSSmm) makeFillHisto1D<TH1F,int>("cut_flow_ssmm","cut_flow_ssmm",50,0,50,2,weight_);
 
+      /*
       //add back to goodleps those fobs not passing iso but passing ptrel wrt lepjet
       for (unsigned int fo=0;fo<fobs.size();++fo) {
 	float ptrel = computePtRel(fobs[fo],lepjets);
 	if (ptrel>8.) goodleps.push_back(fobs[fo]);
       }
+      */
 
       //write skim here (only qcd)
       if (makeQCDskim) {

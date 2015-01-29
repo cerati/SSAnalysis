@@ -647,7 +647,7 @@ void tests::testPtRel( looper* loop, float& weight_, DilepHyp& hyp, std::vector<
 
   bool debug = false;
   //make sure all cuts pass except isolation
-  if (fabs(hyp.traiLep().dzPV())<0.1 && fabs(hyp.traiLep().dxyPV())<0.01 && (abs(hyp.traiLep().pdgId())==11 || fabs(hyp.traiLep().dxyPV())<0.005) ) {//fixme use proper methods
+  if (isGoodLeptonNoIso(hyp.traiLep().pdgId(), hyp.traiLep().idx())) {
     if (isFromW(hyp.traiLep())) {
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_relIso03","hyp_ss_foFromWtrail_"+lt+"_relIso03",10,0.,1.,hyp.traiLep().relIso03(),weight_);
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_iso03","hyp_ss_foFromWtrail_"+lt+"_iso03",10,0.,20.,hyp.traiLep().relIso03()*hyp.traiLep().pt(),weight_);
@@ -664,7 +664,7 @@ void tests::testPtRel( looper* loop, float& weight_, DilepHyp& hyp, std::vector<
   }
 
   //make sure all cuts pass except isolation
-  if (fabs(hyp.leadLep().dzPV())<0.1 && fabs(hyp.leadLep().dxyPV())<0.01 && (abs(hyp.leadLep().pdgId())==11 || fabs(hyp.leadLep().dxyPV())<0.005) ) {
+  if (isGoodLeptonNoIso(hyp.leadLep().pdgId(), hyp.leadLep().idx())) {
     if (isFromW(hyp.leadLep())) {
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_relIso03","hyp_ss_foFromWlead_"+ll+"_relIso03",10,0.,1.,hyp.leadLep().relIso03(),weight_);
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_iso03","hyp_ss_foFromWlead_"+ll+"_iso03",10,0.,20.,hyp.leadLep().relIso03()*hyp.leadLep().pt(),weight_);
@@ -672,7 +672,7 @@ void tests::testPtRel( looper* loop, float& weight_, DilepHyp& hyp, std::vector<
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+lt+"_dxyPV","hyp_ss_foFromWlead_"+lt+"_dxyPV",100,0,0.1,fabs(hyp.leadLep().dxyPV()),weight_);
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+lt+"_dzPV","hyp_ss_foFromWlead_"+lt+"_dzPV",100,0,0.5,fabs(hyp.leadLep().dzPV()),weight_);
 	    
-      if (hyp.leadLep().relIso03()>0.1) {	    
+      if (isGoodLepton(hyp.leadLep().pdgId(), hyp.leadLep().idx())==0) {
 	//test min dR between leptons and jets
 	int lepjetidx = -1;
 	if (debug) cout << "prompt non iso lepton with lepjets.size()=" << lepjets.size() << endl;
@@ -687,6 +687,15 @@ void tests::testPtRel( looper* loop, float& weight_, DilepHyp& hyp, std::vector<
 	    lepjetidx = j;
 	  }
 	} 
+	if (ll=="mu") {
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_fail_"+ll+"_relIso03","hyp_ss_foFromWlead_fail_"+ll+"_relIso03",20,0.,1.,hyp.leadLep().relIso03(),weight_);
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_fail_"+ll+"_relIso02","hyp_ss_foFromWlead_fail_"+ll+"_relIso02",20,0.,1., muRelIsoTest(hyp.leadLep().idx(),0.2),weight_);
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_fail_"+ll+"_relIso02DB","hyp_ss_foFromWlead_fail_"+ll+"_relIso02DB",20,0.,1., muRelIsoTestDB(hyp.leadLep().idx(),0.2),weight_);
+	} else {
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_fail_"+ll+"_relIso03","hyp_ss_foFromWlead_fail_"+ll+"_relIso03",20,0.,1.,hyp.leadLep().relIso03(),weight_);
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_fail_"+ll+"_relIso02","hyp_ss_foFromWlead_fail_"+ll+"_relIso02",20,0.,1., elRelIsoTest(hyp.leadLep().idx(),0.2),weight_);
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_fail_"+ll+"_relIso02DB","hyp_ss_foFromWlead_fail_"+ll+"_relIso02DB",20,0.,1., elRelIsoTestDB(hyp.leadLep().idx(),0.2),weight_);
+	}
 	loop->makeFillHisto1D<TH1F,int>("hyp_ss_foFromWlead_"+ll+"_nlepjets","hyp_ss_foFromWlead_"+ll+"_nlepjets",10,0,10,nlepjets_per_lep,weight_);
 	loop->makeFillHisto2D<TH2F,float>("hyp_ss_foFromWlead_"+ll+"_mindr_vs_nlepjets","hyp_ss_foFromWlead_"+ll+"_mindr_vs_nlepjets",10,0,10,nlepjets_per_lep,10,0,1,mindr,weight_);	      
 	if (mindr<0.1) loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_dPtMinDr01","hyp_ss_foFromWlead_"+ll+"_dPtMinDr01",20,-1.,1.,(lepjets[lepjetidx].pt()-hyp.leadLep().pt())/hyp.leadLep().pt(),weight_); 
@@ -709,7 +718,7 @@ void tests::testPtRel( looper* loop, float& weight_, DilepHyp& hyp, std::vector<
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+lt+"_dxyPV","hyp_ss_foFakelead_"+lt+"_dxyPV",100,0,0.1,fabs(hyp.leadLep().dxyPV()),weight_);
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+lt+"_dzPV","hyp_ss_foFakelead_"+lt+"_dzPV",100,0,0.5,fabs(hyp.leadLep().dzPV()),weight_);
 	    
-      if (hyp.leadLep().relIso03()>0.1) {//fixme use functions in selections
+      if (isGoodLepton(hyp.leadLep().pdgId(), hyp.leadLep().idx())==0) {
 	//test min dR between leptons and jets
 	int lepjetidx = -1;
 	if (debug) cout << "prompt non iso lepton with lepjets.size()=" << lepjets.size() << endl;
@@ -724,6 +733,15 @@ void tests::testPtRel( looper* loop, float& weight_, DilepHyp& hyp, std::vector<
 	    lepjetidx = j;
 	  }
 	} 
+	if (ll=="mu") {
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_fail_"+ll+"_relIso03","hyp_ss_foFakelead_fail_"+ll+"_relIso03",20,0.,1.,hyp.leadLep().relIso03(),weight_);
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_fail_"+ll+"_relIso02","hyp_ss_foFakelead_fail_"+ll+"_relIso02",20,0.,1., muRelIsoTest(hyp.leadLep().idx(),0.2),weight_);
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_fail_"+ll+"_relIso02DB","hyp_ss_foFakelead_fail_"+ll+"_relIso02DB",20,0.,1., muRelIsoTestDB(hyp.leadLep().idx(),0.2),weight_);
+	} else {
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_fail_"+ll+"_relIso03","hyp_ss_foFakelead_fail_"+ll+"_relIso03",20,0.,1.,hyp.leadLep().relIso03(),weight_);
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_fail_"+ll+"_relIso02","hyp_ss_foFakelead_fail_"+ll+"_relIso02",20,0.,1., elRelIsoTest(hyp.leadLep().idx(),0.2),weight_);
+	  loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_fail_"+ll+"_relIso02DB","hyp_ss_foFakelead_fail_"+ll+"_relIso02DB",20,0.,1., elRelIsoTestDB(hyp.leadLep().idx(),0.2),weight_);
+	}
 	loop->makeFillHisto1D<TH1F,int>("hyp_ss_foFakelead_"+ll+"_nlepjets","hyp_ss_foFakelead_"+ll+"_nlepjets",10,0,10,nlepjets_per_lep,weight_);
 	loop->makeFillHisto2D<TH2F,float>("hyp_ss_foFakelead_"+ll+"_mindr_vs_nlepjets","hyp_ss_foFakelead_"+ll+"_mindr_vs_nlepjets",10,0,10,nlepjets_per_lep,10,0,1,mindr,weight_);	      
 	if (mindr<0.1) loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFakelead_"+ll+"_dPtMinDr01","hyp_ss_foFakelead_"+ll+"_dPtMinDr01",20,-1.,1.,(lepjets[lepjetidx].pt()-hyp.leadLep().pt())/hyp.leadLep().pt(),weight_); 
