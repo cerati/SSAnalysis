@@ -5,25 +5,19 @@
   TString plot = "";
   TString xaxis = "";
   TString yaxis = "";
-  plot = "hyp_ss_mass_mindRjj";
-  plot = "hyp_mtmin";
-  plot = "hyp_highpt_genbjets_pt40";
-  plot = "hyp_highpt_genbjets_pt1";
-  plot = "hyp_highpt_gennobjets_csv";
-  plot = "hyp_highpthtmet_nbtag";
-  plot = "hyp_highpt_genbjets_pt20";
-  plot = "hyp_highpthtmetmt_nbtag";
-  plot = "hyp_highpthtmetmt_pttrai";
-  plot = "hyp_ss_foFromWtrail_mu_relIso03";
-  plot = "hyp_highpthtmet_sr";
-  plot = "hyp_highpthtmetmt_sr";
   plot = "hyp_ss_foFromWlead_mu_relIso03";xaxis="relIso03";yaxis="event fraction";
-  plot = "hyp_highpthtmet_mtmin";xaxis="mTmin [GeV]";yaxis="events/bin";
-  plot = "hyp_highpt_mtmin";xaxis="mTmin [GeV]";yaxis="events/bin";
-  plot = "hyp_highpt_excl_sr";xaxis="SR#";yaxis="events/bin";
-  plot = "hyp_highptmt100_excl_sr";xaxis="SR#";yaxis="events/bin";
-  bool norm = true;
-  bool save = true;
+  plot = "hyp_hihihtmet_mtmin";xaxis="mTmin [GeV]";yaxis="events/bin";
+  plot = "hyp_hihi_mtmin";xaxis="mTmin [GeV]";yaxis="events/bin";
+  plot = "hyp_hihi_excl_sr";xaxis="SR#";yaxis="events/bin";
+  plot = "hyp_hihimt100_excl_sr";xaxis="SR#";yaxis="events/bin";
+  plot = "hyp_veryhilow_ht";xaxis="HT [GeV]";yaxis="events/bin";
+  plot = "hyp_veryhilow_met";xaxis="MET [GeV]";yaxis="events/bin";
+  plot = "hyp_veryhilow_njets";xaxis="njets";yaxis="events/bin";
+  plot = "hyp_hihi_nbtag";xaxis="nbtag";yaxis="events/bin";
+  plot = "hyp_hihi_ld";xaxis="LD";yaxis="event fraction";
+  plot = "hyp_hihi_excl_sr_mt100";xaxis="SR";yaxis="events/bin";
+  bool norm = false;
+  bool save = false;
   bool logy = false;
 
   TString dir = "results_PHYS14";
@@ -178,7 +172,7 @@
     else h0->GetYaxis()->SetRangeUser(0.,1.1*maxy);
   }
 
-  TLegend* leg  = new TLegend(0.73,0.54,0.89,0.89);
+  TLegend* leg  = new TLegend(0.69,0.54,0.85,0.89);
   leg->SetNColumns(1);
   leg->SetFillColor(kWhite);
   leg->SetLineColor(kWhite);

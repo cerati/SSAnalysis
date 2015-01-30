@@ -6,8 +6,8 @@
   TString file1 = "T1ttttG1200_histos.root";
   TString file2 = "T1ttttG1200_histos.root";
 
-  TString plot1 = "hyp_highpt_gennobjets_csv";
-  TString plot2 = "hyp_highpt_genbjets_csv";
+  TString plot1 = "hyp_hihi_gennobjets_csv";
+  TString plot2 = "hyp_hihi_genbjets_csv";
 
   bool norm = true;
   bool save = false;

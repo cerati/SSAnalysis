@@ -87,22 +87,22 @@ void plotMCMatch() {
   hyp_ss_trail_el_hiptgamma_mc_mother->Draw();
   c2.SaveAs("hyp_ss_trail_el_hiptgamma_mc_mother_zoom.png");
 
-  TH1F* hyp_ss_trail_mu_lowptgamma_mc_mother = (TH1F*) f->Get("hyp_ss_trail_mu_lowptgamma_mc_mother");
-  hyp_ss_trail_mu_lowptgamma_mc_mother->SetLineWidth(2);
-  hyp_ss_trail_mu_lowptgamma_mc_mother->SetLineColor(kRed);
-  hyp_ss_trail_mu_lowptgamma_mc_mother->Draw();
-  c2.SaveAs("hyp_ss_trail_mu_lowptgamma_mc_mother.png");
-  hyp_ss_trail_mu_lowptgamma_mc_mother->GetXaxis()->SetRangeUser(-25,25);
-  hyp_ss_trail_mu_lowptgamma_mc_mother->Draw();
-  c2.SaveAs("hyp_ss_trail_mu_lowptgamma_mc_mother_zoom.png");
+  TH1F* hyp_ss_trail_mu_hilowgamma_mc_mother = (TH1F*) f->Get("hyp_ss_trail_mu_hilowgamma_mc_mother");
+  hyp_ss_trail_mu_hilowgamma_mc_mother->SetLineWidth(2);
+  hyp_ss_trail_mu_hilowgamma_mc_mother->SetLineColor(kRed);
+  hyp_ss_trail_mu_hilowgamma_mc_mother->Draw();
+  c2.SaveAs("hyp_ss_trail_mu_hilowgamma_mc_mother.png");
+  hyp_ss_trail_mu_hilowgamma_mc_mother->GetXaxis()->SetRangeUser(-25,25);
+  hyp_ss_trail_mu_hilowgamma_mc_mother->Draw();
+  c2.SaveAs("hyp_ss_trail_mu_hilowgamma_mc_mother_zoom.png");
 
   TCanvas c3;
   TH1F* hyp_ss_trail_mu_category_all9999_pt = (TH1F*) f->Get("hyp_ss_trail_mu_category_all9999_pt");
   hyp_ss_trail_mu_category_all9999_pt->Draw();
   c3.SaveAs("hyp_ss_trail_mu_category_all9999_pt.png");
-  TH1F* hyp_ss_trail_mu_category_lowptgamma_pt = (TH1F*) f->Get("hyp_ss_trail_mu_category_lowptgamma_pt");
-  hyp_ss_trail_mu_category_lowptgamma_pt->Draw();
-  c3.SaveAs("hyp_ss_trail_mu_category_lowptgamma_pt.png");
+  TH1F* hyp_ss_trail_mu_category_hilowgamma_pt = (TH1F*) f->Get("hyp_ss_trail_mu_category_hilowgamma_pt");
+  hyp_ss_trail_mu_category_hilowgamma_pt->Draw();
+  c3.SaveAs("hyp_ss_trail_mu_category_hilowgamma_pt.png");
 
   TCanvas cc;cc.SetLogy();
   TH1F* hyp_prompttype = (TH1F*) f->Get("hyp_prompttype");

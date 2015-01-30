@@ -421,11 +421,11 @@ void tests::fakeStudy(looper* loop, float& weight_, DilepHyp& hyp, TString& ll, 
       trailType=FakeUnknown;
       if (hyp.traiLep().mc_id()==22 && hyp.traiLep().mc_p4().pt()<1.) {
 	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,FakeLowPtGamma,weight_);
-	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc","hyp_ss_faketrail_"+lt+"_lowptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
-	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc_mother","hyp_ss_faketrail_"+lt+"_lowptgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
-	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc3","hyp_ss_faketrail_"+lt+"_lowptgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
-	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_lowptgamma_mc3_mother","hyp_ss_faketrail_"+lt+"_lowptgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
-	loop->makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_lowptgamma_pt","hyp_ss_faketrail_"+lt+"_category_lowptgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
+	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hilowgamma_mc","hyp_ss_faketrail_"+lt+"_hilowgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
+	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hilowgamma_mc_mother","hyp_ss_faketrail_"+lt+"_hilowgamma_mc_mother",11001,-5500.5,5500.5,hyp.traiLep().mc_motherid(),weight_);
+	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hilowgamma_mc3","hyp_ss_faketrail_"+lt+"_hilowgamma_mc3",11001,-5500.5,5500.5,hyp.traiLep().mc3_id(),weight_);
+	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hilowgamma_mc3_mother","hyp_ss_faketrail_"+lt+"_hilowgamma_mc3_mother",11001,-5500.5,5500.5,hyp.traiLep().mc3_motherid(),weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_hilowgamma_pt","hyp_ss_faketrail_"+lt+"_category_hilowgamma_pt",50,0,100,hyp.traiLep().pt(),weight_);
       } else if (hyp.traiLep().mc_id()==-9999 && hyp.traiLep().mc_motherid()==-9999 && hyp.traiLep().mc3_id()==-9999 && hyp.traiLep().mc3_motherid()==-9999) {
 	loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_category","hyp_ss_faketrail_"+lt+"_category",End,0,End,All9999,weight_);
 	loop->makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_category_all9999_pt","hyp_ss_faketrail_"+lt+"_category_all9999_pt",50,0,100,hyp.traiLep().pt(),weight_);
@@ -845,17 +845,17 @@ void tests::testBtag( looper* loop, float& weight_, std::vector<Jet>& alljets ) 
 	if (jet.pt()>30) genbjets_pt30++;
 	if (jet.pt()>35) genbjets_pt35++;
 	if (jet.pt()>40) genbjets_pt40++;
-	loop->makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_csv","hyp_highpt_genbjets_csv",50,0,1.,jet.csv(),weight_);
-	loop->makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_tche","hyp_highpt_genbjets_tche",50,-5.,5.,pfjets_trackCountingHighEffBJetTag()[jet.idx()],weight_);
-	loop->makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_tchp","hyp_highpt_genbjets_tchp",50,-5.,5.,pfjets_trackCountingHighPurBJetTag()[jet.idx()],weight_);
-	loop->makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_jbp","hyp_highpt_genbjets_jbp",50,0,10.,pfjets_jetBProbabilityBJetTag()[jet.idx()],weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_hihi_genbjets_csv","hyp_hihi_genbjets_csv",50,0,1.,jet.csv(),weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_hihi_genbjets_tche","hyp_hihi_genbjets_tche",50,-5.,5.,pfjets_trackCountingHighEffBJetTag()[jet.idx()],weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_hihi_genbjets_tchp","hyp_hihi_genbjets_tchp",50,-5.,5.,pfjets_trackCountingHighPurBJetTag()[jet.idx()],weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_hihi_genbjets_jbp","hyp_hihi_genbjets_jbp",50,0,10.,pfjets_jetBProbabilityBJetTag()[jet.idx()],weight_);
       }
     } else {
       if (jet.pt()>20) {
-	loop->makeFillHisto1D<TH1F,float>("hyp_highpt_gennobjets_csv","hyp_highpt_gennobjets_csv",50,0,1.,jet.csv(),weight_);
-	loop->makeFillHisto1D<TH1F,float>("hyp_highpt_gennobjets_tche","hyp_highpt_gennobjets_tche",50,-5.,5.,pfjets_trackCountingHighEffBJetTag()[jet.idx()],weight_);
-	loop->makeFillHisto1D<TH1F,float>("hyp_highpt_gennobjets_tchp","hyp_highpt_gennobjets_tchp",50,-5.,5.,pfjets_trackCountingHighPurBJetTag()[jet.idx()],weight_);
-	loop->makeFillHisto1D<TH1F,float>("hyp_highpt_gennobjets_jbp","hyp_highpt_gennobjets_jbp",50,0,10.,pfjets_jetBProbabilityBJetTag()[jet.idx()],weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_hihi_gennobjets_csv","hyp_hihi_gennobjets_csv",50,0,1.,jet.csv(),weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_hihi_gennobjets_tche","hyp_hihi_gennobjets_tche",50,-5.,5.,pfjets_trackCountingHighEffBJetTag()[jet.idx()],weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_hihi_gennobjets_tchp","hyp_hihi_gennobjets_tchp",50,-5.,5.,pfjets_trackCountingHighPurBJetTag()[jet.idx()],weight_);
+	loop->makeFillHisto1D<TH1F,float>("hyp_hihi_gennobjets_jbp","hyp_hihi_gennobjets_jbp",50,0,10.,pfjets_jetBProbabilityBJetTag()[jet.idx()],weight_);
 	/*
 	  OBJ: TNamed	pfjets_combinedSecondaryVertexBJetTag	floats_pfJetMaker_pfjetscombinedSecondaryVertexBJetTag_CMS2.obj : 0 at: 0x7fb6f3a4bf20
 	  OBJ: TNamed	pfjets_jetBProbabilityBJetTag	floats_pfJetMaker_pfjetsjetBProbabilityBJetTag_CMS2.obj : 0 at: 0x7fb6f3a4c540
@@ -867,16 +867,16 @@ void tests::testBtag( looper* loop, float& weight_, std::vector<Jet>& alljets ) 
       }
     }
   }
-  loop->makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets","hyp_highpt_genbjets",8,0,8,genbjets,weight_);
-  loop->makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt20","hyp_highpt_genbjets_pt20",8,0,8,genbjets_pt20,weight_);
-  loop->makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt25","hyp_highpt_genbjets_pt25",8,0,8,genbjets_pt25,weight_);
-  loop->makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt30","hyp_highpt_genbjets_pt30",8,0,8,genbjets_pt30,weight_);
-  loop->makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt35","hyp_highpt_genbjets_pt35",8,0,8,genbjets_pt35,weight_);
-  loop->makeFillHisto1D<TH1F,int>("hyp_highpt_genbjets_pt40","hyp_highpt_genbjets_pt40",8,0,8,genbjets_pt40,weight_);
+  loop->makeFillHisto1D<TH1F,int>("hyp_hihi_genbjets","hyp_hihi_genbjets",8,0,8,genbjets,weight_);
+  loop->makeFillHisto1D<TH1F,int>("hyp_hihi_genbjets_pt20","hyp_hihi_genbjets_pt20",8,0,8,genbjets_pt20,weight_);
+  loop->makeFillHisto1D<TH1F,int>("hyp_hihi_genbjets_pt25","hyp_hihi_genbjets_pt25",8,0,8,genbjets_pt25,weight_);
+  loop->makeFillHisto1D<TH1F,int>("hyp_hihi_genbjets_pt30","hyp_hihi_genbjets_pt30",8,0,8,genbjets_pt30,weight_);
+  loop->makeFillHisto1D<TH1F,int>("hyp_hihi_genbjets_pt35","hyp_hihi_genbjets_pt35",8,0,8,genbjets_pt35,weight_);
+  loop->makeFillHisto1D<TH1F,int>("hyp_hihi_genbjets_pt40","hyp_hihi_genbjets_pt40",8,0,8,genbjets_pt40,weight_);
   std::sort(jetsbmatch.begin(),jetsbmatch.end(),jetptsort);
-  if (jetsbmatch.size()>0) loop->makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_pt0","hyp_highpt_genbjets_pt0",40,0,200,jetsbmatch[0].pt(),weight_);
-  if (jetsbmatch.size()>1) loop->makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_pt1","hyp_highpt_genbjets_pt1",40,0,200,jetsbmatch[1].pt(),weight_);
-  if (jetsbmatch.size()>2) loop->makeFillHisto1D<TH1F,float>("hyp_highpt_genbjets_pt2","hyp_highpt_genbjets_pt2",40,0,200,jetsbmatch[2].pt(),weight_);
+  if (jetsbmatch.size()>0) loop->makeFillHisto1D<TH1F,float>("hyp_hihi_genbjets_pt0","hyp_hihi_genbjets_pt0",40,0,200,jetsbmatch[0].pt(),weight_);
+  if (jetsbmatch.size()>1) loop->makeFillHisto1D<TH1F,float>("hyp_hihi_genbjets_pt1","hyp_hihi_genbjets_pt1",40,0,200,jetsbmatch[1].pt(),weight_);
+  if (jetsbmatch.size()>2) loop->makeFillHisto1D<TH1F,float>("hyp_hihi_genbjets_pt2","hyp_hihi_genbjets_pt2",40,0,200,jetsbmatch[2].pt(),weight_);
   //now check the performance as a function of the btagging algo & discriminator
 
 }
