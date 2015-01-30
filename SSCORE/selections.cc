@@ -52,6 +52,27 @@ std::vector<Lep> getBestSSLeps(std::vector<Lep> leps) {
   return hypleps;
 }
 
+float computeLD(DilepHyp hyp, vector<Jet> alljets, float met, float minmt) {
+  //fixme: should variables be truncated?
+  int njets25 = 0;
+  float ht25 = 0;
+  float htratio25 = 0;
+  for (unsigned int j=0;j<alljets.size();j++) {
+    float jetpt = alljets[j].pt();
+    if (jetpt<25) continue;
+    njets25++;
+    ht25+=jetpt;
+    if (fabs(alljets[j].eta())<1.2) htratio25+=jetpt;
+  }
+  htratio25/=ht25;
+  float maxlepeta = std::max(fabs(hyp.leadLep().eta()),fabs(hyp.traiLep().eta()));
+  if (hyp.leadLep().pt()>ptCutHigh) {
+    return 0.147*met/100. + 0.178*ht25/1000. + 0.045*minmt/100. + 0.036*njets25 - 0.105*maxlepeta + 0.196*htratio25;
+  } else {
+    return 0.099*met/100. + 0.80*ht25/1000. + 0.004*njets25 - 0.046*maxlepeta + 0.094*htratio25 - 0.5;
+  }
+}
+
 
 bool isGoodVertex(size_t ivtx) {
   if (cms2.vtxs_isFake()[ivtx]) return false;
@@ -757,14 +778,14 @@ void passesSignalRegionCuts(float ht, float met, unsigned int& analysisBitMask) 
 }
 
 //this assumes that the event has already passed all selections (including min ht and met)
-int signalRegion(int njets, int nbtag, float met, float ht) {
+int signalRegion(int njets, int nbtag, float met, float ht, int njetscut, float metcut, float htcut) {
   int result = 1;
   if (nbtag==1) result+=10;
   else if (nbtag==2) result+=20;
   else if (nbtag>=3) result+=30;
-  if (met>120) result+=4;
-  if (njets>=4) result+=2;
-  if (ht>400) result+=1;
+  if (met>metcut) result+=4;
+  if (njets>=njetscut) result+=2;
+  if (ht>htcut) result+=1;
   return result;
 }
 

@@ -239,8 +239,8 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (debug) cout << "fobs" << endl;
       vector<Lep> fobs_noiso;
       for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
-	if (abs(vetoleps_noiso[vl].pdgId())==13 && isFakableMuon(vetoleps_noiso[vl].idx())==0) continue;
-        if (abs(vetoleps_noiso[vl].pdgId())==11 && isFakableElectron(vetoleps_noiso[vl].idx())==0) continue;
+	if (abs(vetoleps_noiso[vl].pdgId())==13 && isFakableMuonNoIso(vetoleps_noiso[vl].idx())==0) continue;
+        if (abs(vetoleps_noiso[vl].pdgId())==11 && isFakableElectronNoIso(vetoleps_noiso[vl].idx())==0) continue;
         if (debug) cout << "good lep id=" << vetoleps_noiso[vl].pdgId() << " pt=" << vetoleps_noiso[vl].pt()
                         << " eta=" << vetoleps_noiso[vl].eta() << " phi=" << vetoleps_noiso[vl].p4().phi() << " q=" << vetoleps_noiso[vl].charge()<< endl;
         fobs_noiso.push_back(vetoleps_noiso[vl]);
@@ -333,7 +333,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
         }
 	alljets.push_back(jet);
 	if (jetpt>20. && jet.isBtag()) nbtag_pt20++;
-	if (jetpt>25. && jet.isBtag()) nbtag_pt25++;
+	if (jetpt>25. && jet.isBtag()){nbtag_pt25++; btags.push_back(jet);}
 	if (jetpt>30. && jet.isBtag()) nbtag_pt30++;
 	if (jetpt>35. && jet.isBtag()) nbtag_pt35++;
 	if (jetpt>40. && jet.isBtag()) nbtag_pt40++;
@@ -553,7 +553,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	float mtmin = min(mt1,mt2);
 	float mtmin12ll = min(mtmin,mtll);
 
-	tests::makeSRplots( this, weight_, TString("all"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+	tests::makeSRplots( this, weight_, TString("all"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 
 	makeFillHisto1D<TH1F,float>("hyp_mt1","hyp_mt1",15,0,300,mt1,weight_);
 	makeFillHisto1D<TH1F,float>("hyp_mt2","hyp_mt2",15,0,300,mt2,weight_);
@@ -591,7 +591,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    cout << "BR" << br << " SR" << sr << endl;
 	  }
 
-	  tests::makeSRplots( this, weight_, TString("allss"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+	  tests::makeSRplots( this, weight_, TString("allss"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	  makeFillHisto2D<TH2F,float>("hyp_ss_met_vs_ht","hyp_ss_met_vs_ht",40,0,2000,ht,20,0,500,met,weight_);
 
 	  //test min dR between leptons and jets
@@ -641,7 +641,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
 					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 
-	    tests::makeSRplots( this, weight_, TString("highpt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+	    tests::makeSRplots( this, weight_, TString("highpt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt20","hyp_highpt_nbtag_pt20",8,0,8,nbtag_pt20,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt25","hyp_highpt_nbtag_pt25",8,0,8,nbtag_pt25,weight_);
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt30","hyp_highpt_nbtag_pt30",8,0,8,nbtag_pt30,weight_);
@@ -649,13 +649,13 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    makeFillHisto1D<TH1F,int>("hyp_highpt_nbtag_pt40","hyp_highpt_nbtag_pt40",8,0,8,nbtag_pt40,weight_);
 
 	    if (mtmin>100.) {
-	      tests::makeSRplots( this, weight_, TString("highptmt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+	      tests::makeSRplots( this, weight_, TString("highpt_mt100"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	    }
 
 	    if (ht400met120) {
-	      tests::makeSRplots( this, weight_, TString("highpthtmet"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+	      tests::makeSRplots( this, weight_, TString("highpthtmet"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	      if (mtmin>100.) {
-		tests::makeSRplots( this, weight_, TString("highpthtmetmt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+		tests::makeSRplots( this, weight_, TString("highpthtmetmt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	      }
 	    }
 
@@ -664,12 +664,18 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
 	  }
 	  if (ac_base & 1<<LowPt) {
-	    tests::makeSRplots( this, weight_, TString("lowpt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+	    tests::makeSRplots( this, weight_, TString("lowpt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
+	    if (mtmin>100.) {
+	      tests::makeSRplots( this, weight_, TString("lowpt_mt100"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
+	    }
 	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
 					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	  }
 	  if (ac_base & 1<<VeryLowPt) {
-	    tests::makeSRplots( this, weight_, TString("verylowpt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+	    tests::makeSRplots( this, weight_, TString("verylowpt"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
+	    //if (mtmin>100.) {fixme!!!
+	      tests::makeSRplots( this, weight_, TString("verylowpt_mt100"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
+	      //}
 	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
 					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	  }
@@ -690,7 +696,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	  */
 
 	} else {
-	  tests::makeSRplots( this, weight_, TString("allos"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, btags, ll, lt );
+	  tests::makeSRplots( this, weight_, TString("allos"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	}
       }//if (makehist)
 

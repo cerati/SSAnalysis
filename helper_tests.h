@@ -26,5 +26,6 @@ namespace tests{
 
   void makeSRplots( looper* loop, float& weight_, TString label, int& br, int& sr, DilepHyp& hyp, 
 		    float& ht, float& met, float& mtmin, int& type, std::vector<Lep>& goodleps, std::vector<Lep>& fobs, 
-		    std::vector<Lep>& vetoleps, std::vector<Jet>& jets, std::vector<Jet>& btags, TString& ll, TString& lt );
+		    std::vector<Lep>& vetoleps, std::vector<Jet>& jets, std::vector<Jet>& alljets, std::vector<Jet>& btags, 
+		    TString& ll, TString& lt );
 }

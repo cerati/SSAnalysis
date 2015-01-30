@@ -883,7 +883,8 @@ void tests::testBtag( looper* loop, float& weight_, std::vector<Jet>& alljets ) 
 
 void tests::makeSRplots( looper* loop, float& weight_, TString label, int& br, int& sr, DilepHyp& hyp, 
 			 float& ht, float& met, float& mtmin, int& type, std::vector<Lep>& goodleps, std::vector<Lep>& fobs, 
-			 std::vector<Lep>& vetoleps, std::vector<Jet>& jets, std::vector<Jet>& btags, TString& ll, TString& lt ) {
+			 std::vector<Lep>& vetoleps, std::vector<Jet>& jets, std::vector<Jet>& alljets, std::vector<Jet>& btags, 
+			 TString& ll, TString& lt ) {
 
   loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_br","hyp_"+label+"_br",40,0,40,br,weight_);
   if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
@@ -893,6 +894,13 @@ void tests::makeSRplots( looper* loop, float& weight_, TString label, int& br, i
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr","hyp_"+label+"_sr",40,0,40,br,weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr","hyp_"+label+"_sr",40,0,40,sr,weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_sr","hyp_"+label+"_excl_sr",40,0,40,sr,weight_);
+    loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_sr_mt100","hyp_"+label+"_excl_sr_mt100",40*2,0,40*2,sr+40*(mtmin>100),weight_);
+    int srt1 = signalRegion(jets.size(), btags.size(), met, ht, 5, 200, 600);
+    int srt2 = signalRegion(jets.size(), btags.size(), met, ht, 6, 250, 800);
+    loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_srt1","hyp_"+label+"_excl_srt1",40,0,40,srt1,weight_);
+    loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_srt2","hyp_"+label+"_excl_srt2",40,0,40,srt2,weight_);
+    loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_srt1_mt100","hyp_"+label+"_excl_srt1_mt100",40*2,0,40*2,srt1+40*(mtmin>100),weight_);
+    loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_srt2_mt100","hyp_"+label+"_excl_srt2_mt100",40*2,0,40*2,srt2+40*(mtmin>100),weight_);
     if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
       loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr_fromWZ","hyp_"+label+"_sr_fromWZ",40,0,40,br,weight_);
       loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr_fromWZ","hyp_"+label+"_sr_fromWZ",40,0,40,sr,weight_);
@@ -915,12 +923,15 @@ void tests::makeSRplots( looper* loop, float& weight_, TString label, int& br, i
     loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_nvetos","hyp_"+label+"_nvetos",10,0,10,vetoleps.size(),weight_);
     loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_trail_"+lt+"_relIso03","hyp_"+label+"_trail_"+lt+"_relIso03",100,0.,1.,hyp.traiLep().relIso03(),weight_);
     loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_lead_"+ll+"_relIso03","hyp_"+label+"_lead_"+ll+"_relIso03",100,0.,1.,hyp.leadLep().relIso03(),weight_);
-    if (mtmin>80. ) loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_mt80_excl_sr","hyp_"+label+"_mt80_excl_sr",40,0,40,sr,weight_);
-    if (mtmin>100.) loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_mt100_excl_sr","hyp_"+label+"_mt100_excl_sr",40,0,40,sr,weight_);
-    if (mtmin>125.) loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_mt125_excl_sr","hyp_"+label+"_mt125_excl_sr",40,0,40,sr,weight_);
-    if (mtmin>150.) loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_mt150_excl_sr","hyp_"+label+"_mt150_excl_sr",40,0,40,sr,weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_leadjetpt","hyp_"+label+"_leadjetpt",50,0,1000,jets[0].pt(),weight_);
     if (btags.size()>0) loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_leadbtagpt","hyp_"+label+"_leadbtagpt",50,0,1000,btags[0].pt(),weight_);
+    float ld = computeLD(hyp, alljets, met, mtmin);
+    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_ld","hyp_"+label+"_ld",30,0,3.0,ld,weight_);
+    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_ld5bins","hyp_"+label+"_ld5bins",5,0,1.6,ld,weight_);
+    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_ld10bins","hyp_"+label+"_ld10bins",10,0,1.6,ld,weight_);
+    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_excl_srld","hyp_"+label+"_excl_srld",30*4,0,3.0*4,std::min(ld,float(3.0))+3.0*btags.size(),weight_);
+    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_excl_srld5bins","hyp_"+label+"_excl_srld5bins",5*4,0,1.6*4.,std::min(ld,float(1.6))+1.6*btags.size(),weight_);
+    loop->makeFillHisto1D<TH1F,float>("hyp_"+label+"_excl_srld10bins","hyp_"+label+"_excl_srld10bins",10*4,0,1.6*4.,std::min(ld,float(1.6))+1.6*btags.size(),weight_);
   }
 
 }

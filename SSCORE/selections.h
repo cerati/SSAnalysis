@@ -92,6 +92,8 @@ std::vector<Lep> getBestSSLeps(std::vector<Lep> leps);
 
 float computePtRel(Lep& lep, vector<Jet> lepjets);
 
+float computeLD(DilepHyp hyp, vector<Jet> alljets, float met, float minmt);
+
 inline float deltaPhi( float phi1 , float phi2 ) {
   float dphi = fabs( phi1 - phi2 );
   if( dphi > TMath::Pi() ) dphi = TMath::TwoPi() - dphi;
@@ -157,7 +159,7 @@ unsigned int analysisCategory(Lep lep1, Lep lep2);
 void passesBaselineCuts(int njets, int nbtag, float met, float ht, unsigned int& analysisBitMask);
 int baselineRegion(int nbtag);
 void passesSignalRegionCuts(float ht, float met, unsigned int& analysisBitMask);
-int signalRegion(int njets, int nbtag, float met, float ht);
+int signalRegion(int njets, int nbtag, float met, float ht, int njetscut=4, float metcut=120, float htcut=400);
 
 bool makesExtraZ(int idx);
 bool makesExtraGammaStar(int idx);

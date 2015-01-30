@@ -3,7 +3,7 @@ import sys
 import os
 import subprocess
 
-#example: python createCard.py results_PHYS14
+#example: python createCard.py results_PHYS14 _excl_sr
 #example: python createCard.py results_PHYS14 hyp_highpt_excl_sr cards/card.txt
 
 #then get expected limits with: combine -M Asymptotic results_PHYS14/card.txt --run expected --noFitAsimov
@@ -97,13 +97,12 @@ def writeOneCard(dir, plot, output):
     writeOneCardFromProcesses(dir, plot, output, processes )
     return
 
-def writeAllCards(dir, prefix=""):
-    writeOneCard(dir, "hyp_highpt"+prefix+"_excl_sr", "card"+prefix+"-hi-hi.txt" )
-    writeOneCard(dir, "hyp_lowpt"+prefix+"_excl_sr", "card"+prefix+"-hi-low.txt" )
-    writeOneCard(dir, "hyp_verylowpt"+prefix+"_excl_sr", "card"+prefix+"-low-low.txt" )
+def writeAllCards(dir, prefix="_excl_sr"):
+    writeOneCard(dir, "hyp_highpt"+prefix, "card"+prefix+"-hi-hi.txt" )
+    writeOneCard(dir, "hyp_lowpt"+prefix, "card"+prefix+"-hi-low.txt" )
+    writeOneCard(dir, "hyp_verylowpt"+prefix, "card"+prefix+"-low-low.txt" )
     olddir = os.getcwd()
     os.chdir(dir)
-    #os.system("python combineCards.py card-hi-hi.txt card-hi-low.txt card-low-low.txt >& card-all.txt")
     f = open('card'+prefix+'-all.txt', 'wb')
     subprocess.call(["combineCards.py","card"+prefix+"-hi-hi.txt","card"+prefix+"-hi-low.txt","card"+prefix+"-low-low.txt"],stdout=f)
     os.chdir(olddir)
