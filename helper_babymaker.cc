@@ -1,5 +1,7 @@
 #include "helper_babymaker.h"
 
+using namespace tas;
+
 //Main functions
 void babyMaker::MakeBabyNtuple(const char* output_name){
 
@@ -194,12 +196,12 @@ double calculateMt(const LorentzVector p4, double met, double met_phi){
 
 int lepMotherID(Lep lep){
   if (tas::evt_isRealData()) return 1;
-  else if (isFromZ(lep) || isFromW(lep)){
+  else if (isFromZ(lep.pdgId(),lep.idx()) || isFromW(lep.pdgId(),lep.idx())){
     if (sgn(lep.pdgId()) == sgn(lep.mc_id())) return 1;
     else return 2;
   }
-  else if (isFromB(lep)) return -1;
-  else if (isFromC(lep)) return -2;
+  else if (isFromB(lep.pdgId(),lep.idx())) return -1;
+  else if (isFromC(lep.pdgId(),lep.idx())) return -2;
   return 0;
 }
 
@@ -297,7 +299,7 @@ hyp_result_t babyMaker::chooseBestHyp(){
   vector <int> good_hyps_sf; 
   vector <int> good_hyps_df; 
   vector <int> good_hyps_os; 
-  for (unsigned int i = 0; i < cms2.hyp_type().size(); i++){
+  for (unsigned int i = 0; i < tas::hyp_type().size(); i++){
     int good_hyp_result = isGoodHyp(i, 2);
     if (good_hyp_result == 3) good_hyps_ss.push_back(i); 
     if (good_hyp_result == 2) good_hyps_sf.push_back(i); 
@@ -692,8 +694,8 @@ int babyMaker::ProcessBaby(){
 
   //Fill Easy Variables
   //filename = currentFile->GetTitle();//fixme
-  met = cms2.evt_pfmet();
-  metPhi = cms2.evt_pfmetPhi();
+  met = evt_pfmet();
+  metPhi = evt_pfmetPhi();
   event = tas::evt_event();
   lumi = tas::evt_lumiBlock();
   run = tas::evt_run();
@@ -759,8 +761,8 @@ int babyMaker::ProcessBaby(){
   lep3_idx = thirdLepton.first.idx;
   lep3_p4 = thirdLepton.first.p4;
   lep3_quality = thirdLepton.second;
-  lep1_iso = abs(lep1_id) == 11 ? eleRelIso03(lep1_idx) : muRelIso03(lep1_idx);
-  lep2_iso = abs(lep2_id) == 11 ? eleRelIso03(lep2_idx) : muRelIso03(lep2_idx);
+  lep1_iso = isIsolatedLepton(lep1_id, lep1_idx);
+  lep2_iso = isIsolatedLepton(lep2_id, lep2_idx);
   dilep_p4 = lep1_p4 + lep2_p4; 
   lep1_passes_id = isGoodLepton(lep1_id, lep1_idx);
   lep2_passes_id = isGoodLepton(lep2_id, lep2_idx);

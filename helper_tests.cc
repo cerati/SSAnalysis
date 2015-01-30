@@ -3,7 +3,7 @@
 
 #include "TFile.h"
 
-#include "./SSCORE/CMS2.h"
+#include "./CORE/CMS3.h"
 #include "./SSCORE/selections.h"
 
 using namespace tas;
@@ -279,7 +279,7 @@ void tests::runWZtest(looper* loop, float& weight_, vector<Lep>& vetoleps, vecto
       int glepfromZ = -1;
       for (unsigned int gl=0;gl<goodleps.size();++gl) {
 	//easy to check that it is not from W
-	if (isFromW(goodleps[gl])==0 ||goodleps[gl].mc_motherid()==23) {
+	if (isFromW(goodleps[gl].pdgId(),goodleps[gl].idx())==0 ||goodleps[gl].mc_motherid()==23) {
 	  glepfromZ=gl; 
 	  break;
 	}
@@ -394,7 +394,7 @@ void tests::fakeStudy(looper* loop, float& weight_, DilepHyp& hyp, TString& ll, 
   int leadType = -1;
   int trailType = -1;
 	    
-  if ( !isFromW(hyp.traiLep()) ) {
+  if ( !isFromW(hyp.traiLep().pdgId(),hyp.traiLep().idx()) ) {
     //check fakes (mother not W)
 	      
     loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_mc","hyp_ss_faketrail_"+lt+"_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
@@ -404,10 +404,10 @@ void tests::fakeStudy(looper* loop, float& weight_, DilepHyp& hyp, TString& ll, 
 	      
     loop->makeFillHisto1D<TH1F,float>("hyp_ss_faketrail_"+lt+"_relIso03","hyp_ss_faketrail_"+lt+"_relIso03",100,0.,1.,hyp.traiLep().relIso03(),weight_);
 	      
-    if (isFromB(hyp.traiLep()) ) trailType=FakeB;
-    else if (isFromC(hyp.traiLep()) ) trailType=FakeC;
-    else if (isFromLight(hyp.traiLep())) trailType=FakeLightTrue;
-    else if (isFromLightFake(hyp.traiLep())) trailType=FakeLightFake;
+    if (isFromB(hyp.traiLep().pdgId(),hyp.traiLep().idx()) ) trailType=FakeB;
+    else if (isFromC(hyp.traiLep().pdgId(),hyp.traiLep().idx()) ) trailType=FakeC;
+    else if (isFromLight(hyp.traiLep().pdgId(),hyp.traiLep().idx())) trailType=FakeLightTrue;
+    else if (isFromLightFake(hyp.traiLep().pdgId(),hyp.traiLep().idx())) trailType=FakeLightFake;
     else if (hyp.traiLep().mc_id()==22 && hyp.traiLep().mc_p4().pt()>hyp.traiLep().pt()/2.) {
       trailType=FakeHiPtGamma;
       loop->makeFillHisto1D<TH1F,int>("hyp_ss_faketrail_"+lt+"_hiptgamma_mc","hyp_ss_faketrail_"+lt+"_hiptgamma_mc",11001,-5500.5,5500.5,hyp.traiLep().mc_id(),weight_);
@@ -459,7 +459,7 @@ void tests::fakeStudy(looper* loop, float& weight_, DilepHyp& hyp, TString& ll, 
     else cout << "UNKNOWN PROMPT LEPTON " << lt << endl;
 	      
   }
-  if ( !isFromW(hyp.leadLep()) ) {
+  if ( !isFromW(hyp.leadLep().pdgId(),hyp.leadLep().idx()) ) {
 	      
     loop->makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc","hyp_ss_fakelead_"+ll+"_mc",11001,-5500.5,5500.5,hyp.leadLep().mc_id(),weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_ss_fakelead_"+ll+"_mc_mother","hyp_ss_fakelead_"+ll+"_mc_mother",11001,-5500.5,5500.5,hyp.leadLep().mc_motherid(),weight_);
@@ -468,10 +468,10 @@ void tests::fakeStudy(looper* loop, float& weight_, DilepHyp& hyp, TString& ll, 
 
     loop->makeFillHisto1D<TH1F,float>("hyp_ss_fakelead_"+lt+"_relIso03","hyp_ss_fakelead_"+lt+"_relIso03",100,0.,1.,hyp.leadLep().relIso03(),weight_);
 	      
-    if (isFromB(hyp.leadLep()) ) leadType=FakeB;
-    else if (isFromC(hyp.leadLep()) ) leadType=FakeC;
-    else if (isFromLight(hyp.leadLep())) leadType=FakeLightTrue;
-    else if (isFromLightFake(hyp.leadLep())) leadType=FakeLightFake;
+    if (isFromB(hyp.leadLep().pdgId(),hyp.leadLep().idx()) ) leadType=FakeB;
+    else if (isFromC(hyp.leadLep().pdgId(),hyp.leadLep().idx()) ) leadType=FakeC;
+    else if (isFromLight(hyp.leadLep().pdgId(),hyp.leadLep().idx())) leadType=FakeLightTrue;
+    else if (isFromLightFake(hyp.leadLep().pdgId(),hyp.leadLep().idx())) leadType=FakeLightFake;
     else if (hyp.leadLep().mc_id()==22 && hyp.leadLep().mc_p4().pt()>hyp.leadLep().pt()/2.) leadType=FakeHiPtGamma;
     else {
       leadType=FakeUnknown;
@@ -551,7 +551,7 @@ void tests::testLepIdFailMode( looper* loop, float& weight_, std::vector<Lep>& f
     if (pdgid==11) {
       for (unsigned int elidx=0;elidx<els_p4().size();++elidx) {
 	if (fabs(ROOT::Math::VectorUtil::DeltaR(els_p4()[elidx],genps_p4()[gp]))>0.1) continue;
-	if (debug) cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " q=" << els_charge()[elidx] << " iso=" << eleRelIso03(elidx)<< endl;
+	if (debug) cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " q=" << els_charge()[elidx] << " iso=" << eleRelIso03(elidx, SS)<< endl;
 	int failmode = 0;
 	if (isElectronFO(elidx)==0) failmode = isElectronFO_debug(elidx);
 	if (threeChargeAgree(elidx)==0) {
@@ -611,7 +611,7 @@ void tests::testLepIdFailMode( looper* loop, float& weight_, std::vector<Lep>& f
 void tests::computeFakeRateAndClosure( looper* loop, float& weight_, std::vector<Lep>& fobs, std::vector<Lep>& goodleps, TFile* fr_file ) {
 
   for (unsigned int fo=0;fo<fobs.size();++fo) {
-    if (isFromW(fobs[fo])) continue;
+    if (isFromW(fobs[fo].pdgId(),fobs[fo].idx())) continue;
     int pdgid = abs(fobs[fo].pdgId());
     //denominator
     loop->makeFillHisto2D<TH2F,float>((pdgid==13?"fr_mu_den":"fr_el_den"),(pdgid==13?"fr_mu_den":"fr_el_den"),10,0.,50.,fobs[fo].pt(),5,0.,2.5,fabs(fobs[fo].eta()),weight_);
@@ -648,7 +648,7 @@ void tests::testPtRel( looper* loop, float& weight_, DilepHyp& hyp, std::vector<
   bool debug = false;
   //make sure all cuts pass except isolation
   if (isGoodLeptonNoIso(hyp.traiLep().pdgId(), hyp.traiLep().idx())) {
-    if (isFromW(hyp.traiLep())) {
+    if (isFromW(hyp.traiLep().pdgId(),hyp.traiLep().idx())) {
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_relIso03","hyp_ss_foFromWtrail_"+lt+"_relIso03",10,0.,1.,hyp.traiLep().relIso03(),weight_);
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_iso03","hyp_ss_foFromWtrail_"+lt+"_iso03",10,0.,20.,hyp.traiLep().relIso03()*hyp.traiLep().pt(),weight_);
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWtrail_"+lt+"_pt","hyp_ss_foFromWtrail_"+lt+"_pt",10,0.,200.,hyp.traiLep().pt(),weight_);
@@ -665,7 +665,7 @@ void tests::testPtRel( looper* loop, float& weight_, DilepHyp& hyp, std::vector<
 
   //make sure all cuts pass except isolation
   if (isGoodLeptonNoIso(hyp.leadLep().pdgId(), hyp.leadLep().idx())) {
-    if (isFromW(hyp.leadLep())) {
+    if (isFromW(hyp.leadLep().pdgId(),hyp.leadLep().idx())) {
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_relIso03","hyp_ss_foFromWlead_"+ll+"_relIso03",10,0.,1.,hyp.leadLep().relIso03(),weight_);
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_iso03","hyp_ss_foFromWlead_"+ll+"_iso03",10,0.,20.,hyp.leadLep().relIso03()*hyp.leadLep().pt(),weight_);
       loop->makeFillHisto1D<TH1F,float>("hyp_ss_foFromWlead_"+ll+"_pt","hyp_ss_foFromWlead_"+ll+"_pt",10,0.,200.,hyp.leadLep().pt(),weight_);
@@ -887,9 +887,9 @@ void tests::makeSRplots( looper* loop, float& weight_, TString label, int& br, i
 			 TString& ll, TString& lt ) {
 
   loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_br","hyp_"+label+"_br",40,0,40,br,weight_);
-  if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
-    loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_br_fromWZ","hyp_"+label+"_br_fromWZ",40,0,40,br,weight_);
-  }
+  //if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
+  //  loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_br_fromWZ","hyp_"+label+"_br_fromWZ",40,0,40,br,weight_);
+  //}
   if (sr>0) {
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr","hyp_"+label+"_sr",40,0,40,br,weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr","hyp_"+label+"_sr",40,0,40,sr,weight_);
@@ -901,10 +901,10 @@ void tests::makeSRplots( looper* loop, float& weight_, TString label, int& br, i
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_srt2","hyp_"+label+"_excl_srt2",40,0,40,srt2,weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_srt1_mt100","hyp_"+label+"_excl_srt1_mt100",40*2,0,40*2,srt1+40*(mtmin>100),weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_excl_srt2_mt100","hyp_"+label+"_excl_srt2_mt100",40*2,0,40*2,srt2+40*(mtmin>100),weight_);
-    if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
-      loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr_fromWZ","hyp_"+label+"_sr_fromWZ",40,0,40,br,weight_);
-      loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr_fromWZ","hyp_"+label+"_sr_fromWZ",40,0,40,sr,weight_);
-    }
+    //if ( isFromWZ(hyp.traiLep()) && isFromWZ(hyp.leadLep()) ) {
+    //  loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr_fromWZ","hyp_"+label+"_sr_fromWZ",40,0,40,br,weight_);
+    //  loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_sr_fromWZ","hyp_"+label+"_sr_fromWZ",40,0,40,sr,weight_);
+    //}
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_charge","hyp_"+label+"_charge",7,-3.5,3.5,hyp.charge(),weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_njets","hyp_"+label+"_njets",8,0,8,jets.size(),weight_);
     loop->makeFillHisto1D<TH1F,int>("hyp_"+label+"_nbtag","hyp_"+label+"_nbtag",8,0,8,btags.size(),weight_);

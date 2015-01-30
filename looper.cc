@@ -15,7 +15,8 @@
 #include "./helper_babymaker.h"
 
 // CMS3
-#include "./SSCORE/CMS2.h"
+#include "./CORE/CMS3.h"
+#include "./CORE/CMS3.h"
 #include "./SSCORE/selections.h"
 
 using namespace tas;
@@ -76,7 +77,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 
     if (debug) cout << "processing file: " << currentFile->GetTitle() << endl;
 
-    //Skimmed output file - needs to be before cms2.Init(tree)
+    //Skimmed output file - needs to be before cms3.Init(tree)
     TFile *skim_file = 0;
     TTree* skim_tree = 0;
     if (makeSSskim || makeQCDskim) {
@@ -94,22 +95,22 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       //locally
       skim_tree = (TTree*) tree->CloneTree(0, "fast");
       skim_tree->SetDirectory(skim_file);
-      cms2.Init(skim_tree);
+      cms3.Init(skim_tree);
     }
 
     // Event Loop
-    cms2.Init(tree);
+    cms3.Init(tree);
     unsigned int nEvents = tree->GetEntries();
     bool newfile = true;
 
     for(unsigned int event = 0; event < nEvents; ++event) {
     
       // Get Event Content
-      cms2.GetEntry(event);
+      cms3.GetEntry(event);
       ++nEventsTotal;
 
       // progress feedback to user
-      CMS2::progress(nEventsTotal, nEventsChain);
+      CMS3::progress(nEventsTotal, nEventsChain);
 
       if (makebaby) bm->InitBabyNtuple();
 
@@ -187,7 +188,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (qpm>1 || qnm>1) isGenSSmm = true;
 
       if (makeSSskim&&isGenSS) {
-	  cms2.LoadAllBranches();
+	  cms3.LoadAllBranches();
 	  skim_file->cd(); 
 	  skim_tree->Fill();
 	  continue;	
@@ -370,7 +371,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (makeQCDskim) {
 	if (debug) cout << "qcd skim" << endl;
 	if (fobs.size()!=0) {
-	  cms2.LoadAllBranches();
+	  cms3.LoadAllBranches();
 	  skim_file->cd(); 
 	  skim_tree->Fill();
 	  continue;
@@ -455,7 +456,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       if (makeSSskim) {
 	if (debug) cout << "ss skim" << endl;
 	if (isGenSS || hyp.charge()!=0) {
-	  cms2.LoadAllBranches();
+	  cms3.LoadAllBranches();
 	  skim_file->cd(); 
 	  skim_tree->Fill();
 	}
@@ -516,9 +517,9 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    cout << "fob pt=" << fobs[fo].pt() << " eta=" << fobs[fo].eta() << endl;
 	    if (mus_p4().at(fobs[fo].idx()).pt()<ptCutLow) cout << "fail pt" << endl;
 	    if (isMuonFO(fobs[fo].idx())==0) cout << "fail FO" << endl;
-	    if (muRelIso03(fobs[fo].idx())>1.0 ) cout << "fail loose iso" << endl;
-	    if (isTightMuon(fobs[fo].idx())==0) cout << "fail tight id" << endl;
-	    if (muRelIso03(fobs[fo].idx())>0.1 ) cout << "fail tight iso, iso=" << muRelIso03(fobs[fo].idx()) << endl;
+	    if (fobs[fo].relIso03()>1.0) cout << "fail loose iso" << endl;
+	    if (isGoodMuonNoIso(fobs[fo].idx())==0) cout << "fail tight id" << endl;
+	    if (isGoodMuon(fobs[fo].idx())==0 ) cout << "fail tight iso, iso=" << fobs[fo].relIso03() << endl;
 	  }
 	}
 	continue;
@@ -635,7 +636,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    
 	  tests::testLeptonIdVariables( this, weight_, hyp, ll, lt );
 
-	  if (ac_base & 1<<HighPt) {
+	  if (ac_base & 1<<HighHigh) {
 	    if (prefix=="TTWJets" && debug) cout << left << setw(10) << ls_  << " "  << setw(10) << evt_ << " "  << setw(10) << njets << " "  << setw(10) << nbtag << " "  << setw(10) << std::setprecision(8) << ht << " "  << setw(10) << std::setprecision(8) << met << " " << sr << endl;
 
 	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
@@ -663,7 +664,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    tests::testBtag( this, weight_, alljets );
 
 	  }
-	  if (ac_base & 1<<LowPt) {
+	  if (ac_base & 1<<HighLow) {
 	    tests::makeSRplots( this, weight_, TString("hilow"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	    if (mtmin>100.) {
 	      tests::makeSRplots( this, weight_, TString("hilow_mt100"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
@@ -671,7 +672,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
 					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	  }
-	  if (ac_base & 1<<VeryLowPt) {
+	  if (ac_base & 1<<LowLow) {
 	    tests::makeSRplots( this, weight_, TString("veryhilow"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	    //if (mtmin>100.) {fixme!!!
 	      tests::makeSRplots( this, weight_, TString("veryhilow_mt100"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
@@ -728,7 +729,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 }
 
 void looper::printEvent(  ostream& ostr ){
-  ostr << cms2.evt_run() << " " << cms2.evt_lumiBlock() << " " << cms2.evt_event() << endl; 
+  ostr << evt_run() << " " << evt_lumiBlock() << " " << evt_event() << endl; 
 }
 
 // // Book the baby ntuple
