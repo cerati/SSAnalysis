@@ -553,7 +553,7 @@ void tests::testLepIdFailMode( looper* loop, float& weight_, std::vector<Lep>& f
 	if (fabs(ROOT::Math::VectorUtil::DeltaR(els_p4()[elidx],genps_p4()[gp]))>0.1) continue;
 	if (debug) cout << "el pt=" << els_p4()[elidx].pt() << " eta=" << els_p4()[elidx].eta() << " q=" << els_charge()[elidx] << " iso=" << eleRelIso03(elidx, SS)<< endl;
 	int failmode = 0;
-	if (isElectronFO(elidx)==0) failmode = isElectronFO_debug(elidx);
+	if (isFakableElectron(elidx)==0) failmode = isElectronFO_debug(elidx);
 	if (threeChargeAgree(elidx)==0) {
 	  failmode = 10;
 	  bool wrongGsf = (genps_charge()[gp]!=els_charge()[elidx]);

@@ -7,6 +7,7 @@
 #include "CORE/CMS3.h"
 #include "SSCORE/selections.h"
 #include "CORE/MT2/MT2.h"
+#include "CORE/SSSelections.h"
 //#include "structAG.h"
 //#include "looper.h" 
 //#include "fromCore.h"
@@ -16,20 +17,6 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> > LorentzVector;
 typedef vector<pair<const LorentzVector *, double> > jets_with_corr_t;
 
 using namespace std;
-
-//Enums
-enum anal_type_t { HIGH_PT, LOW_PT, VLOW_PT };
-enum hyp_type_t { EE, MM, EM, UNASSIGNED }; 
-enum MT2_type_t { MT2W, MT2B }; 
-enum signal_t { T1TTTT, T5TTTT, T5LNU, T5VV, T7BTW, T4TW, T6TTWW_X08, T6TTWW_X05, T6TTHH, NONE};
-enum btag_type_t { CSVL, CSVM, CSVT };
-
-//Structs
-struct btagInfo_t { LorentzVector jetcor; int flavorPhys; int flavorAlgo; bool bjetFlags; };
-struct btags_t { vector<LorentzVector> btags; vector <bool> isBtagged; };
-struct hyp_result_t { int best_hyp; int hyp_class; };
-struct particle_t { int id; LorentzVector p4; int idx; };
-struct val_err_t { float value; float error; };
 
 //Comparisons
 //bool compare_btagInfo(const btagInfo_t a, const btagInfo_t b){ return a.jetcor.pt() > b.jetcor.pt(); }
@@ -51,10 +38,6 @@ class babyMaker {
     void InitBabyNtuple();
     void CloseBabyNtuple () { BabyFile->cd();BabyTree->Write();BabyFile->Close();}
     int ProcessBaby();
-    hyp_result_t chooseBestHyp();
-    int isGoodHyp(int iHyp, int analType = 2);
-    pair <particle_t, int> getThirdLepton(int hyp);
-    vector <particle_t> getGenPair();
 
   protected:
     TFile* BabyFile;

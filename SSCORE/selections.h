@@ -4,17 +4,17 @@
 #include "../CORE/SSSelections.h"
 #include "TString.h"
 
+//Enums
+enum hyp_type_t { EE, MM, EM, UNASSIGNED }; 
 //fixme: put WF and FSR in different categories
 enum LeptonCategories { Prompt = 0, PromptWS = 1, PromptWF = 2, PromptFSR = 2, 
 			FakeLightTrue = 3, FakeC = 4, FakeB = 5, FakeLightFake = 6, FakeHiPtGamma = 7, 
 			FakeUnknown = 8, FakeLowPtGamma = 9, All9999 = 10,
 			Other = 11, End = 12};
 
-float muRelIsoTest(unsigned int, float dr, float deltaZCut=0.1);
-float muRelIsoTestDB(unsigned int, float dr, float deltaZCut=0.1);
-
-float elRelIsoTest(unsigned int, float dr, float deltaZCut=0.1);
-float elRelIsoTestDB(unsigned int, float dr, float deltaZCut=0.1);
+//Structs
+struct hyp_result_t { int best_hyp; int hyp_class; };
+struct particle_t { int id; LorentzVector p4; int idx; };
 
 struct Lep {
   Lep(int pdgid, int idxx):pdgid_(pdgid),idx_(idxx){}
@@ -24,6 +24,12 @@ struct Lep {
   float pt() {return abs(pdgid_)==11 ? cms3.els_p4().at(idx_).pt() : cms3.mus_p4().at(idx_).pt();}
   float eta() {return abs(pdgid_)==11 ? cms3.els_p4().at(idx_).eta() : cms3.mus_p4().at(idx_).eta();}
   LorentzVector p4() {return abs(pdgid_)==11 ? cms3.els_p4().at(idx_) : cms3.mus_p4().at(idx_);}
+  float relIso03() { return abs(pdgid_)==11 ? eleRelIso03(idx_, SS) : muRelIso03(idx_, SS);}
+  float dxyPV() { return abs(pdgid_)==11 ? cms3.els_dxyPV().at(idx_) : cms3.mus_dxyPV().at(idx_);}
+  float dzPV() { return abs(pdgid_)==11 ? cms3.els_dzPV().at(idx_) : cms3.mus_dzPV().at(idx_);}
+  float d0Err() { return abs(pdgid_)==11 ? cms3.els_d0Err().at(idx_) : cms3.mus_d0Err().at(idx_);}
+  float ip3d() { return abs(pdgid_)==11 ? cms3.els_ip3d().at(idx_) : cms3.mus_ip3d().at(idx_);}
+  float ip3dErr() { return abs(pdgid_)==11 ? cms3.els_ip3derr().at(idx_) : cms3.mus_ip3derr().at(idx_);}
   int mc3_id() {return abs(pdgid_)==11 ? cms3.els_mc3_id().at(idx_) : cms3.mus_mc3_id().at(idx_);}
   int mc3idx() {return abs(pdgid_)==11 ? cms3.els_mc3idx().at(idx_) : cms3.mus_mc3idx().at(idx_);}
   int mc3_motherid() {return abs(pdgid_)==11 ? cms3.els_mc3_motherid().at(idx_) : cms3.mus_mc3_motherid().at(idx_);}
@@ -32,9 +38,6 @@ struct Lep {
   int mcidx() { return abs(pdgid_)==11 ? cms3.els_mcidx().at(idx_) : cms3.mus_mcidx().at(idx_);}
   int mc_motherid() {return abs(pdgid_)==11 ? cms3.els_mc_motherid().at(idx_) : cms3.mus_mc_motherid().at(idx_);}
   LorentzVector mc_p4() { return abs(pdgid_)==11 ? cms3.els_mc_p4().at(idx_) : cms3.mus_mc_p4().at(idx_);}
-  float relIso03() { return abs(pdgid_)==11 ? eleRelIso03(idx_, SS) : muRelIso03(idx_, SS);}
-  float dxyPV() { return abs(pdgid_)==11 ? cms3.els_dxyPV().at(idx_) : cms3.mus_dxyPV().at(idx_);}
-  float dzPV() { return abs(pdgid_)==11 ? cms3.els_dzPV().at(idx_) : cms3.mus_dzPV().at(idx_);}
 private:
   int pdgid_, idx_;
 };
@@ -72,6 +75,13 @@ private:
   int idx_;
 };
 
+
+float muRelIsoTest(unsigned int, float dr, float deltaZCut=0.1);
+float muRelIsoTestDB(unsigned int, float dr, float deltaZCut=0.1);
+
+float elRelIsoTest(unsigned int, float dr, float deltaZCut=0.1);
+float elRelIsoTestDB(unsigned int, float dr, float deltaZCut=0.1);
+
 bool ptsort (int i,int j);
 bool lepsort (Lep i,Lep j);
 bool jetptsort (Jet i,Jet j);
@@ -96,13 +106,9 @@ inline float mt(float pt1, float pt2, float dphi){
   return 2*sqrt(pt1*pt2)*fabs(sin(dphi/2));
 }
 
-
-//functions for veto, FO, Tight selection
-
 bool isGoodVertex(size_t ivtx);
 int firstGoodVertex();
 
-bool isElectronFO(unsigned int);
 int  isElectronFO_debug(unsigned int);
 
 TString triggerName(TString);
@@ -119,5 +125,19 @@ struct metStruct{
   float sumet;
 };
 metStruct trackerMET(float deltaZCut = 0.2 /*, const std::vector<LorentzVector>* jets = 0*/);
+
+hyp_result_t chooseBestHyp(bool verbose=false);
+int isGoodHyp(int iHyp, int analType = 2, bool verbose=false);
+std::pair<particle_t, int> getThirdLepton(int hyp);
+std::vector<particle_t> getGenPair(bool verbose=false);
+
+template <typename T> int sgn(T val){
+    return (T(0) < val) - (val < T(0));
+}
+double calculateMt(const LorentzVector p4, double met, double met_phi);
+int lepMotherID(Lep lep);
+float DileptonTriggerScaleFactor(int hyp_type, anal_type_t anal_type, LorentzVector trailing_p4);
+float TagAndProbeScaleFactor(int id, float pt, float eta);
+float DileptonTagAndProbeScaleFactor(const int hyp_idx);
 
 #endif
