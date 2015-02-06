@@ -230,7 +230,6 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
 	if (abs(vetoleps_noiso[vl].pdgId())==13 && isGoodVetoMuon(vetoleps_noiso[vl].idx())==0) continue;
 	if (abs(vetoleps_noiso[vl].pdgId())==11 && isGoodVetoElectron(vetoleps_noiso[vl].idx())==0) continue;
-	//if (vetoleps_noiso[vl].miniRelIso()>0.5) continue;//fixme
       	if (debug) cout << "good lep id=" << vetoleps_noiso[vl].pdgId() << " pt=" << vetoleps_noiso[vl].pt() 
 			<< " eta=" << vetoleps_noiso[vl].eta() << " phi=" << vetoleps_noiso[vl].p4().phi() << " q=" << vetoleps_noiso[vl].charge()<< endl;
       	vetoleps.push_back(vetoleps_noiso[vl]);
@@ -254,14 +253,6 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 			<< " eta=" << vetoleps[vl].eta() << " phi=" << vetoleps[vl].p4().phi() << " q=" << vetoleps[vl].charge()<< endl;
       	fobs.push_back(vetoleps[vl]);
       }
-      /*
-      for (unsigned int fo=0;fo<fobs_noiso.size();++fo) {//fixme!!!!!
-	if (fobs_noiso[fo].miniRelIso()>0.5) continue;//fixme
-      	if (debug) cout << "good lep id=" << fobs_noiso[fo].pdgId() << " pt=" << fobs_noiso[fo].pt() 
-			<< " eta=" << fobs_noiso[fo].eta() << " phi=" << fobs_noiso[fo].p4().phi() << " q=" << fobs_noiso[fo].charge()<< endl;
-      	fobs.push_back(fobs_noiso[fo]);
-      }
-      */
 
       //leptons
       if (debug) cout << "goodleps" << endl;
@@ -269,9 +260,6 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       for (unsigned int fo=0;fo<fobs.size();++fo) {
 	if (abs(fobs[fo].pdgId())==13 && isGoodMuon(fobs[fo].idx())==0) continue;
 	if (abs(fobs[fo].pdgId())==11 && isGoodElectron(fobs[fo].idx())==0) continue;
-	// if (abs(fobs[fo].pdgId())==13 && isGoodMuonNoIso(fobs[fo].idx())==0) continue;//fixme
-	// if (abs(fobs[fo].pdgId())==11 && isGoodElectronNoIso(fobs[fo].idx())==0) continue;
-	// if (fobs[fo].miniRelIso()>0.08) continue;
       	if (debug) cout << "good lep id=" << fobs[fo].pdgId() << " pt=" << fobs[fo].pt() 
 			<< " eta=" << fobs[fo].eta() << " phi=" << fobs[fo].p4().phi() << " q=" << fobs[fo].charge()<< endl;
       	goodleps.push_back(fobs[fo]);
