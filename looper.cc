@@ -13,11 +13,10 @@
 #include "./looper.h"
 #include "./helper_tests.h"
 #include "./helper_babymaker.h"
+#include "./tools.h"
 
 // CMS3
 #include "./CORE/CMS3.h"
-#include "./CORE/CMS3.h"
-#include "./SSCORE/selections.h"
 
 using namespace tas;
 using namespace std;
@@ -231,6 +230,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
 	if (abs(vetoleps_noiso[vl].pdgId())==13 && isGoodVetoMuon(vetoleps_noiso[vl].idx())==0) continue;
 	if (abs(vetoleps_noiso[vl].pdgId())==11 && isGoodVetoElectron(vetoleps_noiso[vl].idx())==0) continue;
+	//if (vetoleps_noiso[vl].miniRelIso()>0.5) continue;//fixme
       	if (debug) cout << "good lep id=" << vetoleps_noiso[vl].pdgId() << " pt=" << vetoleps_noiso[vl].pt() 
 			<< " eta=" << vetoleps_noiso[vl].eta() << " phi=" << vetoleps_noiso[vl].p4().phi() << " q=" << vetoleps_noiso[vl].charge()<< endl;
       	vetoleps.push_back(vetoleps_noiso[vl]);
@@ -254,6 +254,14 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 			<< " eta=" << vetoleps[vl].eta() << " phi=" << vetoleps[vl].p4().phi() << " q=" << vetoleps[vl].charge()<< endl;
       	fobs.push_back(vetoleps[vl]);
       }
+      /*
+      for (unsigned int fo=0;fo<fobs_noiso.size();++fo) {//fixme!!!!!
+	if (fobs_noiso[fo].miniRelIso()>0.5) continue;//fixme
+      	if (debug) cout << "good lep id=" << fobs_noiso[fo].pdgId() << " pt=" << fobs_noiso[fo].pt() 
+			<< " eta=" << fobs_noiso[fo].eta() << " phi=" << fobs_noiso[fo].p4().phi() << " q=" << fobs_noiso[fo].charge()<< endl;
+      	fobs.push_back(fobs_noiso[fo]);
+      }
+      */
 
       //leptons
       if (debug) cout << "goodleps" << endl;
@@ -261,6 +269,9 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       for (unsigned int fo=0;fo<fobs.size();++fo) {
 	if (abs(fobs[fo].pdgId())==13 && isGoodMuon(fobs[fo].idx())==0) continue;
 	if (abs(fobs[fo].pdgId())==11 && isGoodElectron(fobs[fo].idx())==0) continue;
+	// if (abs(fobs[fo].pdgId())==13 && isGoodMuonNoIso(fobs[fo].idx())==0) continue;//fixme
+	// if (abs(fobs[fo].pdgId())==11 && isGoodElectronNoIso(fobs[fo].idx())==0) continue;
+	// if (fobs[fo].miniRelIso()>0.08) continue;
       	if (debug) cout << "good lep id=" << fobs[fo].pdgId() << " pt=" << fobs[fo].pt() 
 			<< " eta=" << fobs[fo].eta() << " phi=" << fobs[fo].p4().phi() << " q=" << fobs[fo].charge()<< endl;
       	goodleps.push_back(fobs[fo]);
@@ -343,12 +354,19 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       std::sort(btags.begin(),btags.end(),jetptsort);
       nbtag = nbtag_pt25;
 
-      //add back to fobs those vetoleps_noiso not passing iso but passing ptrel wrt lepjet
       /*
-      if (makeSSskim || makeQCDskim) {//fixme
-	for (unsigned int vl=0;vl<vetoleps_noiso.size();++vl) {
-	  float ptrel = computePtRel(vetoleps_noiso[vl],lepjets);
-	  if (ptrel>8.) fobs.push_back(vetoleps_noiso[vl]);
+      //add back to fobs those fobs_noiso not passing iso but passing ptrel wrt lepjet
+      //if (makeSSskim || makeQCDskim) {//fixme
+      if (1) {//fixme
+	for (unsigned int fo=0;fo<fobs_noiso.size();++fo) {
+	  if (fobs_noiso[fo].relIso03()<=0.5) continue;
+	  // float ptrel = computePtRel(fobs_noiso[fo],lepjets,false);
+	  // if (ptrel<8.) continue;
+	  // float ptrel = computePtRel(fobs_noiso[fo],lepjets,true);
+	  // if (ptrel<16.) continue;
+	  // float miniIso = fobs_noiso[fo].miniRelIso();
+	  // if (miniIso>0.05) continue;
+	  fobs.push_back(fobs_noiso[fo]);
 	}
       }	
       */
@@ -362,8 +380,15 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       /*
       //add back to goodleps those fobs not passing iso but passing ptrel wrt lepjet
       for (unsigned int fo=0;fo<fobs.size();++fo) {
-	float ptrel = computePtRel(fobs[fo],lepjets);
-	if (ptrel>8.) goodleps.push_back(fobs[fo]);
+	if (fobs[fo].relIso03()<=0.1) continue;
+	if (isGoodLeptonNoIso(fobs[fo].pdgId(),fobs[fo].idx())==0) continue;
+	// float ptrel = computePtRel(fobs[fo],lepjets,false);
+	// if (ptrel<8.) continue;
+	// float ptrel = computePtRel(fobs[fo],lepjets,true);
+	// if (ptrel<16.) continue;
+	// float miniIso = fobs[fo].miniRelIso();
+	// if (miniIso>0.05) continue;
+	goodleps.push_back(fobs[fo]);
       }
       */
 
@@ -405,10 +430,10 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	continue;
       }
 
-      vector<Lep> hypfobsnoiso = getBestSSLeps(fobs_noiso);
-      if (debug) cout << "hypfobsnoiso size=" << hypfobsnoiso.size() << endl;
-      if (hypfobsnoiso.size()<2) {
-	if (debug) cout << "skip, hypfobsnoiso size=" << hypfobsnoiso.size() << endl;
+      vector<Lep> hypfobs = ( makeSSskim ? getBestSSLeps(fobs_noiso) : getBestSSLeps(fobs));
+      if (debug) cout << "hypfobs size=" << hypfobs.size() << endl;
+      if (hypfobs.size()<2) {
+	if (debug) cout << "skip, hypfobs size=" << hypfobs.size() << endl;
 	if (isGenSS) {
 	  tests::testLepIdFailMode( this, weight_, fobs );
 	}
@@ -422,7 +447,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       vector<Lep> hypleps = getBestSSLeps(goodleps);
       if (debug) cout << "hypleps size=" << hypleps.size() << endl;
 
-      DilepHyp hyp = (hypleps.size()==2 ? DilepHyp(hypleps[0],hypleps[1]) : DilepHyp(hypfobsnoiso[0],hypfobsnoiso[1]) );
+      DilepHyp hyp = (hypleps.size()==2 ? DilepHyp(hypleps[0],hypleps[1]) : DilepHyp(hypfobs[0],hypfobs[1]) );
       if (hyp.p4().mass()<8) {
 	if (debug) cout<< "skip, hyp mass=" << hyp.p4().mass() <<endl;
 	continue;
@@ -464,6 +489,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
 
       //3rd lepton veto
+      if (debug) cout << "3rd lepton veto" << endl;
       bool leptonVeto = false;
       for (unsigned int gl=0;gl<hypleps.size();++gl) {
 	for (unsigned int vl=0;vl<vetoleps.size();++vl) {
@@ -493,11 +519,12 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
       }
 
       bool ht400met120 = false;
-      if (ht>400. || met>120.) ht400met120 = true;//continue;//fixme
+      if (ht>400. || met>120.) ht400met120 = true;
 
       TString ll = abs(hyp.leadLep().pdgId())==13 ? "mu" : "el";
       TString lt = abs(hyp.traiLep().pdgId())==13 ? "mu" : "el";
       if (hyp.leadLep().pt()>ptCutHigh && hyp.traiLep().pt()>ptCutHigh) {
+	if (debug) cout << "test pt rel" << endl;
 	tests::testPtRel( this, weight_, hyp, lepjets, ll, lt );
       }
 
@@ -516,7 +543,7 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 	    if (abs(fobs[fo].pdgId())!=13) continue;
 	    cout << "fob pt=" << fobs[fo].pt() << " eta=" << fobs[fo].eta() << endl;
 	    if (mus_p4().at(fobs[fo].idx()).pt()<ptCutLow) cout << "fail pt" << endl;
-	    if (isMuonFO(fobs[fo].idx())==0) cout << "fail FO" << endl;
+	    if (isFakableMuonNoIso(fobs[fo].idx())==0) cout << "fail FO" << endl;
 	    if (fobs[fo].relIso03()>1.0) cout << "fail loose iso" << endl;
 	    if (isGoodMuonNoIso(fobs[fo].idx())==0) cout << "fail tight id" << endl;
 	    if (isGoodMuon(fobs[fo].idx())==0 ) cout << "fail tight iso, iso=" << fobs[fo].relIso03() << endl;
@@ -673,17 +700,17 @@ int looper::ScanChain( TChain* chain, TString prefix, TString postfix, bool isDa
 					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	  }
 	  if (ac_base & 1<<LowLow) {
-	    tests::makeSRplots( this, weight_, TString("veryhilow"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
+	    tests::makeSRplots( this, weight_, TString("lowlow"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	    //if (mtmin>100.) {fixme!!!
-	      tests::makeSRplots( this, weight_, TString("veryhilow_mt100"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
+	      tests::makeSRplots( this, weight_, TString("lowlow_mt100"), br, sr, hyp, ht, met, mtmin, type, goodleps, fobs, vetoleps, jets, alljets, btags, ll, lt );
 	      //}
 	    if (makeSyncTest) cout << Form("%1d %9d %12d\t%2d\t%+2d %5.1f\t%+2d %5.1f\t%d\t%2d\t%5.1f\t%6.1f", run_, ls_, evt_, int(vetoleps.size()), hyp.leadLep().pdgId(), hyp.leadLep().pt(), 
 					   hyp.traiLep().pdgId(), hyp.traiLep().pt(),  njets, nbtag, met, ht) << endl;
 	  }
 
-	  if (prefix=="ttbar") {
-	    tests::fakeStudy(this,weight_,hyp,ll,lt);
-	  }
+	  //if (prefix=="ttbar") {
+	  //tests::fakeStudy(this,weight_,hyp,ll,lt);
+	  //}
 
 	  /*
 	  //dump genps

@@ -14,6 +14,7 @@ namespace tests{
   void runWZtest( looper* loop, float& weight_, std::vector<Lep>& vetoleps, std::vector<Lep>& fobs, std::vector<Lep>& goodleps, int& njets, float& met);
   void fakeStudy( looper* loop, float& weight_, DilepHyp& hyp, TString& ll, TString& lt );
 
+  int isElectronFO_debug(unsigned int);
   void testLepIdFailMode( looper* loop, float& weight_, std::vector<Lep>& fobs );
 
   void computeFakeRateAndClosure( looper* loop, float& weight_, std::vector<Lep>& fobs, std::vector<Lep>& goodleps, TFile* fr_file );

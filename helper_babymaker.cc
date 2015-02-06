@@ -374,16 +374,18 @@ int babyMaker::ProcessBaby(){
   }
   
   //Scale Factors
+  /*
   sf_dilepTrig_hpt = DileptonTriggerScaleFactor(hyp_type, HighHigh, lep2_p4);
   sf_dilepTrig_lpt = DileptonTriggerScaleFactor(hyp_type, HighLow, lep2_p4); 
   sf_dilepTrig_vlpt = DileptonTriggerScaleFactor(hyp_type, LowLow, lep2_p4);
   sf_dilep_eff = DileptonTagAndProbeScaleFactor(best_hyp);
   if (verbose) cout << "sf_dilep_eff: " << sf_dilep_eff << endl;
+  */
   
   //MT variables
-  mt = calculateMt(lep1_p4, met, metPhi);
+  mt = calculateMt(lep1_p4.pt(),met,deltaPhi(lep1_p4.phi(),metPhi));
   mt2 = MT2(met, metPhi, lep1_p4, lep2_p4);
-  mt_l2 = calculateMt(lep2_p4, met, metPhi);
+  mt_l2 = calculateMt(lep2_p4.pt(), met, deltaPhi(lep2_p4.phi(),metPhi));
   
   //Ht and MET
   if (verbose) cout << "ht: " << ht << endl;

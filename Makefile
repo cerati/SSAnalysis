@@ -24,42 +24,30 @@ CC = g++
 CMSROOT = ./
 INCLUDE = $(shell root-config --cflags) -I$(CMSROOT) -I$(CMSROOT)/CORE
 CFLAGS = -Wall -Wno-unused-function -g -O2 -fPIC $(INCLUDE) $(EXTRACFLAGS)
-ROOTLIBS = $(shell root-config --ldflags --cflags --libs) -lEG -lGenVector
+ROOTLIBS = $(shell root-config --ldflags --cflags --libs) #-lEG -lGenVector
 COREDIR = CORE
-SSCOREDIR = SSCORE
 
 DICTINCLUDE = $(ROOTSYS)/include/Math/QuantFuncMathCore.h $(ROOTSYS)/include/TLorentzVector.h $(ROOTSYS)/include/Math/Vector4D.h
 
 LINKER = g++
-LINKERFLAGS = $(shell root-config --ldflags --libs) -lGenVector
+LINKERFLAGS = $(shell root-config --ldflags --libs) -lEG -lGenVector
 
 #DIR = /Users/cerati/SSAnalysis/SSAnalysis/
 DIR = ./
 
 CORESOURCES=$(DIR)/$(COREDIR)/CMS3.cc \
+ $(DIR)/$(COREDIR)/Base.cc \
  $(DIR)/$(COREDIR)/ElectronSelections.cc \
  $(DIR)/$(COREDIR)/MuonSelections.cc \
  $(DIR)/$(COREDIR)/JetSelections.cc \
+ $(DIR)/$(COREDIR)/MetSelections.cc \
+ $(DIR)/$(COREDIR)/VertexSelections.cc \
  $(DIR)/$(COREDIR)/MCSelections.cc \
- $(DIR)/$(COREDIR)/MT2/MT2Utility.cc \
- $(DIR)/$(COREDIR)/MT2/MT2.cc \
- $(DIR)/$(COREDIR)/SSSelections.cc #\
-#./$(COREDIR)/conversionTools.cc \
-#./$(COREDIR)/electronSelectionsParameters.cc \
-#./$(COREDIR)/eventSelections.cc \
-#./$(COREDIR)/jetSelections.cc \
-#./$(COREDIR)/mcSelections.cc \
-#./$(COREDIR)/metSelections.cc \
-#./$(COREDIR)/MITConversionUtilities.cc \
-#./$(COREDIR)/trackSelections.cc \
-#./$(COREDIR)/triggerUtils.cc \
-#./$(COREDIR)/utilities.cc 
+ $(DIR)/Tools/MT2/MT2Utility.cc \
+ $(DIR)/Tools/MT2/MT2.cc \
+ $(DIR)/$(COREDIR)/SSSelections.cc
 COREOBJECTS=$(CORESOURCES:.cc=.o)
 CORELIB=libCORE.so
-
-SSCORESOURCES=$(DIR)/$(SSCOREDIR)/selections.cc 
-SSCOREOBJECTS=$(SSCORESOURCES:.cc=.o)
-SSCORELIB=libSSCORE.so
 
 SOURCES = $(wildcard $(DIR)/*.cc)
 OBJECTS = $(SOURCES:.cc=.o)
@@ -80,15 +68,10 @@ $(CORELIB): $(COREOBJECTS)
 	echo "$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@"; \
 	$(LINKER) $(LINKERFLAGS) -shared $(COREOBJECTS) -o $@
 
-$(SSCORELIB): $(SSCOREOBJECTS)
-	$(QUIET) echo "Linking $@"; \
-	echo "$(LINKER) $(LINKERFLAGS) -shared $(SSCOREOBJECTS) -o $@"; \
-	$(LINKER) $(LINKERFLAGS) -shared $(SSCOREOBJECTS) -o $@
-
-$(LIB):	$(DICT) $(OBJECTS) $(COREOBJECTS) $(SSCOREOBJECTS)
+$(LIB):	$(DICT) $(OBJECTS) $(COREOBJECTS)
 	$(QUIET) echo "Linking $@"; \
 	echo "$(LINKER) $(CFLAGS) $(LINKERFLAGS) -shared $(OBJECTS) $(DICT) -o $@"; \
-	$(LINKER) -shared -o $@ $(OBJECTS) $(COREOBJECTS) $(SSCOREOBJECTS) $(DICT) $(LINKERFLAGS)
+	$(LINKER) -shared -o $@ $(OBJECTS) $(COREOBJECTS) $(DICT) $(LINKERFLAGS)
 
 LinkDef_out.cxx: LinkDef.h
 	$(QUIET) echo "Making CINT dictionaries"; \
@@ -129,8 +112,6 @@ clean: loopclean
 	rm -f \
 	$(CORELIB) \
 	./$(COREDIR)/*.o \
-	./$(COREDIR)/MT2/*.o \
-	$(SSCORELIB) \
-	./$(SSCOREDIR)/*.o
+	./Tools/MT2/*.o \
 
 endif
