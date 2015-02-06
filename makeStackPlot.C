@@ -15,7 +15,8 @@
   plot = "hyp_veryhilow_njets";xaxis="njets";yaxis="events/bin";
   plot = "hyp_hihi_nbtag";xaxis="nbtag";yaxis="events/bin";
   plot = "hyp_hihi_ld";xaxis="LD";yaxis="event fraction";
-  plot = "hyp_hihi_excl_sr_mt100";xaxis="SR";yaxis="events/bin";
+  plot = "hyp_highpt_mtmin";xaxis="mTmin [GeV]";yaxis="events/bin/10 fb^{-1}";
+  plot = "hyp_hihi_excl_sr";xaxis="SR";yaxis="events/bin";//_mt100
   bool norm = false;
   bool save = false;
   bool logy = false;
@@ -116,6 +117,7 @@
     if (WZ_h) hs.Add(WZ_h);
     if (WW_h) hs.Add(WW_h);
     hs.Draw("HIST");
+    hs.SetTitle("");
     hs.GetHistogram()->GetXaxis()->SetTitle(xaxis);
     hs.GetHistogram()->GetYaxis()->SetTitle(yaxis);
   }
